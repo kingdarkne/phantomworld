@@ -1,0 +1,38 @@
+# FiveM runtime (large binaries — download FXServer separately on each machine)
+/alpine/
+/citizen/
+/FXServer.exe
+/run.cmd
+/components/
+
+# Generated / local-only
+/cache/
+/logs/
+/crashes/
+*.log
+
+# txAdmin local data (keep config templates if you use them intentionally)
+/txData/default/data/
+/txData/default/logs/
+
+# Secrets — never commit these
+.env
+.env.*
+*.pem
+*.key
+server.cfg.local
+
+# Node / build artifacts inside resources
+**/node_modules/
+**/.yarn/
+**/dist/
+**/.cache/
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
