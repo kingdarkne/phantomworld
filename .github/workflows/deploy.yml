@@ -1,0 +1,45 @@
+name: Deploy to FiveM host
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync server with origin/main
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_RESTART_CMD: ${{ secrets.DEPLOY_RESTART_CMD }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: DEPLOY_PATH,DEPLOY_RESTART_CMD
+          script_stop: true
+          script: |
+            set -euo pipefail
+            if [ -z "${DEPLOY_PATH:-}" ]; then
+              echo "DEPLOY_PATH secret is not set."
+              exit 1
+            fi
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "No git repo at $DEPLOY_PATH — clone the repo there first (see DEPLOY.md)."
+              exit 1
+            fi
+            cd "$DEPLOY_PATH"
+            git fetch origin
+            git reset --hard origin/main
+            if [ -n "${DEPLOY_RESTART_CMD:-}" ]; then
+              echo "Running DEPLOY_RESTART_CMD..."
+              eval "$DEPLOY_RESTART_CMD"
+            else
+              echo "DEPLOY_RESTART_CMD not set — skipping server restart."
+            fi
