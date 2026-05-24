@@ -1,0 +1,393 @@
+{
+  "color": "#FFD700",
+
+  "audio": {
+    "defaultVolume": 0.03,
+    "autoplay": true
+  },
+
+  "background": {
+    "type": "video",
+    "file": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/TuffAdvanceScoreboard.mp4"
+  },
+
+  "locales": {
+    "loading": "LOADING",
+    "loading_desc": "Welcome to Phantom World - Downloading game data, please wait...",
+    "viewImage": "View image",
+    "news": "News",
+    "events": "Events",
+    "gallery": "Gallery",
+    "keybinds": "Keybinds",
+    "changelog": "Changelog",
+    "staff": "Staff Team"
+  },
+
+  "tabs": {
+    "news": true,
+    "events": true,
+    "gallery": true,
+    "keybinds": true,
+    "changelog": true,
+    "staff": true
+  },
+
+  "navbuttons": {
+    "website": {
+      "text": "Website",
+      "enabled": true,
+      "url": "https://phantomworld.tebex.io/"
+    },
+    "discord": {
+      "text": "Discord",
+      "enabled": true,
+      "url": "https://discord.gg/phantomworld"
+    },
+    "hideui": {
+      "text": "Hide UI"
+    },
+    "showui": {
+      "text": "Show UI"
+    }
+  },
+
+  "serverInfo": {
+    "name": "Phantom World",
+    "description": "Experience Los Santos like never before with custom features, heists, gangs, and more!",
+    "owner": "Dracula",
+    "founder": "Dracula"
+  },
+
+  "staffTeam": [
+    {
+      "name": "Dracula",
+      "role": "Owner / Founder",
+      "discord": "dracula",
+      "color": "#FFD700"
+    },
+    {
+      "name": "Admin Team",
+      "role": "Administrators",
+      "discord": "Admin",
+      "color": "#FF6B6B"
+    },
+    {
+      "name": "Moderators",
+      "role": "Community Moderators",
+      "discord": "Mod",
+      "color": "#4ECDC4"
+    },
+    {
+      "name": "Support Staff",
+      "role": "Support Team",
+      "discord": "Support",
+      "color": "#95E1D3"
+    }
+  ],
+
+  "news": [
+    {
+      "title": "🎉 Welcome to Phantom World!",
+      "description": "Join our thriving community with custom heists, gang wars, vehicle customization, and much more! Connect with us on Discord for updates and events.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "date": "5/8/2026"
+    },
+    {
+      "title": "🚗 New Vehicle Calling Menu",
+      "description": "Spawning your owned and rented vehicles is now easier than ever! Press F3 to access the new vehicle calling menu.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/stanverv2gif-ezgif.com-optimize.gif",
+      "date": "5/8/2026"
+    },
+    {
+      "title": "🔫 GTA-Online Style Weapon Wheel",
+      "description": "Experience the authentic GTA V weapon wheel with smooth animations and inventory integration. Press TAB to access your arsenal.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/Emoji.gif",
+      "date": "5/8/2026"
+    },
+    {
+      "title": "🏠 Custom Garage System",
+      "description": "Store and customize your vehicles in GTA Online style garages. Multiple garage locations available across Los Santos!",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "date": "5/8/2026"
+    },
+    {
+      "title": "💰 Bank Heists & Jewelry Robberies",
+      "description": "Plan and execute high-stakes heists with your crew. Fleeca Bank, Pacific Standard, and Jewelry Store robberies available.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/stanverv2gif-ezgif.com-optimize.gif",
+      "date": "5/8/2026"
+    }
+  ],
+
+  "events": [
+    {
+      "title": "🎊 Server Launch Event",
+      "description": "Join us for our grand opening event! Free starter packs, double XP, and special rewards for new players!",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "date": "5/8/2026"
+    },
+    {
+      "title": "🏎️ Car Show Event",
+      "description": "Show off your custom vehicles and win prizes! Best customization wins exclusive rewards.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/stanverv2gif-ezgif.com-optimize.gif",
+      "date": "5/15/2026"
+    },
+    {
+      "title": "🎯 PvP Tournament",
+      "description": "Test your skills in our arena combat system. Enter the Cops vs Robbers arena for glory and rewards!",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/Emoji.gif",
+      "date": "5/22/2026"
+    },
+    {
+      "title": "💎 Money Drop Event",
+      "description": "Random money drops across the city! Keep an eye on our Discord for announcements.",
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "date": "Weekly"
+    }
+  ],
+
+  "gallery": [
+    {
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "caption": "Los Santos Skyline"
+    },
+    {
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/stanverv2gif-ezgif.com-optimize.gif",
+      "caption": "Custom Vehicles"
+    },
+    {
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/Emoji.gif",
+      "caption": "Heist Action"
+    },
+    {
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/1LoadingScreenThumbnail.png",
+      "caption": "Gang Wars"
+    },
+    {
+      "image": "https://r2.fivemanage.com/egIfenr31HG7UeqR4GDz5/stanverv2gif-ezgif.com-optimize.gif",
+      "caption": "Custom Garages"
+    }
+  ],
+
+  "keybinds": [
+    {
+      "key": "F1",
+      "action": "Open Admin Menu"
+    },
+    {
+      "key": "F2",
+      "action": "Toggle Noclip (Admin)"
+    },
+    {
+      "key": "F3",
+      "action": "Open Vehicle Menu"
+    },
+    {
+      "key": "F4",
+      "action": "Open Phone"
+    },
+    {
+      "key": "F5",
+      "action": "Open vMenu"
+    },
+    {
+      "key": "F6",
+      "action": "Open Mechanic Tablet"
+    },
+    {
+      "key": "F7",
+      "action": "Open Gang Menu"
+    },
+    {
+      "key": "F8",
+      "action": "Open Cops vs Robbers"
+    },
+    {
+      "key": "F9",
+      "action": "Toggle HUD"
+    },
+    {
+      "key": "F10",
+      "action": "Open Phantom Main Menu"
+    },
+    {
+      "key": "F11",
+      "action": "Cycle Voice Proximity"
+    },
+    {
+      "key": "F12",
+      "action": "Open Player List"
+    },
+    {
+      "key": "NUMPAD0",
+      "action": "Weapon Wheel"
+    },
+    {
+      "key": "E",
+      "action": "Interact"
+    },
+    {
+      "key": "X",
+      "action": "Hands Up / Cancel Emote"
+    },
+    {
+      "key": "B",
+      "action": "Toggle Seatbelt"
+    },
+    {
+      "key": "G",
+      "action": "Toggle Engine"
+    },
+    {
+      "key": "L",
+      "action": "Toggle Vehicle Lock"
+    },
+    {
+      "key": "C",
+      "action": "Toggle Cruise Control"
+    },
+    {
+      "key": "LMENU",
+      "action": "Talk over Radio"
+    },
+    {
+      "key": "SHIFT",
+      "action": "Tackle Someone"
+    },
+    {
+      "key": "P",
+      "action": "Open Scoreboard"
+    },
+    {
+      "key": "Z",
+      "action": "Toggle Pointing"
+    },
+    {
+      "key": "K",
+      "action": "Open Police MDT"
+    },
+    {
+      "key": "O",
+      "action": "Exit Bodycam"
+    },
+    {
+      "key": "Y",
+      "action": "Answer Phone Call"
+    },
+    {
+      "key": "J",
+      "action": "Decline Phone Call"
+    },
+    {
+      "key": "I",
+      "action": "Open Inventory"
+    },
+    {
+      "key": "T",
+      "action": "Enable Targeting / Toggle Chat"
+    },
+    {
+      "key": "M",
+      "action": "Open Map / Phone"
+    },
+    {
+      "key": "Q",
+      "action": "Aim Radar Gun"
+    },
+    {
+      "key": "UP",
+      "action": "Increase Radar Range"
+    },
+    {
+      "key": "DOWN",
+      "action": "Decrease Radar Range"
+    },
+    {
+      "key": "NUMPAD5",
+      "action": "Open Emote Menu"
+    }
+  ],
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "5/8/2026",
+      "changes": [
+        "Initial server launch",
+        "Added custom weapon wheel system",
+        "Implemented vehicle calling menu",
+        "Added GTA Online style garages",
+        "Integrated bank heists and jewelry robberies",
+        "Added gang territory wars system",
+        "Implemented cops vs robbers arena",
+        "Added custom HUD and scoreboard",
+        "Integrated Tuff Scripts suite",
+        "Added multicharacter system"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "5/8/2026",
+      "changes": [
+        "Fixed spawn sequence for smooth character entry",
+        "Improved multicharacter UI with React build",
+        "Fixed inventory integration for weapons",
+        "Added vehicle calling menu for owned/rented cars",
+        "Improved loading screen with custom branding",
+        "Added staff team section",
+        "Added changelog system",
+        "Fixed syntax errors in phantom_core"
+      ]
+    }
+  ],
+
+  "songs": [
+    {
+      "title": "Phantom World Theme",
+      "artist": "Dracula",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Los Santos Nights",
+      "artist": "GTAV Radio",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Heist Planning",
+      "artist": "Movie Score",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Street Racing",
+      "artist": "GTAV OST",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Gang Wars",
+      "artist": "Action Music",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Chill Vibes",
+      "artist": "Lo-Fi Beats",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Police Chase",
+      "artist": "GTAV Soundtrack",
+      "image": "song.png",
+      "file": "song.mp3"
+    },
+    {
+      "title": "Money Talk",
+      "artist": "Hip Hop",
+      "image": "song.png",
+      "file": "song.mp3"
+    }
+  ]
+}

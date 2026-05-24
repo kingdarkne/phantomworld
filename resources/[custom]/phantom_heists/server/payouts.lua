@@ -1,0 +1,2 @@
+-- Payout functions (shared with main.lua)
+-- Already implemented in server/main.lua

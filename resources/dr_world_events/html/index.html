@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Events</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>🌍 World Events</h1>
+                <button class="close-btn" onclick="closeMenu()">✕</button>
+            </div>
+            
+            <div class="events-grid">
+                <div class="event-card">
+                    <div class="event-icon">🌋</div>
+                    <h3>Earthquake</h3>
+                    <p>Shake the entire city with a massive earthquake. Players will experience screen shake and vehicle instability.</p>
+                    <button id="btn-earthquake" class="trigger-btn" onclick="triggerEvent('earthquake')">Trigger Earthquake</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">💥</div>
+                    <h3>Explosion</h3>
+                    <p>Create an explosion at your current location. Useful for special events or chaos.</p>
+                    <button id="btn-explosion" class="trigger-btn" onclick="triggerEvent('explosion')">Trigger Explosion</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">⚡</div>
+                    <h3>Lightning Storm</h3>
+                    <p>Random lightning strikes across the map with thunder and screen shake. Lasts 1 hour.</p>
+                    <button id="btn-lightning" class="trigger-btn" onclick="triggerEvent('lightning')">Trigger Lightning</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🌧️</div>
+                    <h3>Acid Rain</h3>
+                    <p>Dangerous acid rain that damages vehicles and players. Lasts 1 hour.</p>
+                    <button id="btn-acidrain" class="trigger-btn" onclick="triggerEvent('acidrain')">Trigger Acid Rain</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🔥</div>
+                    <h3>Heat Wave</h3>
+                    <p>Extreme heat causing vehicle engine damage. Lasts 1 hour.</p>
+                    <button id="btn-heatwave" class="trigger-btn" onclick="triggerEvent('heatwave')">Trigger Heat Wave</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🏜️</div>
+                    <h3>Sandstorm</h3>
+                    <p>Severe sandstorm with reduced visibility. Lasts 1 hour.</p>
+                    <button id="btn-sandstorm" class="trigger-btn" onclick="triggerEvent('sandstorm')">Trigger Sandstorm</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🌫️</div>
+                    <h3>Dense Fog</h3>
+                    <p>Extremely low visibility with spooky atmosphere. Lasts 1 hour.</p>
+                    <button id="btn-fog" class="trigger-btn" onclick="triggerEvent('fog')">Trigger Fog</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">💡</div>
+                    <h3>Blackout</h3>
+                    <p>City-wide power failure, all lights go out. Lasts 1 hour.</p>
+                    <button id="btn-blackout" class="trigger-btn" onclick="triggerEvent('blackout')">Trigger Blackout</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">☄️</div>
+                    <h3>Meteor Shower</h3>
+                    <p>Meteors falling from the sky with explosions. Lasts 1 hour.</p>
+                    <button id="btn-meteor" class="trigger-btn" onclick="triggerEvent('meteor')">Trigger Meteor Shower</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🌪️</div>
+                    <h3>Tornado</h3>
+                    <p>Tornado pulls vehicles and players. Seek shelter! Lasts 1 hour.</p>
+                    <button id="btn-tornado" class="trigger-btn" onclick="triggerEvent('tornado')">Trigger Tornado</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">⚡</div>
+                    <h3>EMP Blast</h3>
+                    <p>Disables all vehicles temporarily. Lasts 5 minutes.</p>
+                    <button id="btn-emp" class="trigger-btn" onclick="triggerEvent('emp')">Trigger EMP</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🌍</div>
+                    <h3>Gravity Anomaly</h3>
+                    <p>Reduced gravity allows higher jumps. Lasts 1 hour.</p>
+                    <button id="btn-gravity" class="trigger-btn" onclick="triggerEvent('gravity')">Trigger Gravity</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">⏱️</div>
+                    <h3>Slow Motion</h3>
+                    <p>Time moves slower for everyone. Lasts 5 minutes.</p>
+                    <button id="btn-slowmo" class="trigger-btn" onclick="triggerEvent('slowmo')">Trigger Slow Mo</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">⬇️</div>
+                    <h3>High Gravity</h3>
+                    <p>Increased gravity slows movement. Lasts 1 hour.</p>
+                    <button id="btn-highgravity" class="trigger-btn" onclick="triggerEvent('highgravity')">Trigger High Gravity</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🚗</div>
+                    <h3>Vehicle Chaos</h3>
+                    <p>All vehicles go crazy with random actions. Lasts 5 minutes.</p>
+                    <button id="btn-vehiclechaos" class="trigger-btn" onclick="triggerEvent('vehiclechaos')">Trigger Vehicle Chaos</button>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-icon">🚔</div>
+                    <h3>Police Pursuit</h3>
+                    <p>Massive police response across the city. Lasts 5 minutes.</p>
+                    <button id="btn-police" class="trigger-btn" onclick="triggerEvent('police')">Trigger Police Pursuit</button>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Active Events</h3>
+                <div class="event-list">
+                    <div class="event-item">
+                        <span class="event-status active">●</span>
+                        <span>Random Earthquakes (6-12h intervals)</span>
+                    </div>
+                    <div class="event-item">
+                        <span class="event-status active">●</span>
+                        <span>Car Explosion on High Jumps</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

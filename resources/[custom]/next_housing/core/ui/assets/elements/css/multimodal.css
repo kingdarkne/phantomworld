@@ -1,0 +1,1146 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+.pap-modal {
+    z-index: 10050;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    
+}
+
+.pap-modal.hidden {
+    display: none !important;
+    pointer-events: none;
+}
+
+
+.pap-modal-overlay {
+    display: none;
+    
+}
+
+
+.pap-modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    animation: none;
+    box-shadow: none;
+}
+
+
+.pap-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    height: auto;
+    flex-shrink: 0;
+}
+
+
+.pap-modal-close,
+.pap-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+.pap-modal-close:hover,
+.pap-close-btn:hover {
+    color: #fff;
+}
+
+.pap-modal-header .pap-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin: 0;
+}
+
+.pap-modal-header .pap-title:hover {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+}
+
+.pap-modal-header .pap-subtitle {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+
+.pap-modal-body {
+    padding: 32px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pap-modal-content .multimodal-context-nav-real {
+    flex-shrink: 0;
+}
+
+.pap-modal-content .multimodal-context-nav-real > .tab-bar,
+.pap-modal-content .multimodal-context-nav-real > .job-tabs,
+.pap-modal-content .multimodal-context-nav-real > .pap-tabs,
+.pap-modal-content .multimodal-context-nav-real > .wardrobe-navigation {
+    opacity: 1 !important;
+    animation: none !important;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+.pap-modal-content.has-context-nav .pap-modal-header {
+    border-bottom: none;
+}
+
+.pap-modal-content.has-context-nav .pap-modal-body {
+    padding-top: 0;
+}
+
+.pap-modal-content .multimodal-context-nav-real .tab-btn,
+.pap-modal-content .multimodal-context-nav-real .job-tab-btn,
+.pap-modal-content .multimodal-context-nav-real .pap-tab-btn,
+.pap-modal-content .multimodal-context-nav-real .wardrobe-nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 16px !important;
+    border-radius: 6px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-sizing: border-box;
+    white-space: nowrap;
+    line-height: 1 !important;
+    flex-shrink: 0;
+}
+
+.pap-modal-content .multimodal-context-nav-real .tab-btn > span,
+.pap-modal-content .multimodal-context-nav-real .job-tab-btn > span,
+.pap-modal-content .multimodal-context-nav-real .pap-tab-btn > span,
+.pap-modal-content .multimodal-context-nav-real .wardrobe-nav-item > span,
+.pap-modal-content .multimodal-context-nav-real .tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .job-tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .pap-tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .wardrobe-nav-item > i {
+    line-height: 1 !important;
+}
+
+.pap-modal-content .multimodal-context-nav-real .tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .job-tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .pap-tab-btn > i,
+.pap-modal-content .multimodal-context-nav-real .wardrobe-nav-item > i {
+    font-size: 12px !important;
+}
+
+.pap-modal-content .multimodal-context-nav-real .multimodal-nav-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0 12px;
+    border-radius: 6px;
+    height: 34px;
+    min-height: 34px;
+    box-sizing: border-box;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: none;
+}
+
+.pap-modal-content .multimodal-context-nav-real .multimodal-nav-back-btn i {
+    font-size: 11px;
+}
+
+.pap-modal-content .multimodal-context-nav-real .multimodal-nav-back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+
+.pap-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+
+.pap-modal-content.multimodal-message-modal .pap-modal-body {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.pap-modal-content.multimodal-message-modal .pap-prompt-label {
+    width: 100%;
+    margin: 0;
+    text-align: center !important;
+    line-height: 1.5;
+}
+
+.pap-modal-content.multimodal-message-modal .pap-modal-footer {
+    justify-content: stretch;
+    flex-wrap: nowrap;
+    margin: 0 -32px;
+    padding: 4px 32px 24px;
+    border-top: none;
+    background: transparent;
+    gap: 10px;
+}
+
+.pap-modal-content.multimodal-message-modal .pap-modal-footer .pap-btn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+
+.multimodal-footer-host {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.multimodal-footer-host > .pap-modal-footer.pap-modal-footer-integrated {
+    margin-top: auto;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 12px 0 0;
+    border-top: none;
+    background: transparent;
+}
+
+
+.pap-modal-content.pap-form-modal .pap-modal-body {
+    gap: 0;
+    padding-bottom: 20px;
+    overflow-x: hidden;
+}
+
+.pap-modal-content.pap-form-modal .agency-modal-main-block,
+.pap-modal-content.pap-form-modal .pap-form-main-block {
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 12px;
+}
+
+.pap-modal-content.pap-form-modal .pap-property-info-box {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 10px;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pap-modal-content.pap-form-modal .pap-property-info-box .pap-info-row {
+    gap: 8px;
+}
+
+.pap-modal-content.pap-form-modal .pap-property-info-box .pap-info-row span {
+    min-height: 36px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.pap-modal-content.pap-form-modal .pap-info-label {
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.pap-modal-content.pap-form-modal .pap-info-value {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pap-modal-content.pap-form-modal .pap-form-group {
+    margin-bottom: 12px;
+}
+
+.pap-modal-content.pap-form-modal .pap-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.pap-modal-content.pap-form-modal .pap-form-control {
+    min-height: 42px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.42);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pap-modal-content.pap-form-modal .pap-form-control::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.pap-modal-content.pap-form-modal .pap-form-control:focus {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.pap-modal-content.pap-form-modal textarea.pap-form-control {
+    min-height: 92px;
+    padding-top: 10px;
+    resize: vertical;
+}
+
+.pap-modal-footer.pap-form-modal-footer:not(.pap-modal-footer-integrated) {
+    justify-content: stretch;
+    flex-wrap: wrap;
+    margin: 0 -32px;
+    padding: 4px 32px 24px;
+    border-top: none;
+    background: transparent;
+    gap: 10px;
+}
+
+.pap-modal-footer.pap-form-modal-footer .pap-btn {
+    flex: 0 0 100%;
+    width: 100%;
+}
+
+
+.pap-form-group {
+    margin-bottom: 20px;
+}
+
+.pap-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pap-form-input,
+.pap-form-select,
+.pap-form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.pap-form-input:focus,
+.pap-form-select:focus,
+.pap-form-textarea:focus {
+    border-color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+
+.pap-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pap-btn.primary {
+    background: #fff;
+    color: #000;
+}
+
+.pap-btn.primary:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.pap-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pap-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pap-btn.danger {
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+    border-color: rgba(255, 68, 68, 0.2);
+}
+
+.pap-btn.danger:hover {
+    background: #ff4444;
+    color: #fff;
+}
+
+
+.pap-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pap-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.pap-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.agency-modal-main-block {
+    width: calc(100% + 64px);
+    max-width: none;
+    box-sizing: border-box;
+    margin: 0 -32px 0;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: #0E0E0E;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.pap-modal-content.agency-contract-modal .pap-modal-body,
+.pap-modal-content.house-details-modal .pap-modal-body {
+    gap: 0;
+    padding-bottom: 20px;
+}
+
+.pap-modal-content.agency-contract-modal .pap-modal-footer:not(.pap-modal-footer-integrated),
+.pap-modal-content.house-details-modal .pap-modal-footer:not(.pap-modal-footer-integrated) {
+    justify-content: stretch;
+    margin: 0 -32px;
+    padding: 4px 32px 24px;
+    border-top: none;
+}
+
+.pap-modal-content.agency-contract-modal .pap-modal-footer.pap-modal-footer-integrated,
+.pap-modal-content.house-details-modal .pap-modal-footer.pap-modal-footer-integrated {
+    justify-content: stretch;
+    margin: auto 0 0;
+    padding: 12px 0 0;
+    border-top: none;
+    background: transparent;
+}
+
+.pap-modal-content.agency-contract-modal .pap-modal-footer .agency-contract-btn,
+.pap-modal-content.house-details-modal .pap-modal-footer .agency-house-upload-btn {
+    flex: 0 0 100%;
+    width: 100%;
+}
+
+
+.agency-contract-create-modal {
+    gap: 16px;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.section-header.pap-main-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pap-modal .section-header.pap-main-block-header h3 {
+    margin: 0 !important;
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 13px !important;
+    color: var(--text) !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+}
+
+.agency-contract-info-title {
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.agency-contract-conditions-title {
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.agency-contract-house-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-bottom: 16px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.agency-contract-house-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.3);
+    min-height: 58px;
+}
+
+.agency-contract-house-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.agency-contract-house-value {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.agency-contract-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.agency-contract-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.agency-contract-field {
+    margin-bottom: 12px;
+}
+
+.agency-contract-field .pap-form-label {
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    margin-bottom: 7px;
+}
+
+.agency-contract-control {
+    min-height: 42px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.42);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.agency-contract-control::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.agency-contract-control:focus {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.pap-modal-footer .agency-contract-btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.pap-modal-footer.agency-contract-footer {
+    justify-content: stretch;
+    flex-wrap: nowrap;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+    position: relative;
+}
+
+.pap-modal-footer.agency-contract-footer.pap-modal-footer-integrated {
+    padding-top: 12px;
+    border-top: none;
+}
+
+.pap-modal-footer.agency-contract-footer .agency-contract-btn {
+    flex: 0 0 100%;
+    width: 100%;
+}
+
+@media (max-width: 720px) {
+    .agency-contract-house-grid,
+    .agency-contract-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .pap-modal-content.pap-form-modal .pap-property-info-box .pap-info-row {
+        grid-template-columns: 1fr;
+    }
+
+    .pap-modal-footer.agency-contract-footer {
+        flex-wrap: wrap;
+    }
+
+    .pap-modal-footer.agency-contract-footer .agency-contract-btn {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}
+
+
+.pap-modal-content.house-details-modal .pap-modal-body {
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.pap-modal-content.house-details-modal .pap-modal-body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.agency-house-details-main-block {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    gap: 12px;
+}
+
+.pap-modal-content.house-details-modal .agency-house-details-main-block {
+    gap: 8px;
+    padding-top: 10px;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+}
+
+.pap-modal-content.house-details-modal .agency-house-details-main-block::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pap-modal-content.house-details-modal .agency-house-details-main-block::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+}
+
+.pap-modal-content.house-details-modal .agency-house-details-main-block::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pap-modal-content.house-details-modal .agency-house-details-main-block > .section-header.pap-main-block-header {
+    margin-top: 0;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+}
+
+.agency-house-title-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.pap-main-block-header .agency-house-title-container {
+    width: auto;
+    margin-left: auto;
+    position: relative;
+    top: -2px;
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header.is-editing {
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header {
+    align-items: center;
+    position: relative;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header.is-editing h3.house-title-editing {
+    visibility: hidden;
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header.is-editing .agency-house-title-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% - 2px);
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    transform: translateY(-50%);
+}
+
+.pap-modal-content.house-details-modal .pap-main-block-header.is-editing .agency-house-title-container .house-title-input {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .house-title-input {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.42);
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .house-title-input:focus {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.56);
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .edit-house-title-btn,
+.pap-modal-content.house-details-modal .agency-house-title-container .save-house-title-btn,
+.pap-modal-content.house-details-modal .agency-house-title-container .cancel-house-title-btn {
+    width: 28px;
+    height: 28px;
+    margin-left: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .edit-house-title-btn {
+    background: rgba(0, 0, 0, 0.32);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .upload-house-title-btn {
+    width: auto;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 12px 0 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px !important;
+    background: rgba(0, 0, 0, 0.32);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .upload-house-title-btn span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .edit-house-title-btn:hover {
+    background: rgba(0, 0, 0, 0.46);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: #fff;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .edit-house-title-btn i,
+.pap-modal-content.house-details-modal .agency-house-title-container .save-house-title-btn i,
+.pap-modal-content.house-details-modal .agency-house-title-container .cancel-house-title-btn i,
+.pap-modal-content.house-details-modal .agency-house-title-container .upload-house-title-btn i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13.5px;
+    height: 13.5px;
+    line-height: 1;
+    font-size: 13.5px !important;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .upload-house-title-btn i {
+    margin-right: 2px;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .upload-house-title-btn:hover {
+    background: rgba(0, 0, 0, 0.46);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: #fff;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container #upload-image-btn.is-uploading {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .save-house-title-btn {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .save-house-title-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.42);
+    color: #fff;
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .cancel-house-title-btn {
+    background: rgba(0, 0, 0, 0.46);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-modal-content.house-details-modal .agency-house-title-container .cancel-house-title-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.agency-house-title-container .house-title-display {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.agency-house-title-container .house-title-input {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+}
+
+.agency-house-images-container {
+    min-height: 120px;
+    padding: 0;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.agency-house-images-container .house-images-grid {
+    margin-top: 2px;
+}
+
+.agency-house-images-container .no-images {
+    margin-top: 2px;
+}
+
+.agency-house-details-info {
+    gap: 10px;
+}
+
+.agency-house-details-info .modal-detail-grid {
+    gap: 8px;
+}
+
+.agency-house-details-info .modal-detail-row:not(.pap-warning) {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 11px 13px;
+    align-items: center;
+}
+
+.agency-house-details-info .modal-detail-label {
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.agency-house-details-info .modal-detail-value {
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.25;
+}
+
+.agency-house-details-info .modal-detail-row.pap-warning .modal-detail-label,
+.agency-house-details-info .modal-detail-row.pap-warning .modal-detail-value {
+    color: var(--text);
+}
+
+.agency-house-upload-btn {
+    width: 100%;
+    min-height: 42px;
+}
+
+
+.pap-btn.multimodal-action-btn {
+    width: 100%;
+    min-height: 42px;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #fff !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.pap-btn.multimodal-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    transform: none !important;
+}
+
+.pap-modal-content.agency-house-buy-modal .pap-modal-body {
+    gap: 0;
+    padding-bottom: 20px;
+}
+
+.pap-modal-content.agency-house-buy-modal .pap-modal-footer:not(.pap-modal-footer-integrated) {
+    justify-content: stretch;
+    margin: 0 -32px;
+    padding: 4px 32px 24px;
+    border-top: none;
+    background: transparent;
+}
+
+.pap-modal-content.agency-house-buy-modal .pap-modal-footer.pap-modal-footer-integrated {
+    justify-content: stretch;
+    margin: auto 0 0;
+    padding: 12px 0 0;
+    border-top: none;
+    background: transparent;
+}
+
+.agency-house-buy-main-block {
+    gap: 14px;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.agency-house-buy-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.agency-house-buy-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 58px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.agency-house-buy-summary-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.agency-house-buy-summary-value {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.agency-house-buy-summary-value.agency-house-buy-summary-price {
+    color: #fff;
+}
+
+.agency-house-buy-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.agency-house-buy-section-label {
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.agency-house-buy-btn {
+    width: 100%;
+}
+
+.agency-house-buy-btn i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    font-size: 13px;
+}
+
+@media (max-width: 720px) {
+    .agency-house-buy-summary {
+        grid-template-columns: 1fr;
+    }
+}

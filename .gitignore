@@ -1,0 +1,68 @@
+# =========================
+# FiveM server — do NOT commit runtime / secrets / huge assets
+# =========================
+
+# Runtime cache (often 10–20+ GB)
+cache/
+tmp/
+
+# txAdmin local data
+txData/
+
+# Local embedded DB (RocksDB)
+db/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Node (resource build folders)
+**/node_modules/
+**/.yarn/
+**/dist/
+**/.cache/
+
+# Secrets — keep local only; use *.example templates in repo
+mysql.cfg
+secrets.cfg
+.env
+.env.*
+
+# =========================
+# Accidental Linux crash dumps (NOT game scripts)
+resources/core
+resources/y_burgershot-main/core
+**/qb-core-legacy/core
+
+# Duplicate QB tree (canonical copy lives in resources/[qb]/)
+resources/\[Newmaps\]/\[qb\]/
+
+# Large map packs — re-upload via FTP after clone
+resources/\[defaultmaps\]/
+
+# Large asset packs (GitHub limit: 100 MB per file, ~1 GB repo recommended)
+# Brackets must be escaped in .gitignore
+resources/\[vehicles\]/
+resources/\[clothing\]/
+resources/\[Graphics\]/
+resources/AzuraPlatV2-Branded/
+resources/FiveM Vehicle Pack/
+resources/cars2/
+resources/Audio_Pack/
+
+# FXServer runtime (re-download on host)
+alpine/
+
+# Local shell history
+.replxx_history
+
+# Duplicate / backup trees
+**/*__duplicate_backup/
+**/*_backup/

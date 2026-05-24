@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OXO Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="app" class="wrapper hidden">
+    <div id="self-duty-graph" class="self-duty-graph hidden"></div>
+    <header class="top">
+        <div class="logo">
+            <img class="logo-img" src="https://ik.imagekit.io/onono/Skjermbilde_2025-12-08_110947-Photoroom_optimized.png" alt="Logo">
+            <span class="logo-text"></span>
+        </div>
+        <nav class="tabs">
+            <button data-tab="self" class="active"><i class="fa-solid fa-user-gear"></i><span>Self</span></button>
+            <button data-tab="players"><i class="fa-solid fa-users"></i><span>Players</span></button>
+            <button data-tab="server"><i class="fa-solid fa-server"></i><span>Server</span></button>
+            <button data-tab="vehicle"><i class="fa-solid fa-car"></i><span>Vehicles</span></button>
+            <button data-tab="bans"><i class="fa-solid fa-ban"></i><span>Bans</span></button>
+            <button data-tab="staff"><i class="fa-solid fa-user-tie"></i><span>Staff</span></button>
+            <button data-tab="roles"><i class="fa-solid fa-id-badge"></i><span>Roles</span></button>
+            <button data-tab="statistics"><i class="fa-solid fa-chart-line"></i><span>Statistics</span></button>
+            <button data-tab="dev"><i class="fa-solid fa-code"></i><span>Dev</span></button>
+            <button data-tab="zones"><i class="fa-solid fa-map"></i><span>Zones</span></button>
+            <button data-tab="monitor"><i class="fa-solid fa-heart-pulse"></i><span>Monitor</span></button>
+            <button data-tab="console"><i class="fa-solid fa-terminal"></i><span>Console</span></button>
+        </nav>
+        <img id="header-watermark" src="https://ik.imagekit.io/onono/norse_development_logo.png" alt="Norse Development Logo">
+        <button id="close">×</button>
+    </header>
+
+    <div id="role-badge" class="role-badge hidden">
+        <div class="role-badge-dot"></div>
+        <div class="role-badge-text">
+            <div class="role-badge-label">Your role</div>
+            <div class="role-badge-name" id="role-badge-name">Staff</div>
+            <div class="role-badge-label">Duty time</div>
+            <div class="role-badge-name role-badge-hours" id="role-badge-hours">0 h</div>
+        </div>
+    </div>
+
+    <main class="content">
+        <section data-tab-content="self" class="tab active">
+            <div class="self-duty-top">
+                <button id="self-duty-btn" class="self-duty-layout" data-self="duty"><i class="fa-solid fa-user-shield"></i><span>Toggle Duty</span></button>
+            </div>
+            <div class="self-player-stats-card self-player-stats-card-off">
+                <div class="self-player-stats-title"><span id="self-player-name">Player</span> <span id="self-player-label">Staff Stats</span></div>
+            </div>
+            <div id="self-offduty-card" class="self-offduty-card hidden">
+                <div class="self-offduty-header">
+                    <div class="self-offduty-icon"><i class="fa-solid fa-user-slash"></i></div>
+                    <div class="self-offduty-title">
+                        <div class="self-offduty-label">You&#39;re</div>
+                        <div class="self-offduty-status">OFF duty</div>
+                    </div>
+                </div>
+                <div class="self-offduty-main">
+                    <div class="self-offduty-col self-offduty-col-duty">
+                        <div class="self-offduty-line" id="self-offduty-total">Total duty: 0.0 h</div>
+                        <div class="self-offduty-line" id="self-offduty-lastshift">Last shift: -</div>
+                        <div class="self-offduty-line self-offduty-muted" id="self-offduty-laston">Last on duty: never</div>
+                        <div class="self-offduty-sub hidden" id="self-offduty-dutyextra"></div>
+                        <div class="self-offduty-sub hidden" id="self-offduty-moneystats"></div>
+                    </div>
+                    <div class="self-offduty-col self-offduty-col-prison">
+                        <div class="self-offduty-sub hidden" id="self-offduty-banstats"></div>
+                    </div>
+                    <div class="self-offduty-col self-offduty-col-mod">
+                        <div class="self-offduty-sub hidden" id="self-offduty-modstats"></div>
+                        <div class="self-offduty-sub hidden" id="self-offduty-trollstats"></div>
+                        <div class="self-offduty-sub hidden" id="self-offduty-controlstats"></div>
+                        <div class="self-offduty-sub hidden" id="self-offduty-vehstats"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="self-layout">
+                <div class="self-col">
+                    <div class="self-section">
+                        <h3 class="players-section-title">Health</h3>
+                        <div class="row">
+                            <button data-self="heal"><i class="fa-solid fa-notes-medical"></i><span>Heal</span></button>
+                            <button data-self="revive"><i class="fa-solid fa-heart-pulse"></i><span>Revive</span></button>
+                            <button id="self-stress-btn" data-self="stress"><i class="fa-solid fa-brain"></i><span>Stress</span></button>
+                            <button id="self-wanted-btn" data-self="wanted"><i class="fa-solid fa-star"></i><span>Reduce Wanted</span></button>
+                        </div>
+                    </div>
+                    <div class="self-section">
+                        <h3 class="players-section-title">Movement</h3>
+                        <div class="row">
+                            <button id="self-noclip-btn" data-self="noclip"><i class="fa-solid fa-shoe-prints"></i><span>Toggle Noclip</span></button>
+                        </div>
+                        <div class="row self-noclip-speed-row">
+                            <label for="noclip-speed">Noclip speed</label>
+                            <input id="noclip-speed" type="range" min="0.01" max="5" value="3" step="0.01">
+                            <span id="noclip-speed-value" class="muted">3x</span>
+                        </div>
+                        <div class="row">
+                            <button id="self-superjump-btn" data-self="superjump"><i class="fa-solid fa-arrow-up"></i><span>Toggle Super Jump</span></button>
+                        </div>
+                        <div class="row">
+                            <button id="self-runfast2x-btn" data-self="runfast2x"><i class="fa-solid fa-person-running"></i><span>Run Fast 2x</span></button>
+                            <button id="self-tp-marked-btn" data-self="tpMarked"><i class="fa-solid fa-location-dot"></i><span>Teleport to Marker</span></button>
+                        </div>
+                        <div class="row">
+                            <button id="self-tp-marked-noveh-btn" data-self="tpMarkedNoVehicle"><i class="fa-solid fa-location-dot"></i><span>Teleport to Marker (No Vehicle)</span></button>
+                        </div>
+                    </div>
+                    <div class="self-section">
+                        <h3 class="players-section-title">Visibility</h3>
+                        <div class="row">
+                            <button id="self-invis-btn" data-self="invisible"><i class="fa-solid fa-user-ninja"></i><span>Toggle Invisible</span></button>
+                            <button id="self-nametag-btn" data-self="nametag"><i class="fa-solid fa-id-badge"></i><span>Toggle Name Tag</span></button>
+                            <button id="self-stafftag-btn" data-self="stafftag"><i class="fa-solid fa-user-tie"></i><span>Toggle Staff Tag</span></button>
+                        </div>
+                        <div class="row">
+                            <button id="self-livemap-btn"><i class="fa-solid fa-location-dot"></i><span>Live Map Blips</span></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="self-col">
+                    <div class="self-section">
+                        <h3 class="players-section-title">Protection</h3>
+                        <div class="row">
+                            <button id="self-inv-btn" data-self="invincible"><i class="fa-solid fa-shield-halved"></i><span>Toggle Invincible</span></button>
+                            <button id="self-armor-btn" data-self="armor"><i class="fa-solid fa-shield"></i><span>Refill Armor</span></button>
+                        </div>
+                        <div class="row">
+                            <button id="self-ammo-btn" data-self="ammo"><i class="fa-solid fa-infinity"></i><span>Unlimited Ammo</span></button>
+                            <button id="self-onepunch-btn"><i class="fa-solid fa-hand-fist"></i><span>One Punch</span></button>
+                        </div>
+                    </div>
+                    <div class="self-section">
+                        <h3 class="players-section-title">Appearance</h3>
+                        <div class="row">
+                            <button data-self="skin"><i class="fa-solid fa-user-astronaut"></i><span>Open Skin Menu</span></button>
+                            <button id="self-pedmenu-btn" data-self="pedMenu"><i class="fa-solid fa-users-rectangle"></i><span>Ped Menu</span></button>
+                        </div>
+                        <div class="row">
+                            <input id="self-ped" placeholder="Ped (mp_m_freemode_01)">
+                            <button id="self-ped-clear-btn"><i class="fa-solid fa-user-slash"></i><span>Clear Ped</span></button>
+                            <button id="self-ped-btn"><i class="fa-solid fa-user"></i><span>Set Ped</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <input id="staff-name" placeholder="Staff display name">
+                <button id="staff-name-btn"><i class="fa-solid fa-pen"></i><span>Set Name</span></button>
+            </div>
+            <div class="row" id="self-job-row">
+                <input id="self-job-name" placeholder="Job (e.g. police)">
+                <select id="self-job-grade">
+                    <option value="0">Grade 0</option>
+                    <option value="1">Grade 1</option>
+                    <option value="2">Grade 2</option>
+                    <option value="3">Grade 3</option>
+                    <option value="4">Grade 4</option>
+                    <option value="5">Grade 5</option>
+                    <option value="6">Grade 6</option>
+                </select>
+                <button id="self-job-btn"><i class="fa-solid fa-briefcase"></i><span>Set Job</span></button>
+            </div>
+            <div class="row" id="self-money-row">
+                <select id="self-money-account">
+                    <option value="money">Money/Cash</option>
+                    <option value="bank">Bank</option>
+                    <option value="black_money">Black Money</option>
+                </select>
+                <input id="self-money-amount" type="number" min="1" placeholder="Amount">
+                <button id="self-money-btn"><i class="fa-solid fa-sack-dollar"></i><span>Add Funds</span></button>
+            </div>
+            <div class="row">
+                <input id="rp-first-name" placeholder="First name">
+                <input id="rp-last-name" placeholder="Last name">
+                <button id="rp-name-btn"><i class="fa-solid fa-user-pen"></i><span>Set RP Name</span></button>
+                <button id="rp-name-reset-btn"><i class="fa-solid fa-rotate-left"></i><span>Reset</span></button>
+            </div>
+        </section>
+
+        <section data-tab-content="players" class="tab">
+            <h2>Players</h2>
+            <div class="split">
+                <div class="list">
+                    <div class="list-head">
+                        <span>ID</span><span>Name</span><span>Ping</span>
+                    </div>
+                    <div id="players"></div>
+                    <button id="players-refresh">Refresh</button>
+                </div>
+                <div class="panel players-panel">
+                    <div class="selected-player"><span class="selected-label">Selected:</span> <span id="sel-player">None</span></div>
+                    <h3 id="players-moderation-header" class="players-section-title">Moderation</h3>
+                    <div class="mod-grid" id="players-moderation-grid">
+                        <div class="row">
+                            <button data-player="kick"><i class="fa-solid fa-person-running"></i><span>Kick</span></button>
+                            <input id="kick-reason" placeholder="Reason">
+                        </div>
+                        <div class="row">
+                            <button data-player="ban"><i class="fa-solid fa-ban"></i><span>Ban</span></button>
+                            <input id="ban-min" type="number" placeholder="Minutes (0=perm)">
+                            <input id="ban-reason" placeholder="Reason">
+                        </div>
+                        <div class="row mod-full">
+                            <button data-player="prisonBan"><i class="fa-solid fa-lock"></i><span>Prison Ban</span></button>
+                            <span>Time is auto-calculated from offences & history</span>
+                        </div>
+                        <div class="row mod-full prisonban-row">
+                            <div class="prisonban-groups">
+                                <div class="offence-col">
+                                    <div class="offence-group-label">General Server Rules</div>
+                                    <button type="button" class="offence-pill" data-offence="rdm">No Random Deathmatching (RDM)</button>
+                                    <button type="button" class="offence-pill" data-offence="teaming">Teaming with opposing roles</button>
+                                    <button type="button" class="offence-pill" data-offence="exploiting">Exploiting glitches or bugs</button>
+                                    <button type="button" class="offence-pill" data-offence="combat_logging">Combat logging</button>
+                                    <button type="button" class="offence-pill" data-offence="ban_evasion">Ban evasion</button>
+                                    <button type="button" class="offence-pill" data-offence="false_report">False reports or slander</button>
+                                    <button type="button" class="offence-pill" data-offence="impersonation">Impersonation</button>
+                                    <button type="button" class="offence-pill" data-offence="advertising">Unauthorized advertising</button>
+                                    <button type="button" class="offence-pill" data-offence="disrespect">Disrespect / toxicity</button>
+                                </div>
+                                <div class="offence-col">
+                                    <div class="offence-group-label">Ambulance Rules</div>
+                                    <button type="button" class="offence-pill" data-offence="amb_force">Ambulance - unlawful lethal force</button>
+                                    <button type="button" class="offence-pill" data-offence="amb_carjack">Ambulance - carjacking</button>
+                                    <button type="button" class="offence-pill" data-offence="amb_property">Ambulance - property damage</button>
+                                    <button type="button" class="offence-pill" data-offence="amb_conduct">Ambulance - professional conduct</button>
+
+                                    <div class="offence-group-label">Police Rules</div>
+                                    <button type="button" class="offence-pill" data-offence="cop_force">Police - excessive lethal force</button>
+                                    <button type="button" class="offence-pill" data-offence="cop_carjack">Police - carjacking</button>
+                                    <button type="button" class="offence-pill" data-offence="cop_property">Police - property damage</button>
+                                    <button type="button" class="offence-pill" data-offence="cop_conduct">Police - professional conduct</button>
+                                </div>
+                                <div class="offence-col">
+                                    <div class="offence-group-label">Gangs / Graffiti / Meta</div>
+                                    <button type="button" class="offence-pill" data-offence="gangs_zip">Gang - illegal kidnapping / zip ties</button>
+                                    <button type="button" class="offence-pill" data-offence="graffiti">Graffiti rules violation</button>
+                                    <button type="button" class="offence-pill" data-offence="lying_staff">Lying to staff</button>
+
+                                    <div class="offence-group-label">Civilian / CnR Rules</div>
+                                    <button type="button" class="offence-pill" data-offence="civ_revenge">Revenge rule abuse</button>
+                                    <button type="button" class="offence-pill" data-offence="civ_property">Property defense abuse</button>
+                                    <button type="button" class="offence-pill" data-offence="civ_provoking">Provoking / trolling</button>
+                                    <button type="button" class="offence-pill" data-offence="civ_legal_troll">Legal trolling abuse</button>
+                                    <button type="button" class="offence-pill" data-offence="civ_assist_rdm">Assisting RDM / getaway driver</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mod-full">
+                            <input id="prisonban-notes" placeholder="Extra information (optional)">
+                        </div>
+                    </div>
+                    <section id="players-isolation-section" class="players-isolation-section">
+                        <div class="players-isolation-header">
+                            <h3 class="players-section-title">Isolation</h3>
+                            <p>Keep disruptive prisoners in solitary while their regular sentence is paused.</p>
+                        </div>
+                        <div class="players-isolation-actions">
+                            <div class="row isolation-row">
+                                <button data-player="isolation"><i class="fa-solid fa-door-closed"></i><span>Send to Isolation</span></button>
+                                <span>Time increases per offense: 1h, 2h, 3h, etc. Pauses prison sentence.</span>
+                            </div>
+                            <div class="row isolation-row">
+                                <button data-player="isolationPardon"><i class="fa-solid fa-door-open"></i><span>Pardon Isolation</span></button>
+                                <span>Release from isolation and return to prison.</span>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="quick-grid">
+                        <div class="quick-col" id="players-health-col">
+                            <h3 class="players-section-title">Health</h3>
+                            <button data-player="heal"><i class="fa-solid fa-notes-medical"></i><span>Heal</span></button>
+                            <button data-player="revive"><i class="fa-solid fa-heart-pulse"></i><span>Revive</span></button>
+                            <button data-player="kill"><i class="fa-solid fa-skull-crossbones"></i><span>Kill</span></button>
+                            <button data-player="stress"><i class="fa-solid fa-brain"></i><span>Clear Stress</span></button>
+                            <button data-player="wanted"><i class="fa-solid fa-star"></i><span>Reduce Wanted</span></button>
+                        </div>
+                        <div class="quick-col">
+                            <h3>Teleport</h3>
+                            <button data-player="bring"><i class="fa-solid fa-arrow-down"></i><span>Bring</span></button>
+                            <button data-player="goto"><i class="fa-solid fa-location-arrow"></i><span>Go To</span></button>
+                        </div>
+                        <div class="quick-col">
+                            <h3>Spectate</h3>
+                            <button data-player="spectate"><i class="fa-solid fa-eye"></i><span>Spectate</span></button>
+                            <button data-player="spectateStop"><i class="fa-solid fa-eye-slash"></i><span>Stop Spectate</span></button>
+                        </div>
+                    </div>
+                    <h3 id="players-control-header" class="players-section-title">Control</h3>
+                    <div class="grid" id="players-control-grid">
+                        <button data-player="freeze">Freeze</button>
+                        <button data-player="unfreeze">Unfreeze</button>
+                        <button data-player="noclip">Noclip</button>
+                        <button data-player="invincible">Invincible</button>
+                        <button data-player="invisible">Invisible</button>
+                    </div>
+                    <h3 id="players-money-header" class="players-section-title">Money</h3>
+                    <div class="row" id="players-money-stats"><span class="muted">Select a player to view balances.</span></div>
+                    <div class="row" id="players-money-row1">
+                        <select id="money-acc">
+                            <option value="money">Money/Cash</option>
+                            <option value="bank">Bank</option>
+                            <option value="black_money">Black</option>
+                        </select>
+                        <input id="money-amt" type="number" placeholder="Amount">
+                    </div>
+                    <div class="row" id="players-money-row2">
+                        <button data-player="giveMoney"><i class="fa-solid fa-circle-plus"></i><span>Give</span></button>
+                        <button data-player="removeMoney"><i class="fa-solid fa-circle-minus"></i><span>Remove</span></button>
+                    </div>
+                    <h3 id="players-inventory-header" class="players-section-title">Inventory</h3>
+                    <div class="row" id="players-inventory-row1">
+                        <button data-player="clearinv"><i class="fa-solid fa-trash"></i><span>Clear Inventory</span></button>
+                        <button data-player="checkinv"><i class="fa-solid fa-magnifying-glass"></i><span>Check Inventory</span></button>
+                        <button data-player="openinv"><i class="fa-solid fa-box-open"></i><span>Open Inventory</span></button>
+                        <button data-player="confiscateillegal"><i class="fa-solid fa-box-open"></i><span>Confiscate Illegal Items</span></button>
+                    </div>
+                    <div class="row" id="players-inventory-give-row">
+                        <input id="item-name" placeholder="Item name">
+                        <input id="item-count" type="number" placeholder="Count">
+                        <button data-player="giveItem"><i class="fa-solid fa-gift"></i><span>Give Item</span></button>
+                    </div>
+                    <h3 id="players-skin-header" class="players-section-title">Skin</h3>
+                    <button data-player="skin"><i class="fa-solid fa-user-astronaut"></i><span>Open Skin Menu</span></button>
+                    <h3 id="players-troll-header" class="players-section-title">Troll</h3>
+                    <div class="grid" id="players-troll-grid">
+                        <button data-player="troll_slap"><i class="fa-solid fa-hand-back-fist"></i><span>Slap</span></button>
+                        <button data-player="troll_launch"><i class="fa-solid fa-rocket"></i><span>Launch</span></button>
+                        <button data-player="troll_screen"><i class="fa-solid fa-eye"></i><span>Screen FX</span></button>
+                        <button data-player="troll_fire"><i class="fa-solid fa-fire"></i><span>Fire</span></button>
+                        <button data-player="troll_ufo"><i class="fa-solid fa-satellite-dish"></i><span>UFO Kidnap</span></button>
+                        <button data-player="troll_npc_kidnap"><i class="fa-solid fa-car-side"></i><span>NPC Kidnap</span></button>
+                        <button data-player="troll_animal"><i class="fa-solid fa-paw"></i><span>Animal Attack</span></button>
+                        <button data-player="troll_npcs"><i class="fa-solid fa-user-group"></i><span>NPC Attack</span></button>
+                        <button data-player="troll_clone"><i class="fa-solid fa-user-plus"></i><span>Clone Follow</span></button>
+                        <button data-player="troll_flipveh"><i class="fa-solid fa-car-burst"></i><span>Flip Vehicle</span></button>
+                        <button data-player="troll_slowwalk"><i class="fa-solid fa-person-walking"></i><span>Slow Walk</span></button>
+                        <button data-player="troll_cam2d"><i class="fa-solid fa-border-all"></i><span>2D Camera</span></button>
+                        <button data-player="troll_camflip"><i class="fa-solid fa-arrows-up-down"></i><span>Flip Camera</span></button>
+                        <button data-player="troll_mobhit"><i class="fa-solid fa-crosshairs"></i><span>Mob Hit</span></button>
+                    </div>
+                    <h3 id="players-communication-header" class="players-section-title">Communication</h3>
+                    <div class="row" id="players-communication-row1">
+                        <input id="pm-text" placeholder="Private message">
+                        <button data-player="message"><i class="fa-solid fa-envelope"></i><span>Send PM</span></button>
+                    </div>
+                    <div class="row">
+                        <input id="warn-text" placeholder="Warning message">
+                        <button data-player="warn"><i class="fa-solid fa-triangle-exclamation"></i><span>Warn</span></button>
+                    </div>
+                    <h3 id="players-job-header" class="players-section-title">Job</h3>
+                    <div class="row" id="players-job-row">
+                        <input id="job-name" placeholder="Job (e.g. police)">
+                        <input id="job-grade" type="number" placeholder="Grade (0)">
+                        <button data-player="setJob"><i class="fa-solid fa-briefcase"></i><span>Set Job</span></button>
+                    </div>
+                    <h3 id="players-history-header" class="players-section-title">History</h3>
+                    <div id="player-history">
+                        <div class="history-section">
+                            <div class="history-header">Bans</div>
+                            <div id="player-bans"></div>
+                        </div>
+                        <div class="history-section">
+                            <div class="history-header">Names</div>
+                            <div id="player-names"></div>
+                        </div>
+                        <div class="history-section">
+                            <div class="history-header">Actions</div>
+                            <div id="player-actions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="server" class="tab">
+            <h2>Server</h2>
+            <h3 class="players-section-title">Cleanup</h3>
+            <div class="grid">
+                <button data-server-clean="veh"><i class="fa-solid fa-car"></i><span>Vehicles</span></button>
+                <button data-server-clean="peds"><i class="fa-solid fa-user"></i><span>Peds</span></button>
+                <button data-server-clean="objs"><i class="fa-solid fa-cubes"></i><span>Objects</span></button>
+                <button data-server-clean="all"><i class="fa-solid fa-broom"></i><span>All</span></button>
+            </div>
+            <div class="row">
+                <input id="cleanup-auto-minutes" type="number" min="1" placeholder="Auto 'All' every (minutes)">
+                <button id="cleanup-auto-toggle"><i class="fa-solid fa-clock-rotate-left"></i><span>Auto All</span></button>
+            </div>
+            <h3 class="players-section-title">Weather</h3>
+            <div class="row">
+                <select id="weather">
+                    <option>EXTRASUNNY</option><option>CLEAR</option><option>CLOUDS</option>
+                    <option>SMOG</option><option>FOGGY</option><option>OVERCAST</option>
+                    <option>RAIN</option><option>THUNDER</option><option>SNOW</option>
+                </select>
+                <button id="weather-btn"><i class="fa-solid fa-cloud-sun"></i><span>Set</span></button>
+            </div>
+            <h3 class="players-section-title">Time</h3>
+            <div class="row">
+                <input id="time-hour" type="number" min="0" max="23" placeholder="Hour (0-23)">
+                <input id="time-minute" type="number" min="0" max="59" placeholder="Min (0-59)">
+                <button id="time-btn"><i class="fa-solid fa-clock"></i><span>Set Time</span></button>
+            </div>
+
+            <h3 class="players-section-title">World Density</h3>
+            <div class="row">
+                <label class="muted">Vehicles % <span id="world-density-veh-current" class="muted"></span></label>
+                <input id="world-density-veh" type="number" min="0" max="200" placeholder="0-200">
+                <button id="world-density-veh-btn"><i class="fa-solid fa-sliders"></i><span>Apply Vehicles</span></button>
+                <label class="muted">Peds % <span id="world-density-peds-current" class="muted"></span></label>
+                <input id="world-density-peds" type="number" min="0" max="200" placeholder="0-200">
+                <button id="world-density-btn"><i class="fa-solid fa-sliders"></i><span>Apply Peds</span></button>
+            </div>
+            <div id="world-density-status" class="muted">
+                <div id="world-density-veh-status"></div>
+                <div id="world-density-peds-status"></div>
+            </div>
+
+            <div class="server-comm-grid">
+                <div class="server-comm-col">
+                    <h3 class="players-section-title">Notification</h3>
+                    <div class="row">
+                        <input id="notify-text" placeholder="Notification text">
+                    </div>
+                    <div class="row">
+                        <button id="notify-btn"><i class="fa-solid fa-bell"></i><span>Notify</span></button>
+                    </div>
+                </div>
+                <div class="server-comm-col">
+                    <h3 class="players-section-title">Announcement</h3>
+                    <textarea id="announce" rows="3" placeholder="Announcement text"></textarea>
+                    <button id="announce-btn"><i class="fa-solid fa-bullhorn"></i><span>Send</span></button>
+                </div>
+            </div>
+            <h3 class="players-section-title">Chaos Events</h3>
+            <div class="row" id="chaos-row">
+                <select id="chaos-mode">
+                    <option value="quake">Earthquake</option>
+                    <option value="meteors">Meteors</option>
+                    <option value="tornado">Tornado</option>
+                </select>
+                <input id="chaos-intensity" type="number" min="1" max="5" value="3" placeholder="Intensity (1-5)">
+                <button id="chaos-run"><i class="fa-solid fa-bolt"></i><span>Run</span></button>
+            </div>
+
+            <h3 class="players-section-title">Screen Filters</h3>
+            <div class="row" id="screen-filters-row">
+                <select id="screen-filter-select">
+                    <option value="drug">Drug Trip</option>
+                    <option value="cinema">Cinema</option>
+                    <option value="noir">Noir</option>
+                </select>
+                <button id="screen-filter-apply"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Apply</span></button>
+                <button id="screen-filter-clear"><i class="fa-solid fa-eraser"></i><span>Clear</span></button>
+            </div>
+        </section>
+
+        <section data-tab-content="vehicle" class="tab">
+            <h2>Vehicles</h2>
+            <div class="veh-subtabs">
+                <button type="button" class="veh-subtab active" data-veh-subtab="tools"><i class="fa-solid fa-wrench"></i><span>Tools</span></button>
+                <button type="button" class="veh-subtab" data-veh-subtab="admin"><i class="fa-solid fa-car"></i><span>Admin Vehicles</span></button>
+            </div>
+
+            <div class="veh-subcontent active" data-veh-subcontent="tools">
+                <h3 class="players-section-title">Spawn</h3>
+                <div class="row">
+                    <input id="veh-model" placeholder="Model (adder)">
+                    <input id="veh-plate" placeholder="Plate (optional)">
+                    <button id="veh-spawn"><i class="fa-solid fa-car"></i><span>Spawn</span></button>
+                </div>
+                <h3 class="players-section-title">Actions</h3>
+                <div class="grid">
+                    <button data-veh="repair"><i class="fa-solid fa-wrench"></i><span>Repair</span></button>
+                    <button data-veh="deleteClosest"><i class="fa-solid fa-trash-can"></i><span>Delete Closest</span></button>
+                    <button data-veh="maxmods"><i class="fa-solid fa-screwdriver-wrench"></i><span>Max Mods</span></button>
+                    <button data-veh="maxfuel"><i class="fa-solid fa-gas-pump"></i><span>Max Fuel</span></button>
+                </div>
+                <h3 class="players-section-title">Plate &amp; Colors</h3>
+                <div class="row">
+                    <input id="veh-plate-new" placeholder="New Plate">
+                    <button data-veh="plate"><i class="fa-solid fa-rectangle-list"></i><span>Set Plate</span></button>
+                </div>
+                <div class="row">
+                    <input id="veh-col-pri" type="number" placeholder="Primary ID">
+                    <input id="veh-col-sec" type="number" placeholder="Secondary ID">
+                    <button data-veh="color"><i class="fa-solid fa-palette"></i><span>Set Colors</span></button>
+                </div>
+                <h3 class="players-section-title">Lock &amp; Torque</h3>
+                <div class="row">
+                    <button data-veh="lock"><i class="fa-solid fa-lock"></i><span>Lock</span></button>
+                    <button data-veh="unlock"><i class="fa-solid fa-unlock"></i><span>Unlock</span></button>
+                </div>
+                <div class="row">
+                    <input id="veh-torque" type="number" placeholder="Torque x2.0">
+                    <button data-veh="torque"><i class="fa-solid fa-gauge-high"></i><span>Set Torque</span></button>
+                </div>
+                <div class="veh-owned-header" style="display:flex;align-items:center;gap:8px;">
+                    <h3 class="players-section-title">Player Owned Vehicles</h3>
+                    <span id="veh-owned-player" class="muted">No player selected</span>
+                </div>
+                <div class="row">
+                    <button id="veh-owned-load"><i class="fa-solid fa-list"></i><span>Load selected player's vehicles</span></button>
+                </div>
+                <div class="list-head veh-owned-head-row">
+                    <span>Vehicle</span><span>Model</span><span>Category</span><span>Plate</span><span>Garage / State</span><span></span>
+                </div>
+                <div id="veh-owned-list" class="list"></div>
+                <h3 class="players-section-title">Gift Vehicle (Player)</h3>
+                <div class="row">
+                    <input id="veh-gift-model" placeholder="Model (adder)">
+                    <input id="veh-gift-plate" placeholder="Plate (optional)">
+                    <button id="veh-gift-btn"><i class="fa-solid fa-gift"></i><span>Gift to selected player</span></button>
+                </div>
+                <p class="muted">Uses the player selected in the Players tab.</p>
+            </div>
+
+            <div class="veh-subcontent" data-veh-subcontent="admin">
+                <h3 class="players-section-title">Search</h3>
+                <div class="veh-admin-search-row">
+                    <input id="veh-admin-search" placeholder="Search by name, model or category">
+                </div>
+                <div class="veh-preview-top-row">
+                    <div id="veh-admin-preview" class="veh-admin-preview veh-admin-preview-top">
+                        <div class="veh-admin-preview-empty muted">Select a vehicle to preview.</div>
+                    </div>
+                </div>
+                <h3 class="players-section-title">Admin Vehicles</h3>
+                <div id="veh-admin-list" class="veh-admin-layout"></div>
+            </div>
+        </section>
+
+        <section data-tab-content="zones" class="tab">
+            <h2>Admin Zones</h2>
+            <div class="split zones-split">
+                <div class="list">
+                    <div class="list-head">
+                        <span>Zone</span><span></span>
+                    </div>
+                    <div id="zones"></div>
+                </div>
+                <div class="panel zones-panel">
+                    <div class="zones-panel-header">
+                        <h3 class="players-section-title">Zone Details</h3>
+                        <span class="zones-hint">Click a zone on the left to edit it. New zones are created at your current position.</span>
+                    </div>
+                    <div class="zones-form-grid">
+                        <div class="zones-col">
+                            <h3 class="players-section-title">Basics</h3>
+                            <div class="row">
+                                <select id="zone-type">
+                                    <option value="custom">Custom</option>
+                                    <option value="safe">Safe Zone</option>
+                                    <option value="speed">Speed Zone</option>
+                                    <option value="restricted">Restricted Area</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <input id="zone-name" placeholder="Name">
+                            </div>
+                            <div class="row">
+                                <input id="zone-radius" type="number" placeholder="Radius (m)">
+                                <input id="zone-maxspd" type="number" placeholder="Max speed (km/h,0=none)">
+                            </div>
+                        </div>
+                        <div class="zones-col">
+                            <h3 class="players-section-title">Effects &amp; Access</h3>
+                            <div class="zones-toggle-row">
+                                <label><input id="zone-inv" type="checkbox"> Invincible</label>
+                                <label><input id="zone-disarm" type="checkbox"> Disarm</label>
+                            </div>
+                            <div class="row">
+                                <input id="zone-job" placeholder="Allowed jobs (comma separated, optional)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="zones-form-grid">
+                        <div class="zones-col">
+                            <h3 class="players-section-title">Blip &amp; Map</h3>
+                            <div class="zones-blip-row">
+                                <label class="zones-blip-toggle"><input id="zone-blip" type="checkbox"> Show map blip</label>
+                            </div>
+                            <div class="zones-blip-pickers">
+                                <div class="zones-blip-col">
+                                    <input id="zone-blip-sprite" type="number" min="0" placeholder="Sprite number">
+                                    <div class="zones-blip-list" id="zone-blip-sprite-list"></div>
+                                </div>
+                                <div class="zones-blip-col">
+                                    <input id="zone-blip-color" type="hidden">
+                                    <div class="zones-blip-list" id="zone-blip-color-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="zones-col">
+                            <h3 class="players-section-title">Schedule</h3>
+                            <div class="row">
+                                <input id="zone-start" type="number" placeholder="Start hour (0-23, optional)">
+                                <input id="zone-end" type="number" placeholder="End hour (0-23, optional)">
+                            </div>
+                            <div class="zones-note">Leave times empty to keep the zone always active.</div>
+                        </div>
+                    </div>
+                    <div class="zones-actions">
+                        <button id="zone-create">Create</button>
+                        <button id="zone-reset" type="button">New zone</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="bans" class="tab">
+            <h2>Bans</h2>
+            <button id="bans-refresh">Refresh</button>
+            <h3>Server Bans</h3>
+            <div id="bans"></div>
+            <h3>Prison Bans</h3>
+            <div id="prison-bans"></div>
+        </section>
+
+        <section data-tab-content="staff" class="tab">
+            <h2>Staff</h2>
+            <div class="split">
+                <div class="list">
+                    <div class="list-head">
+                        <span>ID</span><span>Name</span><span>Role</span>
+                    </div>
+                    <div id="staff-list"></div>
+                    <button id="staff-refresh">Refresh</button>
+                </div>
+                <div class="panel staff-panel">
+                    <h3 class="players-section-title">Staff Info</h3>
+                    <div id="staff-info">Select a staff member on the left to view details.</div>
+                    <h3 class="players-section-title">Staff Meta</h3>
+                    <div class="row">
+                        <input id="staff-country" placeholder="Country (e.g. Denmark)">
+                        <input id="staff-dob" type="date" placeholder="Birthday">
+                        <button id="staff-meta-save">Save</button>
+                    </div>
+                    <div class="row">
+                        <textarea id="staff-note" placeholder="Staff note" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <button id="staff-note-add">Add Note</button>
+                    </div>
+                    <div id="staff-notes-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="roles" class="tab">
+            <h2>Roles</h2>
+            <div class="split">
+                <div class="list">
+                    <div class="list-head">
+                        <span id="roles-head-name">Role</span><span id="roles-head-perms">Perms</span><span></span>
+                    </div>
+                    <div id="roles-list"></div>
+                    <h3>Staff Assignments</h3>
+                    <div id="roles-staff"></div>
+                    <button id="roles-refresh">Refresh</button>
+                </div>
+                <div class="panel" id="roles-panel">
+                    <div class="row">
+                        <input id="role-name" placeholder="Role name (e.g. mod)">
+                        <input id="role-duty-pay" type="number" placeholder="Duty Pay ($)" title="Optional: Set duty pay amount for this role">
+                        <button id="role-create">Create</button>
+                        <button id="role-save">Save</button>
+                        <button id="role-delete">Delete</button>
+                    </div>
+                    <h3>Permissions</h3>
+                    <div id="role-perms" class="roles-perms"></div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="statistics" class="tab">
+            <div class="stats-panel">
+                <div class="stats-header">
+                    <div class="stats-header-text">
+                        <h2>Economy Statistics</h2>
+                        <p class="muted">Monitor economy inflow/outflow, sources, sinks and health alerts.</p>
+                    </div>
+                    <div class="stats-header-actions">
+                        <span id="stats-updated" class="stats-updated muted">Updated —</span>
+                        <button id="stats-refresh"><i class="fa-solid fa-rotate-right"></i><span>Refresh</span></button>
+                    </div>
+                </div>
+
+                <div class="stats-kpi-grid" id="stats-kpi-grid">
+                    <div class="stats-kpi-card stats-kpi-green">
+                        <div class="stats-kpi-icon"><i class="fa-solid fa-coins"></i></div>
+                        <div class="stats-kpi-label">Total money in economy</div>
+                        <div class="stats-kpi-value" id="stats-kpi-total">$0</div>
+                        <div class="stats-kpi-sub" id="stats-kpi-total-sub">Wallets + banks</div>
+                    </div>
+                    <div class="stats-kpi-card stats-kpi-blue">
+                        <div class="stats-kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div class="stats-kpi-label">Earned today</div>
+                        <div class="stats-kpi-value" id="stats-kpi-earned">$0</div>
+                        <div class="stats-kpi-sub" id="stats-kpi-earned-sub">vs yesterday</div>
+                    </div>
+                    <div class="stats-kpi-card stats-kpi-red">
+                        <div class="stats-kpi-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                        <div class="stats-kpi-label">Spent today</div>
+                        <div class="stats-kpi-value" id="stats-kpi-spent">$0</div>
+                        <div class="stats-kpi-sub" id="stats-kpi-spent-sub">Shops, vehicles, fines</div>
+                    </div>
+                    <div class="stats-kpi-card stats-kpi-amber">
+                        <div class="stats-kpi-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div class="stats-kpi-label">Net daily flow</div>
+                        <div class="stats-kpi-value" id="stats-kpi-net">$0</div>
+                        <div class="stats-kpi-sub" id="stats-kpi-net-sub">Economy balance</div>
+                    </div>
+                </div>
+
+                <div class="stats-chart-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Money in vs out — last 7 days</div>
+                                <div class="stats-card-sub">Earned vs spent across all players</div>
+                            </div>
+                        </div>
+                        <div class="stats-flow-bars" id="stats-flow-bars"></div>
+                        <div class="stats-flow-legend" id="stats-flow-legend"></div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Money sources</div>
+                                <div class="stats-card-sub">Where cash enters the economy</div>
+                            </div>
+                            <div class="stats-sources-pill" id="stats-sources-total">0 sources</div>
+                        </div>
+                        <div class="stats-sources-list" id="stats-sources-list"></div>
+                    </div>
+                </div>
+
+                <div class="stats-table-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Top earning jobs</div>
+                                <div class="stats-card-sub">Daily server-wide earnings by job</div>
+                            </div>
+                        </div>
+                        <div class="stats-jobs-list" id="stats-jobs-list"></div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Richest players</div>
+                                <div class="stats-card-sub">Wallet + bank + playtime context</div>
+                            </div>
+                        </div>
+                        <div class="stats-leaderboard" id="stats-leaderboard"></div>
+                    </div>
+                </div>
+
+                <div class="stats-table-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Money sinks</div>
+                                <div class="stats-card-sub">Where cash leaves the economy today</div>
+                            </div>
+                        </div>
+                        <div class="stats-sinks-list" id="stats-sinks-list"></div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Economy health alerts</div>
+                                <div class="stats-card-sub">Inflation, ratios and concentration</div>
+                            </div>
+                        </div>
+                        <div class="stats-alerts-list" id="stats-alerts-list"></div>
+                    </div>
+                </div>
+
+                <div class="stats-table-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Retail performance</div>
+                                <div class="stats-card-sub">Shop revenue + orders today</div>
+                            </div>
+                        </div>
+                        <div class="stats-kpi-line" id="stats-shops-summary">No shop data.</div>
+                        <div class="stats-mini-list" id="stats-shops-list"></div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Drug production</div>
+                                <div class="stats-card-sub">7-day processed vs sold</div>
+                            </div>
+                        </div>
+                        <div class="stats-kpi-line" id="stats-drugs-summary">No drug labs tracked.</div>
+                        <div class="stats-mini-list" id="stats-drugs-list"></div>
+                    </div>
+                </div>
+
+                <div class="stats-table-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Crypto markets</div>
+                                <div class="stats-card-sub">ONO laptop trading volumes</div>
+                            </div>
+                        </div>
+                        <div class="stats-kpi-line" id="stats-crypto-summary">No crypto trades yet.</div>
+                        <div class="stats-mini-list" id="stats-crypto-list"></div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-head">
+                            <div>
+                                <div class="stats-card-title">Gang treasuries</div>
+                                <div class="stats-card-sub">Electus cash + dirty reserves</div>
+                            </div>
+                        </div>
+                        <div class="stats-kpi-line" id="stats-gangs-summary">No gang data.</div>
+                        <div class="stats-mini-list" id="stats-gangs-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="dev" class="tab">
+            <h2>Developer</h2>
+            <button id="dev-toggle">Toggle Debug Raycast</button>
+            <button id="dev-del">Delete Ray Entity</button>
+            <button id="dev-v3">Copy vec3</button>
+            <button id="dev-v4">Copy vec4</button>
+            <button id="dev-lightning"><i class="fa-solid fa-bolt"></i><span>Lightning Strike</span></button>
+            <button id="dev-godshand"><i class="fa-solid fa-hand-sparkles"></i><span>God's Hand</span></button>
+            <div class="row">
+                <select id="dev-theme-select"></select>
+                <button id="dev-theme-apply"><i class="fa-solid fa-palette"></i><span>Apply Theme</span></button>
+            </div>
+            <p>Ray info drawn in-world when enabled.</p>
+        </section>
+
+        <section data-tab-content="monitor" class="tab">
+            <h2>Monitor</h2>
+
+            <div class="monitor-cards">
+                <div class="monitor-card">
+                    <div class="monitor-card-label">Uptime</div>
+                    <div id="monitor-uptime" class="monitor-card-value">-</div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-card-label">Players</div>
+                    <div id="monitor-players" class="monitor-card-value">-</div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-card-label">Avg Ping</div>
+                    <div id="monitor-ping-avg" class="monitor-card-value">-</div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-card-label">Max Ping</div>
+                    <div id="monitor-ping-max" class="monitor-card-value">-</div>
+                </div>
+            </div>
+
+            <div class="monitor-split">
+                <div class="panel monitor-panel">
+                    <h3 class="players-section-title">Incidents</h3>
+                    <div id="monitor-incidents" class="monitor-listbox"></div>
+                </div>
+                <div class="panel monitor-panel">
+                    <h3 class="players-section-title">Top Offenders</h3>
+                    <div id="monitor-offenders" class="monitor-listbox"></div>
+                    <h3 class="players-section-title">Suspicious Snapshot</h3>
+                    <div id="monitor-suspicious" class="monitor-listbox"></div>
+                </div>
+            </div>
+        </section>
+
+        <section data-tab-content="console" class="tab">
+            <h2>Live Console</h2>
+            <div class="console">
+                <div id="console-out"></div>
+                <div class="row">
+                    <input id="console-cmd" placeholder="command...">
+                    <button id="console-run">Run</button>
+                    <button id="console-scan">Exploit Scan</button>
+                    <button id="console-monitor">Monitor</button>
+                    <button id="console-monitor-settings-btn"><i class="fa-solid fa-sliders"></i></button>
+                </div>
+                <div class="row console-monitor-settings hidden" id="console-monitor-settings-panel">
+                    <span class="muted">Monitor checks:</span>
+                    <label><input type="checkbox" data-monitor-check="net" checked>Net (ping / IDs)</label>
+                    <label><input type="checkbox" data-monitor-check="health" checked>Health / armor</label>
+                    <label><input type="checkbox" data-monitor-check="coords" checked>Coords</label>
+                    <label><input type="checkbox" data-monitor-check="weapons" checked>Weapons</label>
+                    <label class="monitor-interval-label">
+                        Interval
+                        <select id="console-monitor-interval">
+                            <option value="1000">1s</option>
+                            <option value="5000">5s</option>
+                            <option value="10000">10s</option>
+                            <option value="30000">30s</option>
+                            <option value="60000" selected>60s</option>
+                        </select>
+                    </label>
+                    <label class="monitor-heavy-label"><input type="checkbox" id="monitor-heavy">Heavy monitor</label>
+                </div>
+                <div class="row">
+                    <input id="console-scan-id" type="number" min="1" placeholder="Player ID (e.g. 23)">
+                    <button id="console-scan-one">Deep Scan ID</button>
+                </div>
+                <div class="row console-monitor-list-row">
+                    <input id="monitor-add-id" type="number" min="1" placeholder="Add player ID to monitor list (e.g. 23)">
+                    <button id="monitor-add-btn"><i class="fa-solid fa-user-secret"></i><span>Add to Monitor</span></button>
+                    <button id="monitor-clear-btn"><i class="fa-solid fa-trash"></i><span>Clear List</span></button>
+                </div>
+                <div id="monitor-list" class="monitor-list"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="prison-confirm" class="hidden">
+        <div class="modal-body">
+            <h3>Confirm Prison Ban</h3>
+            <p id="prison-confirm-text"></p>
+            <div class="row">
+                <button id="prison-confirm-yes">Confirm</button>
+                <button id="prison-confirm-no">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="pardon-confirm" class="hidden">
+        <div class="modal-body">
+            <h3>Confirm Pardon</h3>
+            <p id="pardon-confirm-text"></p>
+            <div class="row">
+                <button id="pardon-confirm-yes">Confirm</button>
+                <button id="pardon-confirm-no">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="clearinv-confirm" class="hidden">
+        <div class="modal-body">
+            <h3>Clear Inventory</h3>
+            <p>Are you sure you want to clear this player's inventory?</p>
+            <div class="row">
+                <button id="clearinv-confirm-yes">Yes</button>
+                <button id="clearinv-confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+    <div id="openinv-confirm" class="hidden">
+        <div class="modal-body">
+            <h3>Confiscate Illegal Items</h3>
+            <p id="openinv-confirm-text"></p>
+            <div class="row" id="openinv-confirm-buttons">
+                <button id="openinv-confirm-yes">Yes</button>
+                <button id="openinv-confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+    <div id="plate-change-modal" class="hidden">
+        <div class="modal-body">
+            <h3>Change Plate</h3>
+            <p>Enter a new plate for this vehicle.</p>
+            <div class="row">
+                <input id="plate-change-input" placeholder="New plate">
+            </div>
+            <div class="row">
+                <button id="plate-change-confirm">Confirm</button>
+                <button id="plate-change-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="stats-player-overlay" class="stats-player-overlay hidden">
+    <iframe id="stats-player-frame" src="stats-player.html" frameborder="0" allow="clipboard-write" tabindex="-1"></iframe>
+</div>
+
+<div id="mini-panel" class="mini hidden">
+    <div class="mini-header">
+        <span class="mini-title">Mini Panel</span>
+        <div class="mini-mode">
+            <button id="mini-mode-mod" class="mini-mode-btn active">Mod</button>
+            <button id="mini-mode-key" class="mini-mode-btn">Key</button>
+            <button id="mini-mode-dev" class="mini-mode-btn">Dev</button>
+        </div>
+        <button id="mini-close">×</button>
+    </div>
+
+    <div id="mini-body-mod" class="mini-body">
+        <div class="mini-section">
+            <h3>Self</h3>
+            <div class="mini-row">
+                <button data-mini-self="heal"><i class="fa-solid fa-notes-medical"></i><span>Heal</span></button>
+                <button data-mini-self="revive"><i class="fa-solid fa-heart-pulse"></i><span>Revive</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-noclip-btn" data-mini-self="noclip"><i class="fa-solid fa-shoe-prints"></i><span>Noclip</span></button>
+                <button id="mini-inv-btn" data-mini-self="invincible"><i class="fa-solid fa-shield-halved"></i><span>God</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-invis-btn" data-mini-self="invisible"><i class="fa-solid fa-user-ninja"></i><span>Invisible</span></button>
+                <button id="mini-duty-btn" data-mini-self="duty"><i class="fa-solid fa-user-shield"></i><span>Duty</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-ammo-btn" data-mini-self="ammo"><i class="fa-solid fa-infinity"></i><span>Unlimited Ammo</span></button>
+                <button id="mini-superjump-btn" data-mini-self="superjump"><i class="fa-solid fa-arrow-up"></i><span>Super Jump</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-armor-btn" data-mini-self="armor"><i class="fa-solid fa-shield"></i><span>Armor</span></button>
+                <button id="mini-runfast2x-btn" data-mini-self="runfast2x"><i class="fa-solid fa-person-running"></i><span>Run Fast 2x</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-stress-btn" data-mini-self="stress"><i class="fa-solid fa-brain"></i><span>Stress</span></button>
+                <button id="mini-tp-marked-btn" data-mini-self="tpMarked"><i class="fa-solid fa-location-dot"></i><span>TP Marker</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-tp-marked-noveh-btn" data-mini-self="tpMarkedNoVehicle"><i class="fa-solid fa-location-dot"></i><span>TP No Veh</span></button>
+            </div>
+            <div class="mini-row">
+                <button id="mini-onepunch-btn"><i class="fa-solid fa-hand-fist"></i><span>One Punch</span></button>
+            </div>
+        </div>
+        <div class="mini-section">
+            <h3>Player</h3>
+            <div class="mini-row">
+                <input id="mini-player-id" placeholder="ID">
+            </div>
+            <div class="mini-row">
+                <button data-mini-player="bring"><i class="fa-solid fa-arrow-down"></i><span>Bring</span></button>
+                <button data-mini-player="goto"><i class="fa-solid fa-location-arrow"></i><span>Go To</span></button>
+            </div>
+            <div class="mini-row">
+                <button data-mini-player="freeze"><i class="fa-solid fa-snowflake"></i><span>Freeze</span></button>
+                <button data-mini-player="unfreeze"><i class="fa-solid fa-sun"></i><span>Unfreeze</span></button>
+            </div>
+            <div class="mini-row">
+                <button data-mini-player="spectate"><i class="fa-solid fa-eye"></i><span>Spectate</span></button>
+                <button data-mini-player="spectateStop"><i class="fa-solid fa-eye-slash"></i><span>Stop</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mini-body-key" class="mini-body hidden">
+        <div class="mini-section">
+            <h3>Keybinds</h3>
+            <p class="mini-subtext">Assign keys for your most-used tools.</p>
+            <div class="mini-bind-list">
+                <div class="mini-bind-row" data-bind-action="mini_heal">
+                    <div class="mini-bind-info">
+                        <strong>Heal Self</strong>
+                        <div class="muted">Instantly heal yourself.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_heal">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_heal">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_revive">
+                    <div class="mini-bind-info">
+                        <strong>Revive Self</strong>
+                        <div class="muted">Trigger the revive action.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_revive">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_revive">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_noclip">
+                    <div class="mini-bind-info">
+                        <strong>Noclip Toggle</strong>
+                        <div class="muted">Toggle noclip mode.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_noclip">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_noclip">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_god">
+                    <div class="mini-bind-info">
+                        <strong>God Mode</strong>
+                        <div class="muted">Toggle invincibility.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_god">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_god">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_invisible">
+                    <div class="mini-bind-info">
+                        <strong>Invisible</strong>
+                        <div class="muted">Quickly hide your ped.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_invisible">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_invisible">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_superjump">
+                    <div class="mini-bind-info">
+                        <strong>Super Jump</strong>
+                        <div class="muted">Toggle enhanced jumps.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_superjump">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_superjump">Set Key</button>
+                    </div>
+                </div>
+                <div class="mini-bind-row" data-bind-action="mini_tp_marker">
+                    <div class="mini-bind-info">
+                        <strong>Teleport Marker</strong>
+                        <div class="muted">Go to your map waypoint.</div>
+                    </div>
+                    <div class="mini-bind-actions">
+                        <span class="mini-bind-label" data-bind-label="mini_tp_marker">Unassigned</span>
+                        <button class="mini-bind-edit" data-bind-target="mini_tp_marker">Set Key</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mini-bind-footer">
+                <button id="mini-bind-clear-all" class="danger">Clear All Keybinds</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mini-body-dev" class="mini-body hidden">
+        <div class="mini-section">
+            <h3>Developer</h3>
+            <div class="mini-row">
+                <button data-mini-dev="toggle"><i class="fa-solid fa-bug"></i><span>Debug</span></button>
+                <button data-mini-dev="del"><i class="fa-solid fa-broom"></i><span>Del Ray</span></button>
+            </div>
+            <div class="mini-row">
+                <button data-mini-dev="copy3"><i class="fa-solid fa-copy"></i><span>Copy vec3</span></button>
+                <button data-mini-dev="copy4"><i class="fa-solid fa-copy"></i><span>Copy vec4</span></button>
+            </div>
+            <div class="mini-row">
+                <button data-mini-dev="lightning"><i class="fa-solid fa-bolt"></i><span>Lightning</span></button>
+                <button data-mini-dev="godshand"><i class="fa-solid fa-hand-sparkles"></i><span>God's Hand</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="helptexts.js"></script>
+<script src="app-zones.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

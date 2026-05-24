@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kaves - Mechanic</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> <!-- JQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.1/howler.min.js"></script>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css' crossorigin='anonymous' />
+</head>
+<body >
+    
+    <div class="eye">
+        <span id="eye-label">MENU</span>
+        <i class="fa-solid fa-sort-down"></i>
+        <i class="fa-solid fa-gear eye-icon-fallback" aria-hidden="true"></i>
+    </div>
+
+    <div class="main-menu">
+        <div class="mechanic-logo">
+            <i class="fa-solid fa-wrench logo-fallback" aria-hidden="true"></i>
+        </div>
+        <div class="menu-items">
+
+            <div class="menu-item" data-id="0" data-active="true">
+                <div class="menu-item-price">
+                    <span>$3000</span>
+                </div>
+                <i class="fa-solid fa-car menu-icon-fallback" aria-hidden="true"></i>
+                <span>vehicle customization</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="color-menu">
+        <span>Color settings</span>
+        <div class="wheel">
+            <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="main"></i>
+            <div class="wheel-text">
+                <span id="main">Primary</span>
+            </div>
+            <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="main"></i>
+        </div>
+<!--         <div class="default-colors" data-id="closeable">
+            <span>Default colors</span>
+            <div class="color-wheel" data-wheel="main"></div>
+        </div> -->
+
+        <div id="picker" data-id="closeable"></div>
+
+        <div class="wheel" data-id="closeable" id="blabla">
+            <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="secondary"></i>
+            <div class="wheel-text">
+                <span id="secondary">Classic</span>
+            </div>
+            <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="secondary"></i>
+        </div>
+        <div class="default-colors" data-id="closeable">
+            <span>Default colors</span>
+            <div class="color-wheel" data-wheel="secondary"></div>
+        </div>
+
+        <div class="wheel" data-id="openable" style="display: none;">
+            <div class="divider"></div>
+            <div class="modal">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="chameleon"></i>
+                <div class="wheel-text">
+                    <span id="chameleon">Metallic</span>
+                </div>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="chameleon"></i>
+            </div>
+        </div>
+
+        <div id="buyColor" class="buy">
+            <span id="buyButton">Buy color</span>
+        </div>
+
+    </div>
+
+    <div class="fitment-menu" style="display: none;">
+        <span>Fitment menu</span>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels width</span>
+            </div>
+            <div class="fitment-modal" data-fitment="wheels-width">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels Front left</span>
+            </div>
+            <div class="fitment-modal" data-fitment="front-left">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels Front right</span>
+            </div>
+            <div class="fitment-modal" data-fitment="front-right">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels rear left</span>
+            </div>
+            <div class="fitment-modal" data-fitment="rear-left">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels rear right</span>
+            </div>
+            <div class="fitment-modal" data-fitment="rear-right">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels Front Camber</span>
+            </div>
+            <div class="fitment-modal" data-fitment="front-left-camber">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels Front Camber</span>
+            </div>
+            <div class="fitment-modal" data-fitment="front-right-camber">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels rear Camber</span>
+            </div>
+            <div class="fitment-modal" data-fitment="rear-left-camber">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fitment">
+            <div class="fitment-title">
+                <span>Wheels rear Camber</span>
+            </div>
+            <div class="fitment-modal" data-fitment="rear-right-camber">
+                <i class="fa-solid fa-caret-left" id="arrow" data-side="left" data-type="fitment"></i>
+                <span id="fitment">1.0</span>
+                <i class="fa-solid fa-caret-right" id="arrow" data-side="right" data-type="fitment"></i>
+            </div>
+        </div>
+
+
+        <div id="buyFitment" class="buy">
+            <span>Apply Settings</span>
+        </div>
+    </div>
+
+    <!-- <div class="invoice">
+        <div class="invoice-logo">
+            <img src="img/bennys.png">
+        </div>
+        <div class="divider-invoice"></div>
+        <div class="basket">
+            <div class="basket-item">
+                <div class="basket-item-img">
+                    <img src="img/front_bumper.png">
+                </div>
+                <div class="basket-item-labels">
+                    <span>Front bumper</span>
+                    <span>Vehicle customization</span>
+                </div>
+                <div class="basket-item-price">
+                    <span>$3000</span>
+                </div>
+            </div>
+        </div>
+        <div class="divider-invoice"></div>
+        <div class="invoice-modals">
+            <div class="total-price">
+                <span>Total price:</span>
+                <span>$1300</span>
+            </div>
+            <div class="modal-buttons">
+                <div class="modal-button" id="buy">
+                    <span>Buy</span>
+                </div>
+                <div class="modal-button" id="bill">
+                    <span>Bill player</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal">
+        <span>enter player id</span>
+        <input type="number">
+        <div class="modal-button" id="buy">
+            <span>send bill</span>
+        </div>
+    </div> -->
+
+    <script src="script.js"></script>
+</body>
+</html>

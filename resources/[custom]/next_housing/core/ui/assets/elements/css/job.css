@@ -1,0 +1,3865 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+.job-interface {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    pointer-events: auto;
+}
+
+.job-interface:not(.hidden) {
+    display: flex !important;
+}
+
+.job-interface.hidden {
+    display: none !important;
+    pointer-events: none;
+}
+
+.job-container {
+    display: flex;
+    z-index: 9999;
+}
+
+
+
+.job-header {
+    animation: jobFadeIn 0.5s ease forwards 0.2s;
+}
+
+.job-header .subtitle {
+    margin-top: 4px;
+}
+
+
+@keyframes jobFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.job-tabs {
+    position: relative;
+    opacity: 0;
+    animation: jobFadeIn 0.5s ease forwards 0.3s;
+}
+
+.job-tab-btn {
+    transition: all 0.3s ease;
+}
+
+.job-tab-btn i {
+    font-size: 12px;
+}
+
+.refresh-btn-tab {
+    margin-left: auto;
+    padding: 8px;
+}
+
+
+.job-tab-panel {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    animation: jobTabFadeIn 0.4s ease forwards;
+    flex-direction: column;
+}
+
+.job-tab-panel.active {
+    display: flex !important;
+}
+
+.job-bottom-spacer {
+    flex: 0 0 20px;
+    min-height: 20px;
+}
+
+@media (max-width: 480px) {
+    .job-bottom-spacer {
+        flex-basis: 16px;
+        min-height: 16px;
+    }
+}
+
+
+.job-tab-panel .job-dashboard-grid {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.job-tab-panel .job-card-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+@keyframes jobTabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+.job-filters,
+.contracts-filters {
+    padding: 0 0 16px 0;
+    display: flex;
+    gap: 10px;
+    background: transparent;
+    border-bottom: none;
+    flex-shrink: 0;
+}
+
+.job-interface .filter-select {
+    width: auto;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-interface .filter-select:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.job-interface .filter-select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.job-interface .filter-select option {
+    background: #000;
+    color: var(--text);
+}
+
+.job-filters-hidden {
+    display: none !important;
+}
+
+.job-houses-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.job-houses-sidebar {
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.job-houses-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.job-houses-sidebar-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.job-houses-sidebar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    animation: nhSidebarDotPulse 2s infinite;
+}
+
+.job-houses-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.job-house-filter-btn {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.job-house-filter-btn i {
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.job-house-filter-btn span {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+}
+
+.job-house-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+}
+
+.job-house-filter-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.job-houses-main {
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 18px 18px 0 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.job-houses-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 14px;
+    padding: 0 4px 14px 4px;
+    flex-shrink: 0;
+}
+
+.job-houses-main-header h3 {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: none;
+}
+
+.job-houses-main .houses-list-container {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.job-houses-main .houses-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    padding-top: 4px;
+    padding-bottom: 20px;
+}
+
+.job-houses-main .houses-list-container::-webkit-scrollbar-track {
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+.job-houses-main .house-card,
+.pap-list .house-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.job-houses-main .house-card:hover,
+.pap-list .house-card:hover {
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.job-houses-main .house-card.available,
+.pap-list .house-card.available {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.job-houses-main .house-card.sold,
+.pap-list .house-card.sold {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.job-houses-main .house-card.pap-contract,
+.pap-list .house-card.pap-contract {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.job-houses-main .house-header-image,
+.pap-list .house-header-image {
+    height: 220px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    position: relative;
+}
+
+.job-houses-main .house-header-image::after,
+.pap-list .house-header-image::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+    pointer-events: none;
+}
+
+.job-houses-main .house-header,
+.pap-list .house-header {
+    padding: 10px 12px 8px 12px;
+    background: #101010;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.job-houses-main .house-id,
+.pap-list .house-id {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.job-houses-main .house-status,
+.pap-list .house-status {
+    font-size: 8px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+    -webkit-backdrop-filter: blur(1.5px);
+    backdrop-filter: blur(1.5px);
+    color: rgba(255, 255, 255, 0.78);
+    flex-shrink: 0;
+}
+
+.job-houses-main .house-card.available .house-status,
+.pap-list .house-card.available .house-status {
+    color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+}
+
+.job-houses-main .house-card.sold .house-status,
+.pap-list .house-card.sold .house-status {
+    color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+}
+
+.job-houses-main .house-card.pap-contract .house-status,
+.pap-list .house-card.pap-contract .house-status {
+    color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+}
+
+.job-houses-main .house-title-container,
+.pap-list .house-title-container {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+}
+
+.job-houses-main .gps-icon-btn,
+.pap-list .gps-icon-btn {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    flex: 0 0 20px;
+    margin-right: 0;
+    border: none;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+}
+
+.job-houses-main .gps-icon-btn:hover,
+.pap-list .gps-icon-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.job-houses-main .house-info,
+.pap-list .house-info {
+    padding: 8px 12px 10px 12px;
+    margin-bottom: 0;
+}
+
+
+.job-houses-main .house-info-grid,
+.pap-list .house-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+.job-houses-main .house-info-item,
+.pap-list .house-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    background: var(--input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-width: 0;
+}
+
+.job-houses-main .house-info-label,
+.pap-list .house-info-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-houses-main .house-info-value,
+.pap-list .house-info-value {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.job-houses-main .house-actions,
+.pap-list .house-actions {
+    padding: 8px 12px 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+    display: flex;
+    align-items: center;
+}
+
+.job-houses-main .house-actions .action-btn,
+.pap-list .house-actions .action-btn {
+    height: 32px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+}
+
+.job-houses-main .house-actions .action-btn:hover,
+.pap-list .house-actions .action-btn:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #151515;
+}
+
+.job-houses-main .house-actions .buy-btn,
+.pap-list .house-actions .buy-btn {
+    background: #101010;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.job-houses-main .house-actions .buy-btn:hover,
+.pap-list .house-actions .buy-btn:hover {
+    background: #161616;
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+}
+
+.job-houses-main .pap-contract-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.25px;
+    color: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 7px 9px;
+}
+
+.job-houses-main .house-actions .action-btn i,
+.pap-list .house-actions .action-btn i {
+    margin-right: 2px;
+}
+
+.job-houses-main .pap-contract-notice i {
+    margin-right: 2px;
+}
+
+@media (max-width: 1080px) {
+    .job-houses-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .job-houses-sidebar {
+        padding: 12px;
+    }
+
+    .job-houses-sidebar-menu {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .job-houses-sidebar-menu::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .job-house-filter-btn {
+        flex: 0 0 auto;
+        min-width: 165px;
+    }
+
+    .job-houses-main .houses-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.houses-list-container,
+.contracts-container,
+.unpaid-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+    padding-right: 4px;
+
+}
+
+.houses-list,
+.contracts-list,
+.unpaid-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding-bottom: 20px;
+}
+
+
+
+.house-card,
+.contract-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.house-card:hover,
+.contract-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.house-header-image {
+    width: 100%;
+    height: 220px;
+    
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    
+}
+
+.house-header-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.house-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+}
+
+.house-image-placeholder img {
+    width: 60px;
+    height: 60px;
+    opacity: 0.3;
+    filter: brightness(0) invert(1);
+}
+
+.house-image-placeholder i {
+    font-size: 72px;
+    opacity: 0.3;
+    color: #fff;
+}
+
+.job-houses-main .house-image-placeholder img {
+    transform: translateY(-40px);
+}
+
+.job-houses-main .house-image-placeholder i {
+    transform: translateY(-40px);
+}
+
+.house-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.gps-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    width: 24px;
+    height: 24px;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+    box-shadow: none;
+}
+
+.gps-icon-btn:hover {
+    background: transparent;
+    color: #fff;
+}
+
+.gps-icon-btn i {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.95));
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.house-title-container {
+    display: flex;
+    align-items: center;
+}
+
+.house-id {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.house-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+}
+
+.job-interface .house-info {
+    padding: 16px;
+    
+}
+
+.job-interface .house-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.job-interface .house-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+    
+    background: rgba(255, 255, 255, 0.03);
+    
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    
+    border-radius: 6px;
+    
+}
+
+.job-interface .house-info-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-interface .house-info-value {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.house-actions {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+
+.job-interface .action-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: #fff;
+    width: 100%;
+}
+
+.job-interface .action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.job-interface .action-btn.primary {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+}
+
+.job-interface .action-btn.primary:hover {
+    background: #eeeeee;
+    transform: translateY(-1px);
+}
+
+
+.job-interface .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text);
+}
+
+.job-interface .loading.hidden {
+    display: none;
+}
+
+.job-interface .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: jobSpin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes jobSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.job-interface .loading p {
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-interface .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.job-interface .empty-state-icon {
+    width: 48px;
+    height: 48px;
+    opacity: 0.2;
+}
+
+
+.treasury-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    min-width: 0;
+    gap: 24px;
+    padding: 0;
+}
+
+.treasury-header {
+    display: flex;
+    justify-content: center;
+}
+
+.treasury-balance-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    width: 100%;
+}
+
+.treasury-balance-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.treasury-balance-amount {
+    font-size: 48px;
+    font-weight: 800;
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.treasury-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.treasury-stat-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+}
+
+.treasury-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.treasury-stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.treasury-withdraw-section {
+    margin-top: 8px;
+}
+
+.treasury-withdraw-card {
+    position: relative;
+}
+
+.treasury-withdraw-card.disabled {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.treasury-withdraw-card.disabled .card-header,
+.treasury-withdraw-card.disabled .card-content {
+    opacity: 0.45;
+}
+
+.treasury-withdraw-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(6, 6, 6, 0.86), rgba(6, 6, 6, 0.94));
+    backdrop-filter: blur(2px);
+}
+
+.treasury-withdraw-overlay-content {
+    max-width: 420px;
+    width: 100%;
+    padding: 18px 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.treasury-withdraw-overlay .overlay-icon {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.treasury-withdraw-overlay .overlay-message {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .treasury-withdraw-overlay {
+        padding: 12px;
+    }
+
+    .treasury-withdraw-overlay-content {
+        padding: 14px 14px;
+        border-radius: 8px;
+    }
+
+    .treasury-withdraw-overlay .overlay-message {
+        font-size: 12px;
+    }
+}
+
+.job-interface .config-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.job-interface .card-header {
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.job-interface .card-icon {
+    color: var(--muted);
+}
+
+.job-interface .card-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.job-interface .card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-interface .form-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.form-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    width: 100%;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+
+
+.modal-detail-row {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    border-radius: 8px;
+}
+
+.modal-house-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-detail-label {
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.modal-detail-value {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.modal-detail-row.pap-warning {
+    border-color: rgba(255, 193, 7, 0.35);
+    background: rgba(255, 193, 7, 0.08);
+    border-left: 4px solid #ffc107;
+    margin-bottom: 10px;
+    padding-left: 10px;
+}
+
+.modal-detail-row.pap-warning .modal-detail-label {
+    color: #ffd24d;
+}
+
+.modal-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.modal-pap-contract-note {
+    margin: 2px 2px 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+.modal-images-section {
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+.house-images-container {
+    padding: 4px 0;
+    min-height: 60px;
+    overflow: hidden;
+}
+
+.house-images-container::-webkit-scrollbar,
+.house-images-grid::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.house-images-container .no-images {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    margin: 16px 0 0;
+    padding: 0 12px;
+    width: 100%;
+    height: 210px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.house-images-container .no-images img {
+    width: 60px;
+    height: 60px;
+    opacity: 0.3;
+    filter: brightness(0) invert(1);
+    object-fit: contain;
+}
+
+.house-images-container .no-images i {
+    font-size: 72px;
+    opacity: 0.3;
+    color: #fff;
+}
+
+.house-images-container .no-images span {
+    display: block;
+    max-width: 90%;
+    line-height: 1.3;
+}
+
+.pap-modal-description-block {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.pap-modal-description-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.pap-modal-description-text {
+    margin: 0;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+
+.pap-modal-description-text.pap-modal-description-placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+}
+
+.modal-detail-row--full {
+    padding: 0;
+    border: none;
+    background: transparent;
+    margin-top: 10px;
+}
+
+.pap-modal-footer #upload-image-btn {
+    width: 100%;
+}
+
+
+.house-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 10px;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.house-image-item {
+    position: relative;
+    height: 210px;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.house-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: none;
+}
+
+.delete-image-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ff4444;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.house-image-item:hover .delete-image-btn {
+    opacity: 1;
+}
+
+.delete-image-btn:hover {
+    background: #ff4444;
+    color: #fff;
+}
+
+
+.house-title-input,
+.contract-title-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    width: 200px;
+}
+
+.house-title-input:focus,
+.contract-title-input:focus {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: #fff;
+}
+
+
+.save-house-title-btn,
+.cancel-house-title-btn,
+.save-contract-title-btn,
+.cancel-contract-title-btn,
+.edit-house-title-btn,
+.edit-contract-title-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.edit-house-title-btn,
+.edit-contract-title-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+}
+
+.edit-house-title-btn:hover,
+.edit-contract-title-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.save-house-title-btn,
+.save-contract-title-btn {
+    background: #44ff44;
+    color: #000;
+}
+
+.save-house-title-btn:hover,
+.save-contract-title-btn:hover {
+    background: #66ff66;
+}
+
+.cancel-house-title-btn,
+.cancel-contract-title-btn {
+    background: #ff4444;
+    color: #fff;
+}
+
+.cancel-house-title-btn:hover,
+.cancel-contract-title-btn:hover {
+    background: #ff6666;
+}
+
+
+.contract-card {
+    padding: 0;
+}
+
+.contract-header {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.contract-id {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.contract-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.status-active {
+    color: #44ff44;
+    background: rgba(68, 255, 68, 0.1);
+}
+
+.status-pending {
+    color: #ffbb00;
+    background: rgba(255, 187, 0, 0.1);
+}
+
+.status-expired {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+
+.unpaid-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.unpaid-info-main {
+    font-weight: 600;
+    color: #fff;
+    font-size: 14px;
+}
+
+.unpaid-info-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.unpaid-amount {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--danger);
+    font-weight: 700;
+}
+
+
+.image-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 10100;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-lightbox:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    animation: zoomIn 0.3s ease;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10101;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10102;
+}
+
+.lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev {
+    left: 32px;
+}
+
+.lightbox-next {
+    right: 32px;
+}
+
+.job-alert-close-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.job-alert-close-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.job-alert-body {
+    padding: 32px 24px;
+    color: var(--text);
+    text-align: center;
+}
+
+.job-alert-message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.job-alert-footer {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.job-alert-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    min-width: 100px;
+    border: none;
+}
+
+.job-alert-btn.primary {
+    background: #fff;
+    color: #000;
+    border: 1px solid transparent;
+}
+
+.job-alert-btn.primary:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.job-alert-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.job-alert-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+
+
+
+
+
+.job-houses-main .house-image-overlay,
+.pap-list .house-image-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    pointer-events: none;
+}
+
+.job-houses-main .house-image-overlay-top,
+.pap-list .house-image-overlay-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+.job-houses-main .house-image-overlay .house-info,
+.pap-list .house-image-overlay .house-info {
+    margin-top: auto;
+    padding: 0;
+    pointer-events: none;
+}
+
+.job-houses-main .house-image-overlay .house-info-grid,
+.pap-list .house-image-overlay .house-info-grid {
+    gap: 4px;
+}
+
+.job-houses-main .house-image-overlay .house-info-item,
+.pap-list .house-image-overlay .house-info-item {
+    padding: 5px 6px;
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    -webkit-backdrop-filter: blur(1.5px);
+    backdrop-filter: blur(1.5px);
+}
+
+.job-houses-main .house-image-overlay .house-info-label,
+.pap-list .house-image-overlay .house-info-label {
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.job-houses-main .house-image-overlay .house-info-value,
+.pap-list .house-image-overlay .house-info-value {
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.job-houses-main .house-image-overlay .gps-icon-btn,
+.job-houses-main .house-image-overlay .house-title-container,
+.pap-list .house-image-overlay .gps-icon-btn,
+.pap-list .house-image-overlay .house-title-container {
+    pointer-events: auto;
+}
+
+
+.job-contracts-main {
+    flex: 1;
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 18px 18px 0 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.job-contracts-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 14px;
+    padding: 0 4px 14px 4px;
+    flex-shrink: 0;
+}
+
+.job-contracts-main-header h3 {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: none;
+}
+
+.job-contracts-toolbar {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    margin: 0 4px 12px 4px;
+    flex-shrink: 0;
+}
+
+.job-contracts-main .contracts-filters {
+    padding: 0;
+}
+
+.job-contracts-main .contracts-container {
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-gutter: stable both-edges;
+    position: relative;
+    padding: 4px 4px 14px 4px;
+}
+
+.job-contracts-main .contracts-list {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    height: 100%;
+    min-height: 0;
+    width: max-content;
+    padding: 0;
+}
+
+.job-contracts-main .contract-drawer {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    height: 100%;
+    min-height: 0;
+    flex-shrink: 0;
+}
+
+@keyframes contractDrawerOpenPop {
+    0% {
+        transform: translateY(2px) scale(0.985);
+        opacity: 0.86;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes contractFolderReveal {
+    0% {
+        transform: translateX(-8px) scale(0.99);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes contractSheetReveal {
+    0% {
+        transform: translateX(14px) scale(0.99);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.job-contracts-main .contract-drawer-spine {
+    width: 58px;
+    min-width: 58px;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #171717 0%, #101010 55%, #0A0A0A 100%);
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: border-color 0.22s ease, background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.job-contracts-main .contract-drawer.is-opening .contract-drawer-spine {
+    animation: contractDrawerOpenPop 0.22s ease-out;
+}
+
+.job-contracts-main .contract-drawer-spine:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(180deg, #1C1C1C 0%, #111111 55%, #0C0C0C 100%);
+    transform: translateY(-1px);
+}
+
+.job-contracts-main .contract-drawer.is-open .contract-drawer-spine {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.33);
+}
+
+.job-contracts-main .contract-drawer-name {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
+    letter-spacing: 1px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.job-contracts-main .contract-drawer-count {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.job-contracts-main .contract-drawer-list-panel,
+.job-contracts-main .contract-drawer-contract-panel {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-left: 0;
+    transform: translateX(-8px);
+    transition: width 0.3s ease, opacity 0.2s ease, margin-left 0.3s ease, transform 0.3s ease;
+}
+
+.job-contracts-main .contract-drawer.is-open .contract-drawer-list-panel {
+    width: var(--drawer-list-width, 280px);
+    opacity: 1;
+    margin-left: 8px;
+    transform: translateX(0);
+}
+
+.job-contracts-main .contract-drawer.is-opening .contract-drawer-list-panel .contract-drawer-panel-inner {
+    animation: contractFolderReveal 0.26s ease-out;
+}
+
+.job-contracts-main .contract-drawer.has-open-contract .contract-drawer-contract-panel {
+    width: clamp(420px, 36vw, 560px);
+    opacity: 1;
+    margin-left: 8px;
+    transform: translateX(0);
+}
+
+.job-contracts-main .contract-drawer-panel-inner {
+    height: 100%;
+    min-height: 0;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    background: rgba(9, 9, 9, 0.92);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.job-contracts-main .contract-drawer-list-header {
+    height: 34px;
+    min-height: 34px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    color: rgba(255, 255, 255, 0.68);
+}
+
+.job-contracts-main .contract-drawer-list-panel .contract-drawer-list-header {
+    display: none;
+}
+
+.job-contracts-main .contract-list-mode {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px;
+}
+
+.job-contracts-main .contract-list-mode.unpaid-list-mode {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+.job-contracts-main .contract-list-mode.contract-stats-mode {
+    display: block;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.job-contracts-main .contract-stats-card {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 14px 14px 12px 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: none;
+}
+
+.job-contracts-main .contract-stats-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+}
+
+.job-contracts-main .contract-stats-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-contracts-main .contract-stats-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.job-contracts-main .contract-stats-head-subtitle {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.55px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.job-contracts-main .contract-stats-head-pulse {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.job-contracts-main .contract-stats-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.job-contracts-main .contract-stats-kpi {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9px;
+    padding: 7px 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.job-contracts-main .contract-stats-kpi-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-contracts-main .contract-stats-kpi-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.96);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.job-contracts-main .contract-stats-kpi.tone-unpaid .contract-stats-kpi-value {
+    color: #d0d0d0;
+}
+
+.job-contracts-main .contract-stats-dashboard {
+    display: grid;
+    grid-template-columns: minmax(240px, 1.05fr) minmax(260px, 0.95fr);
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.job-contracts-main .contract-stats-section {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+    min-height: 0;
+}
+
+.job-contracts-main .contract-stats-section-types {
+    border-right: none;
+    padding-right: 0;
+}
+
+.job-contracts-main .contract-stats-section-title,
+.job-contracts-main .contract-stats-volume-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.75px;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+}
+
+.job-contracts-main .contract-stats-donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+.job-contracts-main .contract-stats-activity-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+.job-contracts-main .contract-stats-donut-spacer {
+    display: none;
+}
+
+.job-contracts-main .contract-stats-legend-activity {
+    flex: 1;
+    width: 100%;
+}
+
+.job-contracts-main .contract-stats-legend-activity .contract-stats-legend-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.job-contracts-main .contract-stats-legend-activity .contract-stats-dot {
+    display: none;
+}
+
+.job-contracts-main .contract-stats-donut {
+    --stats-sale-color: #f2f2f2;
+    --stats-rent-color: #7f7f7f;
+    --stats-other-color: #4f4f4f;
+    width: 140px;
+    min-width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.34), 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.job-contracts-main .contract-stats-donut-center {
+    position: absolute;
+    inset: 17px;
+    border-radius: 50%;
+    background: #0f0f0f;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.job-contracts-main .contract-stats-donut-total {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 21px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+
+.job-contracts-main .contract-stats-donut-caption {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.66);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.job-contracts-main .contract-stats-legend {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+}
+
+.job-contracts-main .contract-stats-legend-row {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-contracts-main .contract-stats-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+}
+
+.job-contracts-main .contract-stats-dot.tone-sale {
+    background: #f2f2f2;
+}
+
+.job-contracts-main .contract-stats-dot.tone-rent {
+    background: #7f7f7f;
+}
+
+.job-contracts-main .contract-stats-dot.tone-other {
+    background: #4f4f4f;
+}
+
+.job-contracts-main .contract-stats-dot.tone-active {
+    background: #f2f2f2;
+}
+
+.job-contracts-main .contract-stats-dot.tone-closed {
+    background: #7f7f7f;
+}
+
+.job-contracts-main .contract-stats-dot.tone-unpaid {
+    background: #4f4f4f;
+}
+
+.job-contracts-main .contract-stats-legend-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.82);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-contracts-main .contract-stats-legend-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.2px;
+}
+
+.job-contracts-main .contract-stats-legend-track {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.job-contracts-main .contract-stats-legend-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-sale {
+    background: #f2f2f2;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-rent {
+    background: #7f7f7f;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-other {
+    background: #4f4f4f;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-active {
+    background: #f2f2f2;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-closed {
+    background: #7f7f7f;
+}
+
+.job-contracts-main .contract-stats-legend-fill.tone-unpaid {
+    background: #4f4f4f;
+}
+
+.job-contracts-main .contract-stats-amount-line {
+    margin-top: 2px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.job-contracts-main .contract-stats-amount-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.64);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-contracts-main .contract-stats-amount-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.job-contracts-main .contract-stats-volume {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+}
+
+.job-contracts-main .contract-stats-columns {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+.job-contracts-main .contract-stats-column {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 7px;
+}
+
+.job-contracts-main .contract-stats-column-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.job-contracts-main .contract-stats-column-bar {
+    min-height: 92px;
+    height: 100%;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+.job-contracts-main .contract-stats-column-fill {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 5px 5px 0 0;
+}
+
+.job-contracts-main .contract-stats-column-fill.tone-total {
+    background: linear-gradient(180deg, #ffffff 0%, #d5d5d5 100%);
+}
+
+.job-contracts-main .contract-stats-column-fill.tone-sale {
+    background: linear-gradient(180deg, #dcdcdc 0%, #b7b7b7 100%);
+}
+
+.job-contracts-main .contract-stats-column-fill.tone-rent {
+    background: linear-gradient(180deg, #b5b5b5 0%, #8e8e8e 100%);
+}
+
+.job-contracts-main .contract-stats-column-fill.tone-unpaid {
+    background: linear-gradient(180deg, #8f8f8f 0%, #666666 100%);
+}
+
+.job-contracts-main .contract-stats-column-label {
+    font-size: 9px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+}
+
+@media (max-width: 1080px) {
+    .job-contracts-main .contract-stats-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .job-contracts-main .contract-stats-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .job-contracts-main .contract-stats-section-types {
+        border-right: none;
+        border-bottom: none;
+        padding-right: 0;
+        padding-bottom: 0;
+    }
+
+    .job-contracts-main .contract-stats-donut-spacer {
+        display: none;
+    }
+}
+
+.job-contracts-main .unpaid-drawer-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.job-contracts-main .unpaid-drawer-empty {
+    padding: 10px 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-contracts-main .contract-list-item {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    background: #101010;
+    padding: 8px 6px;
+    width: 52px;
+    min-width: 52px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.job-contracts-main .contract-list-item:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: #151515;
+}
+
+.job-contracts-main .contract-list-item.is-selected {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #1A1A1A;
+    transform: translateY(-2px);
+}
+
+.job-contracts-main .contract-list-item.is-opening {
+    animation: contractDrawerOpenPop 0.22s ease-out;
+}
+
+.job-contracts-main .contract-list-item-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.job-contracts-main .contract-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+.job-contracts-main .contract-title-display {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    color: rgba(255, 255, 255, 0.62);
+    line-height: 1.05;
+    max-height: 100%;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: normal;
+    cursor: pointer;
+}
+
+.job-contracts-main .contract-title-input {
+    width: 26px;
+    max-width: none;
+    height: 150px;
+    padding: 8px 4px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0D0D0D;
+    color: #fff;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+}
+
+.job-contracts-main .contract-title-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #121212;
+}
+
+.job-contracts-main .edit-contract-title-btn,
+.job-contracts-main .save-contract-title-btn,
+.job-contracts-main .cancel-contract-title-btn {
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    margin-left: 0;
+    font-size: 9px;
+}
+
+.job-contracts-main .edit-contract-title-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.job-contracts-main .edit-contract-title-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.job-contracts-main .save-contract-title-btn {
+    background: rgba(117, 230, 164, 0.2);
+    border-color: rgba(117, 230, 164, 0.34);
+    color: #bff4d7;
+}
+
+.job-contracts-main .save-contract-title-btn:hover {
+    background: rgba(117, 230, 164, 0.28);
+}
+
+.job-contracts-main .cancel-contract-title-btn {
+    background: rgba(255, 143, 143, 0.2);
+    border-color: rgba(255, 143, 143, 0.34);
+    color: #ffd0d0;
+}
+
+.job-contracts-main .cancel-contract-title-btn:hover {
+    background: rgba(255, 143, 143, 0.28);
+}
+
+.job-contracts-main .contract-list-item-meta {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    min-height: 0;
+}
+
+.job-contracts-main .contract-list-item-meta-line {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 9px;
+    line-height: 1.05;
+    color: rgba(255, 255, 255, 0.62);
+    font-family: 'Roboto Mono', monospace;
+    white-space: normal;
+    max-height: 82px;
+    overflow: hidden;
+    text-overflow: clip;
+    letter-spacing: 0.2px;
+}
+
+.job-contracts-main .contract-list-item-right {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.job-contracts-main .contract-inline-panel-item {
+    width: clamp(420px, 36vw, 560px);
+    min-width: clamp(420px, 36vw, 560px);
+    height: 100%;
+    min-height: 0;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.job-contracts-main .contract-inline-panel-item.is-opening .contract-sheet-preview {
+    animation: contractSheetReveal 0.3s ease-out;
+}
+
+.job-contracts-main .contract-inline-panel-inner {
+    width: 100%;
+}
+
+.job-contracts-main .contract-type-badge,
+.job-contracts-main .contract-status-badge {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 7px;
+    line-height: 1;
+    padding: 6px 3px;
+    border-radius: 999px;
+    letter-spacing: 0.35px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: normal;
+}
+
+.job-contracts-main .contract-sheet-meta .contract-status-badge {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 8.5px;
+    line-height: 1.2;
+    padding: 3px 7px;
+    white-space: nowrap;
+}
+
+.job-contracts-main .contract-sheet-location-badge {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 8px;
+    line-height: 1.1;
+    padding: 3px 7px;
+    white-space: nowrap;
+    align-self: flex-start;
+}
+
+.job-contracts-main .contract-type-badge.badge-sale {
+    color: #75E6A4;
+    background: rgba(117, 230, 164, 0.1);
+    border-color: rgba(117, 230, 164, 0.25);
+}
+
+.job-contracts-main .contract-type-badge.badge-rent {
+    color: #90BAFF;
+    background: rgba(144, 186, 255, 0.1);
+    border-color: rgba(144, 186, 255, 0.25);
+}
+
+.job-contracts-main .contract-status-pending {
+    color: #FFCF5A;
+    background: rgba(255, 207, 90, 0.1);
+    border-color: rgba(255, 207, 90, 0.24);
+}
+
+.job-contracts-main .contract-status-active {
+    color: #75E6A4;
+    background: rgba(117, 230, 164, 0.1);
+    border-color: rgba(117, 230, 164, 0.24);
+}
+
+.job-contracts-main .contract-status-completed {
+    color: #90BAFF;
+    background: rgba(144, 186, 255, 0.1);
+    border-color: rgba(144, 186, 255, 0.24);
+}
+
+.job-contracts-main .contract-status-cancelled,
+.job-contracts-main .contract-status-expired {
+    color: #FF8F8F;
+    background: rgba(255, 143, 143, 0.1);
+    border-color: rgba(255, 143, 143, 0.24);
+}
+
+.job-contracts-main .contract-status-unknown {
+    color: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.job-contracts-main .contract-list-item .contract-status-badge.contract-list-status-dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    margin-top: 4px;
+    border-radius: 999px;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    border: none;
+    background: currentColor;
+}
+
+.job-contracts-main .contract-sheet-wrapper {
+    padding: 0;
+}
+
+.job-contracts-main .contract-sheet-preview {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #f0e8d9 0%, #ece0cb 45%, #e8dcc5 100%);
+    color: #2e2518;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+}
+
+.job-contracts-main .contract-sheet-header {
+    padding: 12px 14px 10px 14px;
+    border-bottom: 1px dashed rgba(46, 37, 24, 0.28);
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 68px;
+    gap: 8px;
+}
+
+.job-contracts-main .contract-sheet-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.job-contracts-main .contract-sheet-type {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    opacity: 0.86;
+}
+
+.job-contracts-main .contract-sheet-title {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
+}
+
+.job-contracts-main .contract-sheet-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.job-contracts-main .contract-sheet-number {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    color: rgba(46, 37, 24, 0.8);
+    font-weight: 700;
+}
+
+.job-contracts-main .contract-sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-contracts-main .contract-sheet-section {
+    border: 1px dashed rgba(46, 37, 24, 0.25);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.job-contracts-main .contract-sheet-section h5 {
+    margin: 0 0 6px 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(46, 37, 24, 0.84);
+}
+
+.job-contracts-main .contract-sheet-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.job-contracts-main .contract-sheet-section-header h5 {
+    margin: 0;
+}
+
+.job-contracts-main .contract-sheet-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(46, 37, 24, 0.14);
+}
+
+.job-contracts-main .contract-sheet-row:last-child {
+    border-bottom: none;
+}
+
+.job-contracts-main .contract-sheet-row-label {
+    font-size: 10px;
+    color: rgba(46, 37, 24, 0.72);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.job-contracts-main .contract-sheet-row-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: rgba(46, 37, 24, 0.92);
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.job-contracts-main .contract-inline-edit-section {
+    border-style: solid;
+    border-color: rgba(67, 102, 186, 0.3);
+    background: rgba(67, 102, 186, 0.08);
+}
+
+.job-contracts-main .contract-inline-edit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.job-contracts-main .contract-inline-edit-value {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.job-contracts-main .contract-inline-edit-input,
+.job-contracts-main .contract-inline-edit-select {
+    width: 100%;
+    max-width: none;
+    height: 28px;
+    border: 1px solid rgba(46, 37, 24, 0.34);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.62);
+    color: rgba(46, 37, 24, 0.95);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 8px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.job-contracts-main .contract-inline-name-input {
+    width: 100%;
+}
+
+.job-contracts-main .contract-inline-edit-select {
+    min-width: 0;
+    height: 34px;
+    padding: 0 30px 0 8px;
+    line-height: normal;
+    color: rgba(46, 37, 24, 0.95);
+    background: rgba(255, 255, 255, 0.62);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    display: block;
+}
+
+.job-contracts-main .contract-inline-edit-select option {
+    line-height: 1.2;
+}
+
+.job-contracts-main .custom-dropdown.contract-inline-dropdown {
+    width: 100%;
+    text-align: left;
+}
+
+.job-contracts-main .custom-dropdown.contract-inline-dropdown .custom-dropdown-trigger {
+    min-height: 28px;
+    height: 28px;
+    padding: 0 30px 0 8px;
+    border: 1px solid rgba(46, 37, 24, 0.34);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.62);
+    color: rgba(46, 37, 24, 0.95);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.job-contracts-main .custom-dropdown.contract-inline-dropdown .custom-dropdown-trigger-text {
+    color: rgba(46, 37, 24, 0.95);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: left;
+    display: block;
+}
+
+.job-contracts-main .custom-dropdown.contract-inline-dropdown .custom-dropdown-arrow {
+    border-top-color: rgba(46, 37, 24, 0.75);
+}
+
+.job-contracts-main .custom-dropdown.contract-inline-dropdown.open .custom-dropdown-trigger,
+.job-contracts-main .custom-dropdown.contract-inline-dropdown .custom-dropdown-trigger:focus {
+    border-color: rgba(67, 102, 186, 0.58);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.job-contracts-main .contract-inline-edit-select:disabled+.custom-dropdown.contract-inline-dropdown {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.custom-dropdown-list.contract-inline-dropdown-list {
+    z-index: 10150;
+}
+
+.custom-dropdown-list.contract-inline-dropdown-list .custom-dropdown-option {
+    text-align: left;
+}
+
+.job-contracts-main .contract-inline-edit-input:focus,
+.job-contracts-main .contract-inline-edit-select:focus {
+    border-color: rgba(67, 102, 186, 0.58);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.job-contracts-main .contract-inline-edit-input:disabled,
+.job-contracts-main .contract-inline-edit-select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.job-contracts-main .contract-sheet-actions {
+    margin-top: auto;
+    padding-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.job-contracts-main .contract-sheet-actions .action-btn {
+    height: 30px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(46, 37, 24, 0.3);
+    color: #2e2518;
+    background: rgba(255, 255, 255, 0.36);
+}
+
+.job-contracts-main .contract-sheet-actions .action-btn:hover {
+    background: rgba(255, 255, 255, 0.54);
+}
+
+.job-contracts-main .contract-sheet-actions.pair-actions {
+    flex-wrap: nowrap;
+}
+
+.job-contracts-main .contract-sheet-actions.pair-actions .action-btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.job-contracts-main .contract-sheet-actions .details-btn {
+    border-color: rgba(46, 37, 24, 0.36);
+}
+
+.job-contracts-main .contract-sheet-actions .edit-btn {
+    border-color: rgba(46, 37, 24, 0.36);
+    background: rgba(255, 255, 255, 0.36);
+    color: #2e2518;
+}
+
+.job-contracts-main .contract-sheet-actions .save-btn {
+    border-color: rgba(46, 37, 24, 0.36);
+    background: rgba(255, 255, 255, 0.36);
+    color: #2e2518;
+}
+
+.job-contracts-main .contract-sheet-actions .cancel-edit-btn {
+    border-color: rgba(46, 37, 24, 0.36);
+    background: rgba(255, 255, 255, 0.36);
+    color: #2e2518;
+}
+
+.job-contracts-main .contract-sheet-actions .danger-btn {
+    border-color: rgba(46, 37, 24, 0.36);
+    background: rgba(255, 255, 255, 0.36);
+    color: #2e2518;
+}
+
+.job-contracts-main .contract-sheet-actions .action-btn:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+
+.job-interface .contract-info-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.42);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+}
+
+.job-interface .contract-info-value {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.unpaid-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.unpaid-card .contract-info-item {
+    padding: 6px 8px;
+}
+
+.job-houses-main .job-houses-search {
+    position: relative;
+    width: 100%;
+    margin: 0 4px 12px 4px;
+    flex-shrink: 0;
+}
+
+.job-houses-main .job-houses-search i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+}
+
+.job-houses-main .job-houses-search-input {
+    display: block;
+    width: 100%;
+    height: 34px;
+    padding: 0 12px 0 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-family: 'Roboto Mono', monospace;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.job-houses-main .job-houses-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.job-houses-main .job-houses-search-input:focus {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 1080px) {
+    .job-contracts-main .contract-drawer.has-open-contract .contract-drawer-contract-panel {
+        width: clamp(350px, 46vw, 460px);
+    }
+
+    .unpaid-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.pap-list .house-header-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.pap-list .house-header-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pap-list .house-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pap-list .house-image-placeholder img {
+    width: 48px;
+    height: 48px;
+    opacity: 0.3;
+    object-fit: contain;
+    transform: translateY(-40px);
+}
+
+.pap-list .house-image-placeholder i {
+    font-size: 56px;
+    opacity: 0.3;
+    color: #fff;
+    transform: translateY(-40px);
+}
+
+
+.pap-list .house-status,
+.pap-list .house-card.available .house-status,
+.pap-list .house-card.sold .house-status,
+.pap-list .house-card.pap-contract .house-status {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.pap-list .action-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.pap-list .action-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+.pap-list .house-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.pap-list .pap-listing-description-block {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    width: 100%;
+    height: 64px;
+    min-height: 64px;
+    max-height: 64px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.pap-list .pap-listing-description-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: 600;
+}
+
+.pap-list .pap-listing-description-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.84);
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.pap-list .pap-listing-description-text.pap-listing-description-placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+}
+
+.pap-list .gps-icon-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.pap-list .gps-icon-btn:hover {
+    background: transparent !important;
+    color: #fff !important;
+}
+
+.job-map-layout {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.job-map-sidebar {
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 12px;
+}
+
+.job-map-sidebar-header {
+    padding: 2px 4px 8px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.job-map-sidebar-header h3 {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.job-map-search {
+    position: relative;
+    width: 100%;
+}
+
+.job-map-search i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+}
+
+.job-map-search-input {
+    display: block;
+    width: 100%;
+    height: 34px;
+    padding: 0 12px 0 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-family: 'Roboto Mono', monospace;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.job-map-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.job-map-search-input:focus {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.job-map-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.job-map-filter-label {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.58);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.job-map-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    user-select: none;
+}
+
+.job-map-checkbox input {
+    width: 14px;
+    height: 14px;
+}
+
+.job-map-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.job-map-stat-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-map-stat-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-stat-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.job-map-calibration-panel {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px;
+}
+
+.job-map-calibration-header h4 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.job-map-calibration-header p {
+    margin: 4px 0 0 0;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.58);
+    line-height: 1.35;
+}
+
+.job-map-calibration-header-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.job-map-calibration-btn.is-active {
+    border-color: rgba(255, 255, 255, 0.34);
+    background: #1a1a1a;
+}
+
+.job-map-calibration-toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.job-map-calibration-step {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.68);
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.job-map-calibration-step input {
+    width: 78px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-calibration-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.job-map-calibration-btn {
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: #111;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.job-map-calibration-btn:hover {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: #171717;
+}
+
+.job-map-calibration-nudge-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.job-map-calibration-nudge-row .job-map-calibration-btn {
+    padding: 0 6px;
+}
+
+.job-map-calibration-help {
+    margin: 0;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.56);
+    line-height: 1.35;
+}
+
+.job-map-calibration-ref-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.job-map-calibration-ref-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.job-map-calibration-ref-row.is-capturing {
+    border-color: rgba(255, 248, 166, 0.58);
+    background: rgba(255, 248, 166, 0.08);
+}
+
+.job-map-calibration-ref-tag {
+    width: 20px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.74);
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+}
+
+.job-map-calibration-ref-input,
+.job-map-calibration-ref-readonly {
+    flex: 1 1 56px;
+    min-width: 0;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 10px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-calibration-ref-readonly {
+    color: rgba(255, 255, 255, 0.68);
+    background: #0d0d0d;
+}
+
+.job-map-calibration-btn-mini {
+    width: 28px;
+    min-width: 28px;
+    padding: 0;
+}
+
+.job-map-calibration-capture-state {
+    min-height: 14px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.68);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.2px;
+}
+
+.job-map-calibration-capture-state.is-error {
+    color: #ff9f9f;
+}
+
+.job-map-calibration-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.job-map-calibration-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-calibration-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.job-map-calibration-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.job-map-calibration-field span {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.35px;
+}
+
+.job-map-calibration-field input {
+    width: 100%;
+    height: 27px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.nh-map-calib-ref-label {
+    background: rgba(10, 10, 10, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.92);
+    border-radius: 5px;
+    padding: 1px 4px;
+    font-size: 10px;
+    font-family: 'Roboto Mono', monospace;
+    box-shadow: none;
+}
+
+.job-map-calibration-output {
+    width: 100%;
+    min-height: 130px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 10px;
+    line-height: 1.35;
+    padding: 8px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-houses-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 2px;
+}
+
+.job-map-house-item {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.job-map-house-item:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.job-map-house-item.is-active {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.job-map-house-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.job-map-house-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.3;
+}
+
+.job-map-house-zone {
+    margin: 2px 0 0 0;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.58);
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-house-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.82);
+    flex-shrink: 0;
+}
+
+.job-map-house-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.job-map-house-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 6px 7px;
+}
+
+.job-map-house-chip-label {
+    display: block;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.52);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+}
+
+.job-map-house-chip-value {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.job-map-house-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.job-map-house-btn {
+    height: 30px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: #111;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.job-map-house-btn:hover {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: #171717;
+}
+
+.job-map-main {
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    gap: 10px;
+}
+
+.job-map-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #050505;
+}
+
+.job-agency-map {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    background: #060606;
+}
+
+.job-agency-map .leaflet-container {
+    background: #060606;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-agency-map .leaflet-image-layer.nh-map-tile-overlay {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    outline: 1px solid transparent;
+}
+
+.job-agency-map .leaflet-tile {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    outline: 1px solid transparent;
+}
+
+.job-map-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 2px;
+}
+
+.job-map-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.job-map-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.job-map-dot.vacant {
+    background: #7be495;
+}
+
+.job-map-dot.agency {
+    background: #7ab8ff;
+}
+
+.job-map-dot.sold {
+    background: #d8dbe2;
+}
+
+.job-map-dot.pap {
+    background: #ffd089;
+}
+
+.nh-map-popup {
+    min-width: 190px;
+    font-family: 'Roboto Mono', monospace;
+    color: #111;
+}
+
+.nh-map-popup-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.nh-map-popup-meta {
+    font-size: 10px;
+    opacity: 0.85;
+    margin-bottom: 7px;
+}
+
+.nh-map-popup-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.nh-map-popup-btn {
+    border: 1px solid #d0d0d0;
+    background: #f7f7f7;
+    color: #111;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    padding: 5px 8px;
+    cursor: pointer;
+}
+
+.nh-map-popup-btn:hover {
+    background: #ececec;
+}
+
+@media (max-width: 1280px) {
+    .job-map-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .job-map-sidebar {
+        max-height: 44vh;
+    }
+}

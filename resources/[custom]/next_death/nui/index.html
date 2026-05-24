@@ -1,0 +1,422 @@
+<!--
+  ------------------------------------------------------------------------------------------------
+    Next Death - Advanced death system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-death/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-death/?from=homepage
+    Tebex: https://nextcorestudio.tebex.io/package/7057654
+
+--------------------------------------------------------------------------------------------------
+-->
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Next Death</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <div id="help-messages" class="help-messages">
+    <div class="help-message" id="help-message-template" style="display: none;">
+      <div class="help-icon"></div>
+      <div class="help-text"></div>
+    </div>
+  </div>
+
+  <div id="damage-vignette"></div>
+
+  <div id="centerTitle" aria-hidden="true">YOU ARE UNCONSCIOUS</div>
+  <div id="centerInfo" aria-hidden="true">
+    <span id="centerEarlyValue">--:--</span>
+    <div id="centerHint">It will take some time before you regain your strength</div>
+    <div class="hint" id="called" style="display:none;">Alert sent to EMS</div>
+  </div>
+  <div id="blink" aria-hidden="true">
+    <div id="blinkVignette" class="vignette"></div>
+    <svg id="blinkMaskSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <filter id="eyeFeather" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="64" />
+        </filter>
+        <mask id="eyeMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="1000" height="1000" fill="white" />
+          <ellipse id="eyeEllipse" cx="500" cy="500" rx="820" ry="820" fill="black" filter="url(#eyeFeather)" />
+        </mask>
+      </defs>
+      <rect class="maskOverlay" x="0" y="0" width="1000" height="1000" fill="rgba(0,0,0,1)" mask="url(#eyeMask)" />
+    </svg>
+  </div>
+  <div id="overlay" class="hidden" role="dialog" aria-live="polite" aria-label="Death screen">
+    <div class="panel">
+      <div class="handle" aria-hidden="true"></div>
+      <div class="actionsRow">
+        <button id="callBtn" class="btn primary lg">Call Emergency Services <span class="hintSmall">(E)</span></button>
+        <button id="respawnBtn" class="btn respawn lg" disabled>Respawn <span class="hintSmall">(R)</span></button>
+      </div>
+      <div class="bottomTrack">
+        <div class="bottomBar" id="bottomBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="glass-panel">
+      <div class="header">
+        <div>
+          <div class="title">NEXT<span class="square-dot"></span>DEATH</div>
+          <div class="subtitle" id="ui-citizen-status">ADMIN PANEL</div>
+        </div>
+        <div class="header-right">
+          <div class="meta-info">
+            <div class="badge-version" id="ui-version">v?</div>
+            <div class="command-hint">/nd</div>
+          </div>
+          <button class="close-btn" onclick="closeAdminMenu()">✖</button>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="configuration">
+          <span data-translate="configuration">CONFIGURATION</span>
+        </button>
+        <button class="tab-btn" data-tab="settings">
+          <span data-translate="parametres">SETTINGS</span>
+        </button>
+        <div class="tab-indicator"></div>
+      </div>
+
+      <div class="main-content">
+        <div id="tab-configuration" class="tab-pane active">
+          <div class="dashboard-grid">
+            <div class="card card-sidebar">
+              <div class="card-header">
+                <span class="card-title" data-translate="menu_title">CURRENT STATUS</span>
+                <div class="status-indicator"></div>
+              </div>
+              <div class="sidebar-menu">
+                <div class="sidebar-item active" data-section="timers">
+                  <i class="fas fa-clock"></i>
+                  <span data-translate="timers">TIMERS</span>
+                </div>
+                <div class="sidebar-item" data-section="options">
+                  <i class="fas fa-cog"></i>
+                  <span data-translate="options">OPTIONS</span>
+                </div>
+                <div class="sidebar-item" data-section="location">
+                  <i class="fas fa-hospital"></i>
+                  <span data-translate="respawn_location">LOCATION</span>
+                </div>
+                <div class="sidebar-item" data-section="effects">
+                  <i class="fas fa-palette"></i>
+                  <span data-translate="bonus">EFFECTS</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-content">
+
+              <div class="content-section active" id="section-timers">
+                <div class="section-header">
+                  <h3 data-translate="timers">TIMERS</h3>
+                </div>
+                <div class="settings-list">
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="early_respawn">EARLY RESPAWN</span>
+                      <span class="setting-desc" data-translate="early_respawn_desc">Allows players to respawn before
+                        the end of timer.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="early-respawn-enabled">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item column">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="time_before_early_respawn">TIME BEFORE EARLY
+                        RESPAWN</span>
+                      <span class="setting-value-display" id="early-value">1 min</span>
+                    </div>
+                    <div class="range-container">
+                      <input type="range" id="early-slider" class="range-input" min="0.5" max="10" step="0.5" value="1">
+                    </div>
+                  </div>
+
+                  <div class="divider"></div>
+                  <div id="timer-warning" class="timer-warning" aria-live="polite"></div>
+
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="forced_respawn">FORCED RESPAWN</span>
+                      <span class="setting-desc" data-translate="forced_respawn_desc">Automatically respawns player at
+                        end of timer.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="forced-respawn-enabled">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item column">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="time_before_forced_respawn">BLEEDOUT TIME</span>
+                      <span class="setting-value-display" id="bleedout-value">5 min</span>
+                    </div>
+                    <div class="range-container">
+                      <input type="range" id="bleedout-slider" class="range-input" min="1" max="30" step="0.5" value="5">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-section" id="section-options">
+                <div class="section-header">
+                  <h3 data-translate="options">OPTIONS</h3>
+                </div>
+                <div class="settings-list">
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="remove_weapons_on_respawn">STRIP WEAPONS ON
+                        RESPAWN</span>
+                      <span class="setting-desc" data-translate="remove_weapons_desc">Remove all weapons when player
+                        respawns.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="remove-weapons">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="lose_inventory_on_respawn">LOSE INVENTORY ON
+                        RESPAWN</span>
+                      <span class="setting-desc" data-translate="lose_inventory_desc">Remove all items from inventory on
+                        respawn.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="lose-inventory-on-respawn">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item column" id="container-inventory-whitelist">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="inventory_whitelist">INVENTORY WHITELIST</span>
+                      <span class="setting-desc" data-translate="inventory_whitelist_desc">Items that will NOT be
+                        removed (comma separated).</span>
+                    </div>
+                    <div class="range-container">
+                      <textarea id="inventory-whitelist" class="text-input" rows="3"
+                        placeholder="phone, id_card, driver_license"></textarea>
+                      <button id="save-whitelist-btn" class="action-btn"
+                        style="margin-top: 8px; width: 100%; justify-content: center;">
+                        <i class="fas fa-save"></i> <span data-translate="save">SAVE</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="drop_weapon_on_death">DROP WEAPON ON DEATH</span>
+                      <span class="setting-desc" data-translate="drop_weapon_desc">Drop held weapon on ground when
+                        dying.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="drop-weapon-on-death">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="info-block">
+                    <span class="info-label" data-translate="detected_inventory">DETECTED INVENTORY</span>
+                    <span class="info-value" id="inventory-status-value">-</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-section" id="section-location">
+                <div class="section-header">
+                  <h3 data-translate="respawn_location">LOCATION</h3>
+                </div>
+
+                <div class="settings-list">
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="respawn_at_location">RESPAWN AT HOSPITAL</span>
+                      <span class="setting-desc" data-translate="respawn_at_location_desc">Teleport to hospital on
+                        respawn.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="respawn-at-location">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="revive_at_location">REVIVE AT HOSPITAL</span>
+                      <span class="setting-desc" data-translate="revive_at_location_desc">Teleport to hospital when
+                        revived by medic.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="revive_at_location">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item multi-respawn-toggle-row">
+                    <div class="setting-info multi-respawn-text">
+                      <span class="setting-label" data-translate="nearest_respawn_point_enabled">Multi respawn</span>
+                      <span class="setting-desc" data-translate="nearest_respawn_point_enabled_desc">If enabled, player respawns at the nearest custom respawn point.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="nearest-respawn-point-enabled">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div id="multi-respawn-config" class="multi-respawn-config" style="display: none;">
+                    <div class="setting-item column">
+                      <div class="setting-info multi-respawn-text">
+                        <span class="setting-label" data-translate="custom_respawn_points">Custom respawn points</span>
+                        <span class="setting-desc" data-translate="custom_respawn_points_desc">All custom points are listed below and can be edited directly.</span>
+                      </div>
+                      <div id="respawn-point-list" class="respawn-point-list"></div>
+                    </div>
+                  </div>
+
+                  <div id="multi-respawn-controls" class="multi-respawn-controls" style="display: none;">
+                    <button class="action-btn" id="add-respawn-point-btn" onclick="addRespawnPointFromUI()">
+                      <i class="fas fa-plus"></i>
+                      <span data-translate="add_respawn_point">Add respawn point</span>
+                    </button>
+                  </div>
+ 
+                </div>
+              </div>
+
+              <div class="content-section" id="section-effects">
+                <div class="section-header">
+                  <h3 data-translate="bonus">EFFECTS</h3>
+                </div>
+
+                <div class="settings-list">
+                  <div class="setting-item">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="damage_vignette_enabled">DAMAGE INDICATOR</span>
+                      <span class="setting-desc" data-translate="damages_desc">Show screen effect when taking
+                        damage.</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" id="damage-vignette-enabled">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item column">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="damage_vignette_opacity">OPACITY</span>
+                      <span class="setting-value-display" id="damage-vignette-opacity-value">90%</span>
+                    </div>
+                    <div class="range-container">
+                      <input type="range" id="damage-vignette-opacity" class="range-input" min="10" max="100"
+                        value="90">
+                    </div>
+                  </div>
+
+                  <div class="setting-item column">
+                    <div class="setting-info">
+                      <span class="setting-label" data-translate="damage_vignette_color">COLOR</span>
+                    </div>
+                    <div class="color-palette">
+                      <div class="color-option" data-color="black" style="background: #000000;"></div>
+                      <div class="color-option" data-color="red" style="background: #ff0000;"></div>
+                      <div class="color-option" data-color="blue" style="background: #0000ff;"></div>
+                      <div class="color-option" data-color="green" style="background: #00ff00;"></div>
+                      <div class="color-option" data-color="yellow" style="background: #ffff00;"></div>
+                      <div class="color-option" data-color="purple" style="background: #800080;"></div>
+                      <div class="color-option" data-color="orange" style="background: #ffa500;"></div>
+                      <div class="color-option" data-color="pink" style="background: #ffc0cb;"></div>
+                      <div class="color-option" data-color="cyan" style="background: #00ffff;"></div>
+                      <div class="color-option" data-color="white" style="background: #ffffff;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-settings" class="tab-pane">
+          <div class="settings-container">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label" data-translate="language">LANGUAGE</span>
+                <span class="setting-desc" data-translate="language_description">Interface language.</span>
+              </div>
+              <select id="language-select" class="setting-select">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+                <option value="pt">Português</option>
+                <option value="ru">Русский</option>
+                <option value="tr">Türkçe</option>
+                <option value="ar">العربية</option>
+                <option value="ja">日本語</option>
+                <option value="zh">中文</option>
+                <option value="hi">हिन्दी</option>
+                <option value="bn">বাংলা</option>
+              </select>
+            </div>
+
+            <div id="discord-admin-text" class="discord-admin-text">
+              <p><span data-translate="found_bug">Found a bug?</span> <a href="https://discord.gg/DPQarEF65Y"
+                  target="_blank" rel="noopener noreferrer" class="discord-link">https://discord.gg/DPQarEF65Y</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="admin.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+

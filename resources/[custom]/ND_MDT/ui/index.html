@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="script.js" type="text/javascript" defer></script>
+</head>
+<body>
+    <div class="background">
+        <!-- This text shows the mdt name and department -->
+        <h3 class="topBarText"></h3>
+
+        <!-- X button to close the whole ui -->
+        <button class="minimizeOverlay"><i class="fa-solid fa-minus"></i></button>
+        <button class="closeOverlay"><i class="fa-solid fa-xmark"></i></button>
+
+        <!-- Overlay for the whole mdt (not the top bar that would be behind .overlay and in .background) -->
+        <div class="overlay">
+
+            <!-- Left side of the mdt, this has, player information, all the menu buttons to switch pages, and the 10 codes -->
+            <div class="leftPanel">
+                <!-- Player profile info -->
+                <div class="leftPanelPlayerInfo">
+                    <div class="leftPanelPlayerInfoImageContainer">
+                        <img class="leftPanelPlayerInfoImage" />
+                    </div>
+                    <div class="leftPanelPlayerInfoContainer">
+                        <h3 class="leftPanelPlayerInfoUnitNumber">Callsign not set</h3>
+                        <h4 class="leftPanelPlayerInfoName"></h4>
+                    </div>
+                </div>
+
+                <!-- Buttons to switch pages -->
+                <button id="leftPanelButtonDashboard" class="leftPanelButtons" style="background-color: #3a3b3c">Dashboard</button>
+                <button id="leftPanelButtonNameSearch" class="leftPanelButtons">Name Search</button>
+                <button id="leftPanelButtonPlateSearch" class="leftPanelButtons">Plate Search</button>
+                <button id="leftPanelButtonWeaponSearch" class="leftPanelButtons">Weapon Search</button>
+                <button id="leftPanelButtonBolo" class="leftPanelButtons">BOLO</button>
+                <button id="leftPanelButtonReports" class="leftPanelButtons">Reports</button>
+                <button id="leftPanelButtonLiveChat" class="leftPanelButtons">Live Chat</button>
+                <button id="leftPanelButtonEmployees" class="leftPanelButtons">Employees</button>
+                <!-- <button id="leftPanelButtonSettings" class="leftPanelButtons">Settings</button> -->
+
+                <button id="leftPanelPanicButton">PANIC</button>
+            </div>
+
+            <!-- Right side of the mdt this will have all the pages in it -->
+            <div class="rightPanel">
+                <!-- Dashboard Page -->
+                <div class="rightPanelDashboard">
+                    <!-- Change status using these buttons -->
+                    <div class="rightPanelDashboardButtons">
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardBusyButton" style="background-color: #2656c9" value="10-6">Busy</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardOutServiceButton" style="background-color: #2656c9; opacity: 1; color: white" value="10-7">Out of service</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardInServiceButton" style="background-color: #2656c9" value="10-8">In service</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardPanicButton" style="background-color: red" value="10-99">PANIC</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardTrafficStopButton" style="background-color: gray" value="10-11">Traffic stop</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardTransportButton" style="background-color: gray" value="10-15">Transporting to station</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardArrivedButton" style="background-color: gray" value="10-23">Arrived on scene</button>
+                        <button class="rightPanelDashboardButtonsStatus" id="rightPanelDashboardRouteButton" style="background-color: gray" value="10-97">En route</button>
+                    </div>
+
+                    <div class="rightPanelDashboardDisplays">
+                        <h3 class="rightPanelDashboardDisplayTitle" id="rightPanelDashboardDisplayActiveUnits">Active Units</h3>
+                        <h3 class="rightPanelDashboardDisplayTitle" id="rightPanelDashboardDisplayCalls">Calls</h3>
+
+                        <!-- Show active units on the dashboard -->
+                        <div class="rightPanelDashboardActiveUnits rightPanelDashboardDisplayItems"></div>
+
+                        <!-- Show 911 calls on the dashboard -->
+                        <div class="rightPanelDashboard911Calls rightPanelDashboardDisplayItems"></div>
+                    </div>
+                </div>
+
+                <!-- Name search Page -->
+                <div class="rightPanelNameSearch">
+                    <div class="recordsPage">
+                        <i class="fa-solid fa-chevron-left recordsReturn"></i>
+                        <button class="viewVehiclesButton recordsPageTopButton"><i class="fas fa-car-side"></i> View vehicles</button>
+                        <button class="viewWeaponsButton recordsPageTopButton"><i class="fa-solid fa-gun"></i> View weapons</button>
+                        <button class="boloCitizenCreateButton recordsPageTopButton"><i class="fa-solid fa-hand"></i> Create BOLO</button>
+                        <button class="recordsMainCreateButton recordsPageTopButton"><i class="fa-solid fa-file"></i> Create record</button>
+                        <button class="recordsCitizenSave recordsPageTopButton"><i class="fa-solid fa-check"></i> Save all changes</button>
+
+                        <div class="recordsCitizen"></div>
+
+                        <div class="recordsInfo">
+                            <div class="recordsLicenses">
+                                <p class="recordsLicensesTitle">Licenses:</p>
+                                <div class="recordsLicensesInfo"></div>
+                            </div>
+                            <div class="recordsProperties">
+                                <p class="recordsPropertiesTitle">Properties:</p>
+                                <div class="recordsPropertiesInfo"></div>
+                            </div>
+                            <div class="recordsMain">
+                                <p class="recordsMainTitle">Records:</p>
+                                <div class="recordsMainInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="nameSearch">
+                        <input id="firstNameSearchBar" class="searchBar" type="text" placeholder="First name.." data-index="1"/><input id="lastNameSearchBar" class="searchBar" type="text" placeholder="Last name.." data-index="2"/><button class="searchBarButton" type="submit"><i class="fa fa-search"></i></button>
+                        <div class="rightPanelNameSearchResponses"></div>
+                        <p id="searchNameDefault" style="position: absolute; margin: auto; bottom: 80%; left: 0; right: 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-weight: bolder; color: #ccc;">Search citizen by name.</p>
+                    </form>
+                    <div id="nameLoader" class="loader" style="display: none"></div>
+                </div>
+
+                <!-- Plate search Page -->
+                <div class="rightPanelPlateSearch">
+                    <form id="plateSearch">
+                        <input id="plateSearchBar" class="plateNumberSearchBar" type="text" placeholder="Plate number"/><button class="searchBarButton" type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                    <div class="rightPanelPlateSearchResponses"></div>
+                    <p id="searchPlateDefault" style="position: absolute; margin: auto; bottom: 80%; left: 0; right: 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-weight: bolder; color: #ccc;">Search vehicle by plate number.</p>
+                    <div id="plateLoader" class="loader" style="display: none"></div>
+                </div>
+
+                <!-- Weapon search Page -->
+                <div class="rightPanelWeaponSearch">
+                    <form id="weaponSearch">
+                        <input id="weaponSearchBar" class="weaponNumberSearchBar" type="text" placeholder="Weapon serial number"/><button class="searchBarButton" type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                    <div class="rightPanelWeaponSearchResponses"></div>
+                    <p id="searchWeaponDefault" style="position: absolute; margin: auto; bottom: 80%; left: 0; right: 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-weight: bolder; color: #ccc;">Search weapon by serial number.</p>
+                    <div id="weaponLoader" class="loader" style="display: none"></div>
+                </div>
+
+                <!-- BOLOs Page -->
+                <div class="rightPanelBoloPage">
+                    <div class="rightPanelBoloButtons">
+                        <button value="all" style="opacity: 0.5;">All Bolo</button>
+                        <button value="vehicle">Vehicle Bolo</button>
+                        <button value="person">Person Bolo</button>
+                        <button value="other">Other Bolo</button>
+                        <button value="create">Create Bolo</button>
+                    </div>
+                    <div class="rightPanelBoloResponses"></div>
+                </div>
+
+                <!-- Reports Page -->
+                <div class="rightPanelReportsPage">
+                    <div class="rightPanelReportsButtons">
+                        <button value="crime" style="opacity: 0.5;">Crime</button>
+                        <button value="traffic">Traffic</button>
+                        <button value="arrest">Arrest</button>
+                        <button value="incident">Incident</button>
+                        <button value="use_of_force">Use of Force</button>
+                        <button value="create">Create report</button>
+                    </div>
+                    <div class="rightPanelReportsResponses"></div>
+                </div>
+
+                <!-- Live chat Page -->
+                <div class="rightPanelLiveChat">
+                    <div class="rightPanelLiveChatBox"></div>
+                    <form id="liveChatForm">
+                        <p class="liveChatRateLimit">You've been rate limited, wait for this message to dissapear.</p>
+                        <input id="liveChatTextField" type="text"/>
+                        <button class="liveChatSendButton" type="submit"><i class="fa-solid fa-angle-up"></i></button>
+                    </form>
+                </div>
+
+                <!-- manage employees page -->
+                <div class="rightPanelEmployees">
+                    <form id="employeeSearch">
+                        <input id="employeeSearchBar" class="employeeSearchBar" type="text" placeholder="Search employee"/><button class="employeeSearchBarButton" type="submit"><i class="fa fa-search"></i></button><button class="newEmployeeButton" type="button"><i class="fa-solid fa-user-plus"></i></button>
+                    </form>
+                    <div class="rightPanelEmployeeSearchResponses"></div>
+                    <div id="plateLoader" class="loader" style="display: none"></div>
+                </div>
+
+                
+                <!-- Settings Page -->
+                <div class="rightPanelSettings"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="form-records">
+        <div class="form-records-bar" style="user-select: none"><p>Create record</p></div>
+        <button class="form-records-close"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="form-records-content">
+            <select id="form-records-charges"></select>
+            <div class="form-records-description"><p class="form-records-description-value"></p></div>
+            <div class="form-records-info">
+                <p class="form-records-fine">$2000 fine</p>
+                <p class="form-records-sentence">Up to 2 months sentence</p>
+            </div>
+            <button id="form-records-create">Create</button>
+        </div>
+    </div>
+
+    <div class="form-bolo">
+        <div class="form-bolo-bar" style="user-select: none"><p>Create BOLO</p></div>
+        <button class="form-bolo-close"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="form-records-content">
+            <select class="form-bolo-type" required>
+                <option value="" disabled selected hidden>Choose bolo Type</option>
+                <option value="person">Person</option>
+                <option value="vehicle">Vehicle</option>
+                <option value="other">Other</option>
+            </select>
+            <div class="form-bolo-content"></div>
+            <button id="form-bolo-create">Create</button>
+        </div>
+    </div>
+
+    <div class="form-reports">
+        <div class="form-reports-bar" style="user-select: none"><p>Create report</p></div>
+        <button class="form-reports-close"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="form-records-content">
+            <select class="form-reports-type" required>
+                <option value="" disabled selected hidden>Choose report type</option>
+                <option value="crime">Crime</option>
+                <option value="traffic">Traffic</option>
+                <option value="arrest">Arrest</option>
+                <option value="incident">Incident</option>
+                <option value="use_of_force">Use of Force</option>
+            </select>
+            <div class="form-reports-content">
+                <input type="text" placeholder="Location">
+                <textarea style="height: 80%;" placeholder="Report information"></textarea>
+            </div>
+            <button id="form-reports-create">Create</button>
+        </div>
+    </div>
+
+    <div class="confirm-screen">
+        <p></p>
+        <div>
+            <button value="confirm">Confirm</button>
+            <button value="cancel">Cancel</button>
+        </div>
+    </div>
+
+</body>
+</html>

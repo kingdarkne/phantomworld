@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Economy Stats — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:       #0d0f14;
+    --bg2:      #13161e;
+    --bg3:      #1a1d27;
+    --bg4:      #21263a;
+    --border:   rgba(255,255,255,0.07);
+    --border2:  rgba(255,255,255,0.13);
+    --text:     #e8eaf0;
+    --muted:    #6b7280;
+    --dim:      #3d4355;
+    --green:    #22d3a0;
+    --green-bg: rgba(34,211,160,0.08);
+    --green-bd: rgba(34,211,160,0.22);
+    --red:      #f87171;
+    --red-bg:   rgba(248,113,113,0.08);
+    --red-bd:   rgba(248,113,113,0.22);
+    --amber:    #fbbf24;
+    --amber-bg: rgba(251,191,36,0.08);
+    --amber-bd: rgba(251,191,36,0.22);
+    --blue:     #60a5fa;
+    --accent:   #7c6af7;
+    --accent2:  #a78bfa;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700; font-size: 14px; color: #fff;
+  }
+  .header-title { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-updated { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .refresh-btn {
+    background: var(--bg4); border: 1px solid var(--border2);
+    color: var(--text); font-family: var(--sans); font-size: 12px;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { background: var(--bg3); border-color: var(--accent); color: var(--accent2); }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ─── LAYOUT ─── */
+  .page { padding: 28px 32px; max-width: 1400px; }
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── KPI CARDS ─── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--border2); }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-icon {
+    font-size: 18px; margin-bottom: 12px;
+    opacity: 0.7;
+  }
+  .kpi-label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.03em; margin-bottom: 6px; }
+  .kpi-value {
+    font-family: var(--mono); font-size: 26px; font-weight: 700;
+    letter-spacing: -1px; color: var(--text); margin-bottom: 6px;
+  }
+  .kpi-delta {
+    font-family: var(--mono); font-size: 11px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .kpi-delta.up { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+  .kpi-delta.neutral { color: var(--muted); }
+
+  /* ─── CHART CARDS ─── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .chart-card-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+  .chart-wrap { position: relative; width: 100%; height: 220px; }
+  .donut-row { display: flex; align-items: center; gap: 20px; }
+  .donut-wrap { position: relative; width: 160px; height: 160px; flex-shrink: 0; }
+  .donut-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .donut-center-val { font-family: var(--mono); font-size: 16px; font-weight: 700; }
+  .donut-center-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-pct { font-family: var(--mono); font-size: 11px; color: var(--text); margin-left: auto; }
+
+  /* ─── TABLES ─── */
+  .table-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .table-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .table-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .table-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+
+  /* Jobs table */
+  .job-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .job-row:last-child { border-bottom: none; }
+  .job-rank { font-family: var(--mono); font-size: 11px; color: var(--dim); width: 18px; flex-shrink: 0; }
+  .job-name { font-size: 13px; color: var(--text); flex: 1; }
+  .badge {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+    padding: 2px 7px; border-radius: 4px; text-transform: uppercase;
+  }
+  .badge-legal { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+  .badge-illegal { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+  .badge-gray { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+  .job-bar-wrap { width: 80px; background: var(--bg4); border-radius: 3px; height: 4px; flex-shrink: 0; }
+  .job-bar { height: 4px; border-radius: 3px; transition: width 0.8s ease; }
+  .job-val { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 76px; text-align: right; flex-shrink: 0; }
+
+  /* Leaderboard */
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-family: var(--mono); font-size: 11px; color: var(--dim); width: 18px; flex-shrink: 0; }
+  .lb-rank.gold { color: #fbbf24; }
+  .lb-rank.silver { color: #94a3b8; }
+  .lb-rank.bronze { color: #c0784a; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+    font-family: var(--mono);
+  }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .lb-val { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+
+  /* Money sinks */
+  .sink-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .sink-row:last-child { border-bottom: none; }
+  .sink-left { display: flex; align-items: center; gap: 10px; }
+  .sink-icon { font-size: 14px; width: 28px; text-align: center; }
+  .sink-name { font-size: 13px; color: var(--text); }
+  .sink-pct { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .sink-right { text-align: right; }
+  .sink-amount { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--red); }
+  .sink-bar-wrap { width: 80px; background: var(--bg4); border-radius: 3px; height: 3px; margin-top: 4px; margin-left: auto; }
+  .sink-bar { height: 3px; border-radius: 3px; background: var(--red); opacity: 0.5; }
+
+  /* Health alerts */
+  .alert-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-left { display: flex; align-items: center; gap: 8px; }
+  .alert-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .alert-label { font-size: 13px; color: var(--text); }
+  .alert-right { display: flex; align-items: center; gap: 8px; }
+  .alert-val { font-family: var(--mono); font-size: 12px; }
+  .status-ok { color: var(--green); }
+  .status-warn { color: var(--amber); }
+  .status-bad { color: var(--red); }
+
+  /* ─── SQL SECTION ─── */
+  .sql-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sql-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .sql-header {
+    background: var(--bg3); padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sql-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0.7; }
+  .sql-name { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; }
+  .sql-body { padding: 14px 16px; }
+  pre {
+    font-family: var(--mono); font-size: 11px; line-height: 1.7;
+    color: #94a3b8; white-space: pre-wrap; word-break: break-word;
+  }
+  .kw { color: #818cf8; }
+  .fn { color: #34d399; }
+  .str { color: #fbbf24; }
+  .cm { color: #4b5563; font-style: italic; }
+
+  /* ─── LOADING STATES ─── */
+  .skeleton { background: var(--bg3); border-radius: 4px; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+  /* ─── FADE IN ─── */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.10s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.20s; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 3px; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .chart-grid, .table-grid, .sql-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .page { padding: 16px; }
+    .header { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">$</div>
+    <div>
+      <div class="header-title">Economy Statistics</div>
+      <div class="header-sub">FiveM Admin Panel — Money Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated">Updated: <span id="lastUpdated">—</span></div>
+    <div class="pulse"></div>
+    <button class="refresh-btn" onclick="loadAll()">↺ Refresh</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ═══ KPI CARDS ═══ -->
+  <div class="section fade-in">
+    <div class="section-header">
+      <span class="section-title">Economy Overview</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card green fade-in delay-1">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Total money in economy</div>
+        <div class="kpi-value" id="kpi-total">—</div>
+        <div class="kpi-delta neutral" id="kpi-total-delta">Loading...</div>
+      </div>
+      <div class="kpi-card blue fade-in delay-2">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Earned today</div>
+        <div class="kpi-value" id="kpi-earned">—</div>
+        <div class="kpi-delta up" id="kpi-earned-delta">Loading...</div>
+      </div>
+      <div class="kpi-card red fade-in delay-3">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-label">Spent today</div>
+        <div class="kpi-value" id="kpi-spent">—</div>
+        <div class="kpi-delta neutral" id="kpi-spent-delta">Loading...</div>
+      </div>
+      <div class="kpi-card amber fade-in delay-4">
+        <div class="kpi-icon">⚖️</div>
+        <div class="kpi-label">Net daily flow</div>
+        <div class="kpi-value" id="kpi-net">—</div>
+        <div class="kpi-delta up" id="kpi-net-delta">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CHARTS ═══ -->
+  <div class="section fade-in delay-1">
+    <div class="section-header">
+      <span class="section-title">Flow & Sources</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">Money in vs out — last 7 days</div>
+        <div class="chart-card-sub">Earned vs spent across all players</div>
+        <div class="chart-wrap"><canvas id="flowChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Money sources</div>
+        <div class="chart-card-sub">Where cash enters the economy</div>
+        <div class="donut-row">
+          <div class="donut-wrap">
+            <canvas id="donutChart"></canvas>
+            <div class="donut-center">
+              <div class="donut-center-val">5</div>
+              <div class="donut-center-label">sources</div>
+            </div>
+          </div>
+          <div class="legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ JOBS + LEADERBOARD ═══ -->
+  <div class="section fade-in delay-2">
+    <div class="section-header">
+      <span class="section-title">Jobs & Players</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-grid">
+      <div class="table-card">
+        <div class="table-card-title">Top earning jobs</div>
+        <div class="table-card-sub">Daily server-wide earnings by job</div>
+        <div id="jobsList"></div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-title">Richest players</div>
+        <div class="table-card-sub">Combined wallet + bank balance</div>
+        <div id="leaderboard"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SINKS + ALERTS ═══ -->
+  <div class="section fade-in delay-3">
+    <div class="section-header">
+      <span class="section-title">Sinks & Health</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-grid">
+      <div class="table-card">
+        <div class="table-card-title">Money sinks</div>
+        <div class="table-card-sub">Where cash leaves the economy today</div>
+        <div id="sinksList"></div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-title">Economy health alerts</div>
+        <div class="table-card-sub">Balance indicators — act on red flags</div>
+        <div id="alertsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SQL REFERENCE ═══ -->
+  <div class="section fade-in delay-4">
+    <div class="section-header">
+      <span class="section-title">MySQL Query Reference</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="sql-grid">
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">ECONOMY OVERVIEW — KPI CARDS</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Total money in economy (wallet + bank)</span>
+<span class="kw">SELECT</span>
+  <span class="fn">SUM</span>(JSON_UNQUOTE(JSON_EXTRACT(accounts, <span class="str">'$.money'</span>))) + 
+  <span class="fn">SUM</span>(JSON_UNQUOTE(JSON_EXTRACT(accounts, <span class="str">'$.bank'</span>)))
+  <span class="kw">AS</span> total_economy
+<span class="kw">FROM</span> players;
+
+<span class="cm">-- Money earned today (from transaction logs)</span>
+<span class="kw">SELECT</span> <span class="fn">SUM</span>(amount) <span class="kw">AS</span> earned_today
+<span class="kw">FROM</span> economy_transactions
+<span class="kw">WHERE</span> type = <span class="str">'earn'</span>
+  <span class="kw">AND</span> created_at >= <span class="fn">CURDATE</span>();
+
+<span class="cm">-- Money spent today</span>
+<span class="kw">SELECT</span> <span class="fn">SUM</span>(amount) <span class="kw">AS</span> spent_today
+<span class="kw">FROM</span> economy_transactions
+<span class="kw">WHERE</span> type = <span class="str">'spend'</span>
+  <span class="kw">AND</span> created_at >= <span class="fn">CURDATE</span>();</pre></div>
+      </div>
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">7-DAY FLOW CHART</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Daily earn vs spend for last 7 days</span>
+<span class="kw">SELECT</span>
+  <span class="fn">DATE</span>(created_at) <span class="kw">AS</span> day,
+  <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> type = <span class="str">'earn'</span>
+       <span class="kw">THEN</span> amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> earned,
+  <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> type = <span class="str">'spend'</span>
+       <span class="kw">THEN</span> amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> spent
+<span class="kw">FROM</span> economy_transactions
+<span class="kw">WHERE</span> created_at >= <span class="fn">DATE_SUB</span>(<span class="fn">NOW</span>(), <span class="kw">INTERVAL</span> 7 <span class="kw">DAY</span>)
+<span class="kw">GROUP BY</span> <span class="fn">DATE</span>(created_at)
+<span class="kw">ORDER BY</span> day <span class="kw">ASC</span>;
+
+<span class="cm">-- Adjust table/column names to match your</span>
+<span class="cm">-- billing/transaction resource schema.</span></pre></div>
+      </div>
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">TOP EARNING JOBS</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Total daily earnings grouped by job</span>
+<span class="kw">SELECT</span>
+  p.job                   <span class="kw">AS</span> job_name,
+  <span class="fn">SUM</span>(t.amount)           <span class="kw">AS</span> total_earned,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> t.identifier) <span class="kw">AS</span> player_count
+<span class="kw">FROM</span> economy_transactions t
+<span class="kw">JOIN</span> players p <span class="kw">ON</span> p.identifier = t.identifier
+<span class="kw">WHERE</span> t.type = <span class="str">'earn'</span>
+  <span class="kw">AND</span> t.created_at >= <span class="fn">CURDATE</span>()
+<span class="kw">GROUP BY</span> p.job
+<span class="kw">ORDER BY</span> total_earned <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 10;
+
+<span class="cm">-- Column 'job' may be 'job_name' in your</span>
+<span class="cm">-- players table. Check your ESX/QB schema.</span></pre></div>
+      </div>
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">RICHEST PLAYERS</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Top 10 players by total wealth</span>
+<span class="kw">SELECT</span>
+  p.name,
+  p.identifier,
+  p.job,
+  (
+    JSON_UNQUOTE(JSON_EXTRACT(p.accounts, <span class="str">'$.money'</span>)) +
+    JSON_UNQUOTE(JSON_EXTRACT(p.accounts, <span class="str">'$.bank'</span>))
+  ) <span class="kw">AS</span> total_wealth,
+  <span class="fn">ROUND</span>(p.playtime / 60) <span class="kw">AS</span> hours_played
+<span class="kw">FROM</span> players p
+<span class="kw">ORDER BY</span> total_wealth <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 10;
+
+<span class="cm">-- For QBCore: accounts col is JSON with</span>
+<span class="cm">-- 'cash' and 'bank' keys instead of 'money'.</span></pre></div>
+      </div>
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">MONEY SINKS</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Where money leaves economy today</span>
+<span class="kw">SELECT</span>
+  category,
+  <span class="fn">SUM</span>(amount) <span class="kw">AS</span> total_spent
+<span class="kw">FROM</span> economy_transactions
+<span class="kw">WHERE</span> type = <span class="str">'spend'</span>
+  <span class="kw">AND</span> created_at >= <span class="fn">CURDATE</span>()
+<span class="kw">GROUP BY</span> category
+<span class="kw">ORDER BY</span> total_spent <span class="kw">DESC</span>;
+
+<span class="cm">-- You need a 'category' column in your</span>
+<span class="cm">-- transactions table: 'shop', 'vehicle',</span>
+<span class="cm">-- 'hospital', 'fine', 'weapon', 'property'</span>
+<span class="cm">-- Log this when the transaction fires.</span></pre></div>
+      </div>
+
+      <div class="sql-card">
+        <div class="sql-header"><div class="sql-dot"></div><div class="sql-name">ECONOMY HEALTH METRICS</div></div>
+        <div class="sql-body"><pre><span class="cm">-- Average player wallet</span>
+<span class="kw">SELECT</span> <span class="fn">AVG</span>(
+  JSON_UNQUOTE(JSON_EXTRACT(accounts, <span class="str">'$.money'</span>)) +
+  JSON_UNQUOTE(JSON_EXTRACT(accounts, <span class="str">'$.bank'</span>))
+) <span class="kw">AS</span> avg_wealth
+<span class="kw">FROM</span> players;
+
+<span class="cm">-- Illegal vs legal earn ratio</span>
+<span class="kw">SELECT</span>
+  <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> source_type = <span class="str">'illegal'</span>
+       <span class="kw">THEN</span> amount <span class="kw">ELSE</span> 0 <span class="kw">END</span>) * 100.0
+  / <span class="fn">SUM</span>(amount) <span class="kw">AS</span> illegal_pct
+<span class="kw">FROM</span> economy_transactions
+<span class="kw">WHERE</span> type = <span class="str">'earn'</span>
+  <span class="kw">AND</span> created_at >= <span class="fn">CURDATE</span>();
+
+<span class="cm">-- Top 10% wealth concentration</span>
+<span class="cm">-- Run richest query, sum top 10%, divide</span>
+<span class="cm">-- by total economy figure.</span></pre></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG — adjust to match your DB schema
+// ══════════════════════════════════════════
+const CONFIG = {
+  // Set to true to use live data via your API endpoint
+  // Set to false to use mock data (demo mode)
+  LIVE_MODE: false,
+  API_BASE: 'http://localhost:3000/api', // Your Express/API endpoint if using live mode
+};
+
+// ══════════════════════════════════════════
+//  MOCK DATA — replace with real DB calls
+// ══════════════════════════════════════════
+function getMockData() {
+  return {
+    kpi: {
+      totalEconomy: 4820000,
+      earnedToday: 318000,
+      spentToday: 204000,
+      netFlow: 114000,
+      earnedYesterday: 284000,
+      spentYesterday: 198000,
+    },
+    flow7d: {
+      labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      earned:  [210000, 245000, 198000, 310000, 280000, 340000, 318000],
+      spent:   [140000, 165000, 130000, 210000, 190000, 230000, 204000],
+    },
+    sources: [
+      { label: 'Jobs (legal)',  pct: 42, color: '#60a5fa' },
+      { label: 'Illegal runs',  pct: 28, color: '#22d3a0' },
+      { label: 'Robberies',     pct: 15, color: '#fbbf24' },
+      { label: 'Heists',        pct: 9,  color: '#f87171' },
+      { label: 'Other',         pct: 6,  color: '#6b7280' },
+    ],
+    jobs: [
+      { name: 'Police',       type: 'legal',   daily: 87400 },
+      { name: 'Drug courier', type: 'illegal', daily: 71800 },
+      { name: 'Mechanic',     type: 'legal',   daily: 59300 },
+      { name: 'Arms dealer',  type: 'illegal', daily: 48100 },
+      { name: 'Taxi driver',  type: 'legal',   daily: 33200 },
+      { name: 'Street racer', type: 'gray',    daily: 24500 },
+    ],
+    leaderboard: [
+      { name: 'XenonRacer',   job: 'Police',       wealth: 2140000, hours: 142, initials: 'XR', color: '#1d4ed8', bg: '#1e3a5f' },
+      { name: 'DarkKnight99', job: 'Drug courier', wealth: 1870000, hours: 98,  initials: 'DK', color: '#065f46', bg: '#064e3b' },
+      { name: 'V8Bandit',     job: 'Arms dealer',  wealth: 1530000, hours: 201, initials: 'VB', color: '#92400e', bg: '#451a03' },
+      { name: 'NovaZero',     job: 'Mechanic',     wealth: 984000,  hours: 77,  initials: 'NZ', color: '#4c1d95', bg: '#2e1065' },
+      { name: 'SilentRyze',   job: 'Taxi driver',  wealth: 741000,  hours: 55,  initials: 'SR', color: '#831843', bg: '#4a0520' },
+    ],
+    sinks: [
+      { icon: '🛒', name: 'Shops & black market', amount: 88200,  pct: 43 },
+      { icon: '🚗', name: 'Vehicle purchases',     amount: 52100,  pct: 26 },
+      { icon: '🏥', name: 'Hospital bills',         amount: 29400,  pct: 14 },
+      { icon: '⚖️', name: 'Police fines & bail',   amount: 18700,  pct: 9  },
+      { icon: '🔫', name: 'Weapon purchases',       amount: 11300,  pct: 6  },
+      { icon: '🏠', name: 'Property / housing',     amount: 4800,   pct: 2  },
+    ],
+    health: [
+      { label: 'Economy net status',       value: 'Inflating',  status: 'warn', detail: '+2.4%/day'   },
+      { label: 'Illegal earn ratio',       value: '67%',        status: 'bad',  detail: 'Too high'    },
+      { label: 'Inflation index',          value: '+3.2%',      status: 'warn', detail: 'Moderate'    },
+      { label: 'Avg player wallet',        value: '$48,200',    status: 'ok',   detail: 'Healthy'     },
+      { label: 'New player earn rate',     value: '$4,200/hr',  status: 'ok',   detail: 'Good onboard'},
+      { label: 'Top 10% wealth share',     value: '71%',        status: 'bad',  detail: 'Concentrated'},
+    ],
+  };
+}
+
+// ══════════════════════════════════════════
+//  LIVE DATA FETCHER (when LIVE_MODE = true)
+//  Wire this to your Express/Node API that
+//  runs the MySQL queries from the reference
+//  section below.
+// ══════════════════════════════════════════
+async function fetchLiveData() {
+  const [kpi, flow, sources, jobs, lb, sinks, health] = await Promise.all([
+    fetch(`${CONFIG.API_BASE}/economy/kpi`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/flow7d`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/sources`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/jobs`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/leaderboard`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/sinks`).then(r => r.json()),
+    fetch(`${CONFIG.API_BASE}/economy/health`).then(r => r.json()),
+  ]);
+  return { kpi, flow7d: flow, sources, jobs, leaderboard: lb, sinks, health };
+}
+
+// ══════════════════════════════════════════
+//  FORMATTERS
+// ══════════════════════════════════════════
+function fmtMoney(n) {
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n / 1e3) + 'k';
+  return '$' + n.toLocaleString();
+}
+
+function fmtChange(now, prev) {
+  const diff = now - prev;
+  const pct = Math.round((diff / prev) * 100);
+  const sign = diff >= 0 ? '+' : '';
+  return `${sign}${fmtMoney(Math.abs(diff))} (${sign}${pct}% vs yesterday)`;
+}
+
+// ══════════════════════════════════════════
+//  RENDERERS
+// ══════════════════════════════════════════
+function renderKPI(data) {
+  const { kpi } = data;
+  document.getElementById('kpi-total').textContent = fmtMoney(kpi.totalEconomy);
+  document.getElementById('kpi-total-delta').textContent = 'All player wallets + banks combined';
+  document.getElementById('kpi-total-delta').className = 'kpi-delta neutral';
+
+  document.getElementById('kpi-earned').textContent = fmtMoney(kpi.earnedToday);
+  const earnEl = document.getElementById('kpi-earned-delta');
+  earnEl.textContent = fmtChange(kpi.earnedToday, kpi.earnedYesterday);
+  earnEl.className = kpi.earnedToday >= kpi.earnedYesterday ? 'kpi-delta up' : 'kpi-delta down';
+
+  document.getElementById('kpi-spent').textContent = fmtMoney(kpi.spentToday);
+  document.getElementById('kpi-spent-delta').textContent = 'Shops, vehicles, fines, bills';
+  document.getElementById('kpi-spent-delta').className = 'kpi-delta neutral';
+
+  const net = kpi.earnedToday - kpi.spentToday;
+  document.getElementById('kpi-net').textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
+  document.getElementById('kpi-net-delta').textContent = net > 0 ? 'Economy expanding' : 'Economy contracting';
+  document.getElementById('kpi-net-delta').className = net >= 0 ? 'kpi-delta up' : 'kpi-delta down';
+}
+
+let flowChart = null;
+function renderFlow(data) {
+  const { flow7d } = data;
+  if (flowChart) flowChart.destroy();
+  flowChart = new Chart(document.getElementById('flowChart'), {
+    type: 'bar',
+    data: {
+      labels: flow7d.labels,
+      datasets: [
+        {
+          label: 'Earned',
+          data: flow7d.earned,
+          backgroundColor: '#22d3a0',
+          borderRadius: 4,
+          barPercentage: 0.6,
+        },
+        {
+          label: 'Spent',
+          data: flow7d.spent,
+          backgroundColor: '#f87171',
+          borderRadius: 4,
+          barPercentage: 0.6,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': ' + fmtMoney(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6b7280', font: { size: 11, family: "'JetBrains Mono', monospace" } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#6b7280',
+            font: { size: 10, family: "'JetBrains Mono', monospace" },
+            callback: v => fmtMoney(v)
+          }
+        }
+      }
+    }
+  });
+}
+
+let donutChart = null;
+function renderDonut(data) {
+  const { sources } = data;
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: sources.map(s => s.label),
+      datasets: [{
+        data: sources.map(s => s.pct),
+        backgroundColor: sources.map(s => s.color),
+        borderWidth: 0,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%' } } }
+    }
+  });
+
+  const leg = document.getElementById('donutLegend');
+  leg.innerHTML = sources.map(s =>
+    `<div class="legend-item">
+      <span class="legend-dot" style="background:${s.color}"></span>
+      <span>${s.label}</span>
+      <span class="legend-pct">${s.pct}%</span>
+    </div>`
+  ).join('');
+}
+
+function renderJobs(data) {
+  const max = data.jobs[0].daily;
+  document.getElementById('jobsList').innerHTML = data.jobs.map((j, i) => {
+    const badgeClass = j.type === 'legal' ? 'badge-legal' : j.type === 'illegal' ? 'badge-illegal' : 'badge-gray';
+    const badgeLabel = j.type === 'legal' ? 'Legal' : j.type === 'illegal' ? 'Illegal' : 'Gray';
+    const barPct = Math.round((j.daily / max) * 100);
+    const barColor = j.type === 'legal' ? '#60a5fa' : j.type === 'illegal' ? '#f87171' : '#fbbf24';
+    return `
+      <div class="job-row">
+        <span class="job-rank">#${i + 1}</span>
+        <span class="job-name">${j.name}</span>
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
+        <div class="job-bar-wrap"><div class="job-bar" style="width:${barPct}%;background:${barColor};"></div></div>
+        <span class="job-val">${fmtMoney(j.daily)}/day</span>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboard(data) {
+  const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+  document.getElementById('leaderboard').innerHTML = data.leaderboard.map((p, i) => `
+    <div class="lb-row">
+      <span class="lb-rank ${rankClass(i)}">#${i + 1}</span>
+      <div class="avatar" style="background:${p.bg};color:${p.color};">${p.initials}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.name}</div>
+        <div class="lb-meta">${p.job} · ${p.hours}h playtime</div>
+      </div>
+      <span class="lb-val">${fmtMoney(p.wealth)}</span>
+    </div>`).join('');
+}
+
+function renderSinks(data) {
+  const max = data.sinks[0].pct;
+  document.getElementById('sinksList').innerHTML = data.sinks.map(s => `
+    <div class="sink-row">
+      <div class="sink-left">
+        <span class="sink-icon">${s.icon}</span>
+        <div>
+          <div class="sink-name">${s.name}</div>
+          <div class="sink-pct">${s.pct}% of total sinks</div>
+        </div>
+      </div>
+      <div class="sink-right">
+        <div class="sink-amount">-${fmtMoney(s.amount)}</div>
+        <div class="sink-bar-wrap"><div class="sink-bar" style="width:${Math.round(s.pct/max*100)}%;"></div></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderHealth(data) {
+  document.getElementById('alertsList').innerHTML = data.health.map(h => {
+    const dotColor = h.status === 'ok' ? '#22d3a0' : h.status === 'warn' ? '#fbbf24' : '#f87171';
+    const valClass = h.status === 'ok' ? 'status-ok' : h.status === 'warn' ? 'status-warn' : 'status-bad';
+    return `
+      <div class="alert-row">
+        <div class="alert-left">
+          <div class="alert-dot" style="background:${dotColor}"></div>
+          <span class="alert-label">${h.label}</span>
+        </div>
+        <div class="alert-right">
+          <span class="alert-val ${valClass}">${h.value}</span>
+          <span style="font-size:11px;color:var(--muted);">${h.detail}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  MAIN LOAD
+// ══════════════════════════════════════════
+async function loadAll() {
+  try {
+    const data = CONFIG.LIVE_MODE ? await fetchLiveData() : getMockData();
+    renderKPI(data);
+    renderFlow(data);
+    renderDonut(data);
+    renderJobs(data);
+    renderLeaderboard(data);
+    renderSinks(data);
+    renderHealth(data);
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error('Economy stats load error:', err);
+  }
+}
+
+loadAll();
+// Auto-refresh every 60 seconds
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bai+Jamjuree:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Bigshot+One&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@font-face {
+    font-family: 'Gilroy-ExtraBold';
+    src: url(fonts/Gilroy-ExtraBold.ttf)
+}
+
+@font-face {
+    font-family: 'Akrobat-Bold';
+    src: url(fonts/Akrobat-Bold.otf)
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: none;
+    width: 100vw;
+    height: 56.25vw;
+    user-select: none;
+    overflow: hidden;
+}
+
+.main {
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+    height: 56.25vw;
+}
+
+.container {
+    position: absolute;
+    width: 19.9479vw;
+    height: 3.85vw;
+    bottom: 2.5vw;
+    background: linear-gradient(0deg, rgba(192, 192, 192, 0.5) 0%, rgba(0, 0, 0, 0.05) 100%);
+    border: .0521vw solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0vw 0vw 2.5208vw rgba(255, 255, 255, 0.15);
+}
+
+.EarthquakeContain {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: absolute;
+    width: 2.6042vw;
+    height: 2.6042vw;
+    left: .5729vw;
+    bottom: .5729vw;
+    background: linear-gradient(0deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.003) 100%);
+    border: .0521vw solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0vw 0vw 2.5208vw rgba(255, 255, 255, 0.15);
+}
+
+.EarthquakeContain h1 {
+    position: absolute;
+    font-family: 'Gilroy-ExtraBold';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1.5625vw;
+    leading-trim: both;
+    text-edge: cap;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.EarthquakeTitle {
+    position: absolute;
+    left: 3.6979vw;
+    bottom: 1.8229vw;
+    font-family: 'Akrobat-Bold';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1.25vw;
+    line-height: 1.5104vw;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.EarthquakeDesc {
+    position: absolute;
+    left: 3.6979vw;
+    bottom: .5208vw;
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 500;
+    font-size: .5729vw;
+    line-height: 120.5%;
+    color: rgba(255, 255, 255, 0.3);
+}

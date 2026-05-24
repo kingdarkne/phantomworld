@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Options</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="menuContainer" class="hidden">
+        <div class="menu-header">
+            <h2 id="storeTitle">STORE OPTIONS</h2>
+            <button id="closeBtn" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="menu-content">
+            <div class="option-group">
+                <h3>Robbery Options</h3>
+                <button class="menu-btn" data-action="npc_robbery">
+                    <i class="fas fa-user"></i>
+                    <span>Intimidate Clerk</span>
+                    <small>Point gun at NPC for cash</small>
+                </button>
+                
+                <button class="menu-btn" data-action="lockpick_robbery">
+                    <i class="fas fa-lock"></i>
+                    <span>Lockpick Register</span>
+                    <small>Traditional lockpicking method</small>
+                </button>
+                
+                <button class="menu-btn" data-action="vault_hack">
+                    <i class="fas fa-laptop-code"></i>
+                    <span>Hack Vault</span>
+                    <small>High reward, requires skill</small>
+                </button>
+            </div>
+            
+            <div class="option-group">
+                <h3>Shop Items</h3>
+                <button class="menu-btn" data-action="shop_items">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Browse Items</span>
+                    <small>Purchase store items</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

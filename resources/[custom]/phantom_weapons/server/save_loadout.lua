@@ -1,0 +1,2 @@
+-- Loadout saving/loading
+-- Core in main.lua, extended features here

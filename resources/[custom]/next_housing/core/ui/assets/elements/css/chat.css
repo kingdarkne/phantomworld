@@ -1,0 +1,281 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+.pap-modal-content.pap-chat-modal .pap-modal-body {
+    gap: 0;
+    padding-bottom: 4px;
+    overflow: hidden;
+}
+
+.pap-modal-content.pap-chat-modal .pap-modal-footer {
+    display: none !important;
+}
+
+.pap-chat-layout {
+    --pap-chat-surface-bg: rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 12px;
+    margin: 0 -32px 10px;
+    overflow: hidden;
+}
+
+.pap-chat-messages {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 10px;
+    background: var(--pap-chat-surface-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.pap-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pap-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pap-chat-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+}
+
+.pap-chat-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 26px 12px;
+    gap: 10px;
+}
+
+.pap-chat-empty-icon {
+    font-size: 24px;
+    opacity: 0.55;
+}
+
+.pap-chat-empty-text {
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 340px;
+}
+
+.pap-chat-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 6px 0 2px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.pap-chat-separator::before,
+.pap-chat-separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pap-chat-bubble-wrap {
+    display: flex;
+    width: 100%;
+}
+
+.pap-chat-bubble-wrap.me {
+    justify-content: flex-end;
+}
+
+.pap-chat-bubble-wrap.them {
+    justify-content: flex-start;
+}
+
+.pap-chat-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.92);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.pap-chat-bubble.me {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.2);
+    border-bottom-right-radius: 2px;
+}
+
+.pap-chat-bubble.them {
+    border-bottom-left-radius: 2px;
+}
+
+.pap-chat-meta {
+    font-size: 11px;
+    opacity: 0.62;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.pap-chat-sender {
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+}
+
+.pap-chat-time {
+    font-size: 9px;
+    opacity: 0.85;
+    white-space: nowrap;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.pap-chat-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.pap-chat-footer {
+    flex-shrink: 0;
+}
+
+.pap-chat-input-shell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--pap-chat-surface-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    min-height: 46px;
+    padding: 6px 10px;
+    transition: background-color 0.2s ease;
+}
+
+.pap-chat-input-shell:focus-within {
+    background: var(--pap-chat-surface-bg);
+}
+
+.pap-chat-input {
+    flex: 1;
+    border: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    appearance: none;
+    -webkit-appearance: none;
+    color: #fff;
+    padding: 10px 6px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+}
+
+.pap-chat-input:focus,
+.pap-chat-input:active {
+    border: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.pap-chat-input:-webkit-autofill,
+.pap-chat-input:-webkit-autofill:hover,
+.pap-chat-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fff;
+    -webkit-box-shadow: 0 0 0 1000px transparent inset;
+    box-shadow: 0 0 0 1000px transparent inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+.pap-chat-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.pap-chat-send {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.pap-chat-send:hover:not(:disabled) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.pap-chat-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pap-chat-footer.pap-chat-disabled {
+    opacity: 0.45;
+}
+
+@media (max-width: 760px) {
+    .pap-chat-messages {
+        padding: 14px;
+        min-height: 220px;
+    }
+
+    .pap-chat-bubble {
+        max-width: 88%;
+    }
+}

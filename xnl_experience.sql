@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS `experience` (
+  `cid`      VARCHAR(50) NOT NULL,
+  `driving`  INT NOT NULL DEFAULT 0,
+  `crafting` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`cid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

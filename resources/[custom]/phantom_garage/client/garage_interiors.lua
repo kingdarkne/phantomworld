@@ -1,0 +1,2 @@
+-- Garage interior handling (IPL loading in main.lua)
+-- Additional interior camera/movement features

@@ -1,0 +1,200 @@
+{
+    "server": {
+        "serverId": "serverConnectId like 3qyo9t",
+        "titleMode": "mixed",
+        "title": "PHANTOM [Ctext-primary font-bold]WORLD[/C]",
+        "logoUrl": "https://assets.quasar-store.com/quasar-loadingscreen.png",
+        "name": "QUASAR [Ctext-secondary font-semibold]ROLEPLAY[/C] COMMUNITY",
+        "subtitle": "Experience [Ctext-green-600 font-bold]Freedom[/C] in Phantom World - Where Limits Are Just Suggestions",
+        "description": "Welcome to Quasar Roleplay, a premier FiveM server powered by QBCore Framework. Immerse yourself in a vibrant world of jobs, gangs, housing, and a dynamic economy. Shape your story today!"
+    },
+    "loadingPhases": {
+        "startup": {
+            "label": "Initializing Server",
+            "icon": "Zap"
+        },
+        "systems": {
+            "label": "Loading Server Systems",
+            "icon": "Shield"
+        },
+        "assets": {
+            "label": "Loading World Assets",
+            "icon": "Loader2"
+        },
+        "map": {
+            "label": "Building City Map",
+            "icon": "MapPin"
+        },
+        "finalizing": {
+            "label": "Finalizing Connection",
+            "icon": "Users"
+        },
+        "default": {
+            "label": "Preparing Experience",
+            "icon": "Loader2"
+        }
+    },
+    "strings": {
+        "loadingResources": "Loading server resources...",
+        "filesProcessed": "{count} resources processed",
+        "playersOnline": "Players [Ctext-primary font-bold]Online[/C]",
+        "serverStatus": "Server [Ctext-primary font-bold]Status[/C]",
+        "ping": "Ping [Ctext-primary font-bold]AVG[/C]",
+        "proTipLabel": "🌟 [Ctext-secondary font-semibold]Roleplay Tip[/C]"
+    },
+    "proTips": [
+        "Type [Ctext-primary font-bold]/help[/C] to discover all available commands and start your adventure!",
+        "Join our [Ctext-secondary font-semibold]Discord[/C] at discord.quasarroleplay.com for events and community updates!",
+        "Visit [Ctext-red-600 font-bold]City Hall[/C] to apply for jobs or purchase properties!",
+        "Use the in-game [Ctext-blue-400 font-bold]phone[/C] to manage jobs, contacts, and bank transactions!",
+        "Form [Ctext-foreground/50]gangs[/C] or start businesses in our player-driven economy!"
+    ],
+    "rules": [
+        {
+            "category": "[Ctext-primary font-bold]General Rules[/C]",
+            "description": "Core rules for all players to ensure a fair and enjoyable experience.",
+            "items": [
+                {
+                    "title": "No [Ctext-red-600]Cheating[/C]",
+                    "content": "Using cheats, exploits, or third-party software to gain an unfair advantage is strictly prohibited.",
+                    "className": "border-l-4 border-primary pl-4"
+                },
+                {
+                    "title": "Respect [Ctext-primary]Others[/C]",
+                    "content": "Treat all players with respect. Harassment, racism, or toxic behavior will result in immediate action."
+                },
+                {
+                    "title": "Roleplay [Ctext-secondary]Standards[/C]",
+                    "content": "Maintain immersion by staying in character. Use [Ctext-blue-400]/ooc[/C] for out-of-character communication.",
+                    "className": "border-l-4 border-primary pl-4"
+                }
+            ]
+        },
+        {
+            "category": "[Ctext-primary font-bold]Combat Rules[/C]",
+            "description": "Guidelines for engaging in combat and PvP to maintain roleplay integrity.",
+            "items": [
+                {
+                    "title": "No [Ctext-red-600]RDM[/C] (Random Deathmatching)",
+                    "content": "All combat must have a valid roleplay reason. Random attacks without context are not allowed.",
+                    "className": "border-l-4 border-secondary pl-4"
+                },
+                {
+                    "title": "Avoid [Ctext-orange-600]Combat Logging[/C]",
+                    "content": "Do not disconnect during or immediately after combat to evade consequences."
+                }
+            ]
+        },
+        {
+            "category": "[Ctext-primary font-bold]Vehicle Rules[/C]",
+            "description": "Rules for vehicle usage to enhance realism and roleplay.",
+            "items": [
+                {
+                    "title": "Realistic [Ctext-green-600]Driving[/C]",
+                    "content": "Drive vehicles realistically. Reckless driving without roleplay justification is prohibited."
+                },
+                {
+                    "title": "Vehicle [Ctext-blue-400]Theft[/C] Roleplay",
+                    "content": "Stealing vehicles requires proper roleplay interaction and cannot be done randomly."
+                }
+            ]
+        }
+    ],
+    "changeLogs": [
+        {
+            "title": "[Ctext-primary font-bold]Update 1.3.0[/C] - Major System Overhaul",
+            "date": "2025-05-11",
+            "content": "[Ctext-secondary font-semibold]🚀 COMPLETE QBOX_CORE CONVERSION:[/C] Successfully converted ALL 300+ scripts from qb-core to qbox_core framework. [Ctext-secondary font-semibold]New Robbery Systems:[/C] Added qb-bankrobbery (Fleeca, Paleto, Pacific heists), qb-houserobbery, mz-storerobbery with ps-ui minigames, and lation_247robbery. [Ctext-secondary font-semibold]New Housing:[/C] qb-houses with fixed dependencies for illenium-appearance compatibility. [Ctext-secondary font-semibold]New Police MDT:[/C] ps-mdt with ps_lib integration. [Ctext-secondary font-semibold]New Weapons:[/C] Added LeSiiN Custom Weapons pack (17 weapons) to Ammunation. [Ctext-secondary font-semibold]New Loading Screen:[/C] qs-loadingscreen-master with custom changelog. [Ctext-secondary font-semibold]Medical System:[/C] Death timer reduced to 90s, last stand to 120s, added Sandy Shores hospital. [Ctext-secondary font-semibold]Enhanced Features:[/C] Player blip system, notification center, AI cops integration, hybrid store robbery with NPC interactions. [Ctext-secondary font-semibold]Bug Fixes:[/C] Fixed 15+ Lua syntax errors across phantom_core, renzu_customs, car_exporter, XNLRankBar, and others. Reduced XP rank requirements by 50%. Fixed admin menu F12 keybind. [Ctext-green-600]Framework Status:[/C] 100% qbox_core compatible with zero qb-core dependencies.",
+            "images": []
+        },
+        {
+            "title": "[Ctext-primary font-bold]Update 1.2.0[/C] - Economy Overhaul",
+            "date": "2025-09-01",
+            "content": "Revamped the [Ctext-green-600]economy system[/C] with dynamic pricing and new businesses for players to own.",
+            "images": []
+        },
+        {
+            "title": "[Ctext-primary font-bold]Update 1.1.0[/C] - Gang System",
+            "date": "2025-07-15",
+            "content": "Introduced [Ctext-blue-400]gang territories[/C] and new criminal activities. Enhanced roleplay with gang interactions.",
+            "images": [
+                "https://assets.quasar-store.com/hero-background.png"
+            ]
+        },
+        {
+            "title": "[Ctext-primary font-bold]Update 1.0.0[/C] - Initial Release",
+            "date": "2025-05-20",
+            "content": "Launched [Ctext-secondary font-semibold]Quasar Roleplay[/C] with core QBCore features, including jobs, housing, and economy systems.",
+            "images": [
+                "https://assets.quasar-store.com/hero-background.png",
+                "https://assets.quasar-store.com/hero-background.png"
+            ]
+        }
+    ],
+    "keybinds": [
+        {
+            "key": "F1",
+            "title": "Open [Ctext-blue-400]Inventory[/C]",
+            "description": "Opens the [Ctext-blue-400]inventory[/C] to manage your items and equipment."
+        },
+        {
+            "key": "F2",
+            "title": "Access [Ctext-blue-400]Phone[/C]",
+            "description": "Opens the [Ctext-blue-400]phone[/C] for contacts, messages, and banking."
+        },
+        {
+            "key": "F3",
+            "title": "Toggle [Ctext-blue-400]Radial Menu[/C]",
+            "description": "Toggles the [Ctext-blue-400]radial menu[/C] for quick access to actions."
+        },
+        {
+            "key": "E",
+            "title": "Interact with [Ctext-blue-400]Environment[/C]",
+            "description": "Interact with objects, vehicles, or NPCs in the game world."
+        },
+        {
+            "key": "M",
+            "title": "Open [Ctext-blue-400]Main Menu[/C]",
+            "description": "Opens the [Ctext-blue-400]main menu[/C] for game settings and options."
+        }
+    ],
+    "audio": {
+        "enabled": true,
+        "url": "https://www.youtube.com/watch?v=ep9a-R_VgoY",
+        "volume": 0.5,
+        "loop": true,
+        "useVideoAudio": true
+    },
+    "background": {
+        "type": "gradient",
+        "colors": ["#1a1a2e", "#16213e"],
+        "fallback": {
+            "type": "gradient",
+            "colors": ["#0f172a", "#3b82f6"]
+        }
+    },
+    "gridOverlay": {
+        "enabled": true,
+        "opacity": 0.1,
+        "color": "rgba(16, 185, 129, 0.1)",
+        "size": 50
+    },
+    "particles": {
+        "enabled": true,
+        "count": 50
+    },
+    "blobs": [
+        {
+            "position": "top-1/4 left-1/4",
+            "size": "w-96 h-96",
+            "color": "bg-primary/5",
+            "blur": "blur-3xl"
+        },
+        {
+            "position": "bottom-1/4 right-1/4",
+            "size": "w-96 h-96",
+            "color": "bg-secondary/5",
+            "blur": "blur-3xl"
+        }
+    ]
+}

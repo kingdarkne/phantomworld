@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat');
+@import "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,500&display=swap";
+@import "https://assets.nopixel.net/web/fonts/gilroy/stylesheet.css";
+@import "https://assets.nopixel.net/web/fonts/nekst/stylesheet.css";
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.container {
+  text-align: center;
+  margin-left: -17%;
+  /* Abstand zur linken Seite anpassen */
+  max-width: 30%;
+  /* Maximale Breite des Containers */
+  min-width: 30%;
+  /* Maximale Breite des Containers */
+  scale: 0.7;
+
+}
+
+.title {
+  font-family: 'nekst'!important;
+  color: rgb(255,226,99);
+  font-size: 2.2vh;
+  font-weight: bold;
+  margin-bottom: 1vh;
+  position: relative;
+  display: inline-block;
+  margin-left: -4%;
+}
+
+.separator {
+  content: "";
+  height: 5px;
+  width: 60%;
+  display: block;
+  left: 0;
+  right: 0;
+  border-radius: 50%;
+  align-content: center;
+  background: rgb(255, 255, 255);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.014443277310924318) 0%, rgba(140, 140, 140, 1) 33%, rgba(181, 181, 181, 1) 66%, rgba(255, 255, 255, 0) 100%);
+  bottom: 0;
+  margin-left: 18%;
+}
+
+.separator2 {
+  content: "";
+  height: 5px;
+  width: 30%;
+  display: block;
+  left: 0;
+  right: 0;
+  align-content: center;
+  background: rgb(255,226,99);
+  box-shadow: 0px 5px 30px #ffe263, 0px -5px 30px #ffe263;
+  margin-left: 33%;
+  margin-top: -0.9%;
+}
+
+.content {
+  font-family: 'gilroy' !important;
+  font-weight: bold; /* Combined bold setting */
+  line-height: 1.5;
+  margin-top: 5%;
+  margin-left: 20%;
+  border-radius: 0.5vh;
+  border: 1px solid rgba(255, 251, 251, 0.7); /* Adjusted border opacity */
+  background-color: rgba(109, 109, 109, 0.5); /* Adjusted background opacity */
+  max-width: 47%;
+  min-width: 20%;
+  font-size: 1.6vh;
+  overflow-wrap: break-word;
+  padding: 5%;
+  color: white;
+}

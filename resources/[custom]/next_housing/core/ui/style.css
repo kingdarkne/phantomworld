@@ -1,0 +1,843 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Roboto+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --bg: #000000;
+    --panel: #0E0E0E;
+    --panel-border: rgba(255, 255, 255, 0.06);
+    --text: #ffffff;
+    --muted: rgba(255, 255, 255, 0.4);
+    --accent: #ffffff;
+    --accent-2: #ffffff;
+    --danger: #ff4444;
+    --success: #44ff44;
+    --input: rgba(0, 0, 0, 0.3);
+    --input-border: rgba(255, 255, 255, 0.05);
+    --hover: rgba(255, 255, 255, 0.04);
+    --shadow: rgba(0, 0, 0, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent !important;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    color: #fff;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.nui-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent !important;
+    z-index: -1;
+    pointer-events: none;
+}
+
+
+
+
+
+
+.container,
+.job-container,
+.garage-container,
+.pap-modal-content {
+    width: min(1100px, 92vw);
+    height: min(80vh, 800px);
+    background: #000000;
+    border-radius: 20px;
+    padding: 32px 32px 16px 32px;
+    color: #ffffff;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+
+.container,
+.job-container,
+.garage-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+}
+
+
+.container::before,
+.job-container::before,
+.garage-container::before,
+.pap-interface::before,
+.wardrobe-container::before,
+.pap-modal-content::before,
+.modal-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.03) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.15;
+    border-radius: inherit;
+}
+
+.container::after,
+.job-container::after,
+.garage-container::after,
+.pap-interface::after,
+.wardrobe-container::after,
+.pap-modal-content::after,
+.modal-container::after {
+    content: none;
+}
+
+.modal-container {
+    position: relative;
+}
+
+
+.tab-bar,
+.job-tabs,
+.pap-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+.tab-btn,
+.job-tab-btn,
+.pap-tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.tab-btn,
+.job-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn:hover,
+.job-tab-btn:hover,
+.pap-tab-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn.active,
+.job-tab-btn.active,
+.pap-tab-btn.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+.job-interface ::-webkit-scrollbar,
+.pap-interface ::-webkit-scrollbar {
+    width: 4px;
+}
+
+.pap-interface ::-webkit-scrollbar {
+    height: 4px;
+}
+
+.job-interface ::-webkit-scrollbar-track,
+.pap-interface ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.job-interface ::-webkit-scrollbar-thumb,
+.pap-interface ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.job-interface ::-webkit-scrollbar-thumb:hover,
+.pap-interface ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.nh-scroll-managed {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
+}
+
+.nh-scroll-managed::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+
+.house-card,
+.contract-card,
+.pap-property-card,
+.pap-listing-card,
+.garage-vehicle-card {
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.header,
+.job-header,
+.pap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0;
+    padding-bottom: 24px;
+    border-bottom: none;
+    background: transparent;
+    height: auto;
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+.title,
+.job-title,
+.pap-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.title:hover,
+.job-title:hover,
+.pap-title:hover {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+}
+
+.square-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    background-color: #ffffff;
+    margin: 0 4px;
+    border-radius: 1px;
+    vertical-align: 0px;
+}
+
+.title .square-dot,
+.job-title .square-dot,
+.pap-title .square-dot {
+    margin: 0 2px 0 4px;
+}
+
+.subtitle,
+.pap-subtitle {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.nh-brand-header-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.nh-brand-text-stack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.nh-brand-logo {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-top: 0;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.meta-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.badge-version {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.command-hint {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding-right: 4px;
+}
+
+.close-btn,
+.pap-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+.close-btn:hover,
+.pap-close-btn:hover {
+    color: #fff;
+    cursor: pointer;
+}
+
+@keyframes papSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes papSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+
+    to {
+        opacity: 0.98;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes papFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes nhSidebarDotPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+
+    70% {
+        transform: scale(1.6);
+        opacity: 0;
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+
+
+
+
+.player-contract-interface,
+.pap-contract-interface {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10004;
+}
+
+.player-contract-interface.hidden,
+.pap-contract-interface.hidden {
+    display: none !important;
+}
+
+.player-contract-interface .contract-paper-wrapper,
+.pap-contract-interface .pap-contract-paper-wrapper {
+    position: relative;
+    width: min(800px, 90vw);
+    max-height: 90vh;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.player-contract-interface .contract-paper-wrapper::before,
+.pap-contract-interface .pap-contract-paper-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 6px;
+    bottom: 6px;
+    background: #e8e8e0;
+    border: 2px solid #c4a574;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+    z-index: 1;
+    border-radius: 2px;
+    transform: rotate(1.2deg);
+    pointer-events: none;
+}
+
+.player-contract-interface .contract-paper-wrapper::after,
+.pap-contract-interface .pap-contract-paper-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    background: #d8d8d0;
+    border: 2px solid #b4a574;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 0;
+    border-radius: 2px;
+    transform: rotate(-1.5deg);
+    pointer-events: none;
+}
+
+.player-contract-interface .contract-paper,
+.pap-contract-interface .pap-contract-paper {
+    background-color: #f5f5f0;
+    width: 100%;
+    height: 100%;
+    max-height: calc(90vh - 32px);
+    padding: 60px 80px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    border: 2px solid #d4a574;
+    position: relative;
+    overflow-y: auto;
+    font-family: 'Times New Roman', serif;
+    color: #2c2c2c;
+    z-index: 2;
+}
+
+.player-contract-interface .contract-paper .contract-header,
+.pap-contract-interface .pap-contract-paper .contract-header {
+    text-align: center;
+    border-bottom: 3px double #2c2c2c;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.player-contract-interface .contract-paper .contract-header h1,
+.pap-contract-interface .pap-contract-paper .contract-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin: 0 0 10px 0;
+    color: #1a1a1a;
+}
+
+.player-contract-interface .contract-paper .contract-number,
+.pap-contract-interface .pap-contract-paper .contract-number {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.player-contract-interface .contract-paper .contract-section,
+.pap-contract-interface .pap-contract-paper .contract-section {
+    margin-bottom: 30px;
+}
+
+.player-contract-interface .contract-paper .contract-section h3,
+.pap-contract-interface .pap-contract-paper .contract-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #2c2c2c;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    color: #1a1a1a;
+}
+
+.player-contract-interface .contract-paper .contract-parties,
+.pap-contract-interface .pap-contract-paper .contract-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.player-contract-interface .contract-paper .contract-parties .party,
+.pap-contract-interface .pap-contract-paper .contract-parties .party {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #d4a574;
+    border-radius: 4px;
+}
+
+.player-contract-interface .contract-paper .contract-parties .party strong,
+.pap-contract-interface .pap-contract-paper .contract-parties .party strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.player-contract-interface .contract-paper .contract-parties .party p,
+.pap-contract-interface .pap-contract-paper .contract-parties .party p {
+    margin: 0;
+    font-size: 14px;
+    min-height: 40px;
+    border-bottom: 1px solid #2c2c2c;
+    padding-bottom: 5px;
+}
+
+.player-contract-interface .contract-paper .contract-property p,
+.player-contract-interface .contract-paper .contract-conditions p,
+.pap-contract-interface .pap-contract-paper .contract-property p,
+.pap-contract-interface .pap-contract-paper .contract-conditions p {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.player-contract-interface .contract-paper .contract-signature-section,
+.pap-contract-interface .pap-contract-paper .contract-signature-section {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 2px solid #2c2c2c;
+}
+
+.player-contract-interface .contract-paper .signature-line,
+.pap-contract-interface .pap-contract-paper .signature-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 60px;
+}
+
+.player-contract-interface .contract-paper .signature-line p,
+.pap-contract-interface .pap-contract-paper .signature-line p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.player-contract-interface .contract-paper .signature-box,
+.pap-contract-interface .pap-contract-paper .signature-box {
+    width: 200px;
+    height: 60px;
+    border: 1px solid #2c2c2c;
+    border-bottom: 2px solid #2c2c2c;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.pap-contract-interface .pap-contract-paper .signature-canvas {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.player-contract-interface .contract-paper .agent-signature,
+.pap-contract-interface .pap-contract-paper .agent-signature {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+.player-contract-interface .contract-paper .signature-box.agent-signature,
+.pap-contract-interface .pap-contract-paper .signature-box.agent-signature {
+    overflow: visible;
+}
+
+.player-contract-interface .contract-paper .agent-signature .signature-img,
+.pap-contract-interface .pap-contract-paper .agent-signature .signature-img {
+    position: static;
+    width: auto !important;
+    height: 170% !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform: none;
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
+}
+
+.player-contract-interface .contract-paper .player-signature .signature-canvas,
+.pap-contract-interface .pap-contract-paper .player-signature .signature-canvas {
+    position: relative;
+    z-index: 1;
+}
+
+.player-contract-interface .contract-paper .contract-footer,
+.pap-contract-interface .pap-contract-paper .contract-footer {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #2c2c2c;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.player-contract-interface .contract-paper .buttons-container,
+.pap-contract-interface .pap-contract-paper .buttons-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.player-contract-interface .contract-paper .contract-btn,
+.pap-contract-interface .pap-contract-paper .contract-btn {
+    padding: 15px 40px;
+    border: 2px solid #2c2c2c;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Times New Roman', serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.player-contract-interface .contract-paper .contract-btn.sign-btn,
+.pap-contract-interface .pap-contract-paper .contract-btn.sign-btn {
+    background: #2c2c2c;
+    color: #f5f5f0;
+}
+
+.player-contract-interface .contract-paper .contract-btn.sign-btn:hover,
+.pap-contract-interface .pap-contract-paper .contract-btn.sign-btn:hover {
+    background: #1a1a1a;
+}
+
+.player-contract-interface .contract-paper .contract-btn.decline-btn,
+.pap-contract-interface .pap-contract-paper .contract-btn.decline-btn {
+    background: transparent;
+    color: #2c2c2c;
+}
+
+.player-contract-interface .contract-paper .contract-btn.decline-btn:hover,
+.pap-contract-interface .pap-contract-paper .contract-btn.decline-btn:hover {
+    background: #2c2c2c;
+    color: #f5f5f0;
+}
+
+.player-contract-interface .signature-clear-icon,
+.pap-contract-interface .signature-clear-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: transparent;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    line-height: 1;
+    z-index: 2;
+}
+
+.player-contract-interface .signature-clear-icon:hover,
+.pap-contract-interface .signature-clear-btn:hover {
+    color: #666;
+}
+
+.player-contract-interface .signature-clear-icon {
+    display: none;
+}
+
+.player-contract-interface .signature-clear-icon.visible {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pap-contract-interface .signature-clear-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.pap-contract-interface .signature-clear-btn.visible {
+    display: inline-flex;
+}
+
+.player-contract-interface .signature-error-message,
+.pap-contract-interface .signature-error-message {
+    display: none;
+    margin: 0;
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.player-contract-interface .signature-error-message.visible,
+.pap-contract-interface .signature-error-message.visible {
+    display: block;
+}
+
+.player-contract-interface .contract-paper::-webkit-scrollbar,
+.pap-contract-interface .pap-contract-paper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.player-contract-interface .contract-paper::-webkit-scrollbar-track,
+.pap-contract-interface .pap-contract-paper::-webkit-scrollbar-track {
+    background: var(--input);
+    border-radius: 4px;
+}
+
+.player-contract-interface .contract-paper::-webkit-scrollbar-thumb,
+.pap-contract-interface .pap-contract-paper::-webkit-scrollbar-thumb {
+    background: #d4a574;
+    border-radius: 4px;
+}
+
+@media (max-width: 900px) {
+
+    .nh-brand-header-block {
+        gap: 10px;
+    }
+
+    .nh-brand-logo {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
+    }
+
+    .player-contract-interface .contract-paper,
+    .pap-contract-interface .pap-contract-paper {
+        padding: 30px 24px;
+    }
+
+    .player-contract-interface .contract-paper .contract-parties,
+    .pap-contract-interface .pap-contract-paper .contract-parties {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .player-contract-interface .contract-paper .signature-line,
+    .pap-contract-interface .pap-contract-paper .signature-line {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .player-contract-interface .contract-paper .signature-box,
+    .pap-contract-interface .pap-contract-paper .signature-box {
+        width: 100%;
+    }
+
+    .player-contract-interface .contract-paper .buttons-container,
+    .pap-contract-interface .pap-contract-paper .buttons-container {
+        width: 100%;
+        flex-direction: column;
+    }
+}

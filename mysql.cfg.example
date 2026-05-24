@@ -1,0 +1,5 @@
+# Copy to mysql.cfg and fill in your Gravelhost / local MySQL credentials.
+# NEVER commit mysql.cfg to a public GitHub repo.
+#
+# Loaded via: exec mysql.cfg  (in server.cfg)
+set mysql_connection_string "host=YOUR_HOST;user=YOUR_USER;password=YOUR_PASSWORD;database=YOUR_DATABASE;port=3306;charset=utf8mb4"

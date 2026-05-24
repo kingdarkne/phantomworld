@@ -1,0 +1,191 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    background: transparent;
+}
+
+#app {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    max-height: 80vh;
+    background: rgba(20, 20, 20, 0.95);
+    border: 2px solid #f1e542;
+    border-radius: 10px;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(241, 229, 66, 0.3);
+}
+
+.menu-header h2 {
+    color: #f1e542;
+    font-size: 24px;
+    margin: 0;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #f1e542;
+}
+
+.menu-content {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+}
+
+.menu-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.menu-item:hover {
+    background: rgba(241, 229, 66, 0.1);
+    border-color: #f1e542;
+}
+
+.menu-item-label {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.menu-item-price {
+    color: #f1e542;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.vehicle-info {
+    padding: 15px;
+    background: rgba(241, 229, 66, 0.1);
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.vehicle-info-label {
+    color: #ffffff;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.vehicle-info-value {
+    color: #f1e542;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.sub-menu-title {
+    color: #f1e542;
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(241, 229, 66, 0.3);
+}
+
+.back-btn {
+    background: rgba(241, 229, 66, 0.2);
+    border: 1px solid #f1e542;
+    color: #f1e542;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: rgba(241, 229, 66, 0.3);
+}
+
+.install-btn {
+    background: #f1e542;
+    border: none;
+    color: #000000;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.install-btn:hover {
+    background: #ffffff;
+}
+
+.mod-level {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mod-level-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mod-level-btn:hover {
+    background: rgba(241, 229, 66, 0.2);
+    border-color: #f1e542;
+}
+
+.mod-level-btn.active {
+    background: #f1e542;
+    color: #000000;
+    border-color: #f1e542;
+}

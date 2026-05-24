@@ -1,0 +1,35 @@
+========================================
+  QB-PHONE-PRO – EXTRACT THE RAR FIRST
+========================================
+
+The phone script is inside  qb-phone.rar  in this folder.
+Until you extract it, the server has no phone resource.
+
+DO THIS:
+
+1. Install 7-Zip (free) from https://www.7-zip.org/  
+   OR use WinRAR if you have it.
+
+2. Right-click  qb-phone.rar  → 7-Zip or WinRAR →  
+   "Extract Here" (or "Extract to qb-phone\").
+
+3. You should get a folder with  fxmanifest.lua, client, server, html, etc.
+
+4. FINAL structure must be:
+
+   resources\[qb]\qb-phone-pro-main\
+       fxmanifest.lua    <-- at this level
+       client\
+       server\
+       html\
+       config.lua
+       (etc.)
+
+   If the RAR created a subfolder (e.g. "qb-phone" or "qb-phone-pro"):
+   - Move everything FROM inside that subfolder
+   - INTO this folder (qb-phone-pro-main)
+   - So fxmanifest.lua is directly in qb-phone-pro-main.
+
+5. Restart your server. The phone will start with  ensure [qb]  and open with key  M.
+
+========================================

@@ -1,0 +1,1 @@
+exports["dr-lockpick"]:createGame(STAGE_AMOUNT, MAX_ERRORS)

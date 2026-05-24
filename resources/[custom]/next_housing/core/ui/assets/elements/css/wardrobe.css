@@ -1,0 +1,349 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+.wardrobe-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(1100px, 92vw);
+    height: min(80vh, 800px);
+    background: #000000;
+    border-radius: 20px;
+    padding: 32px 32px 16px 32px;
+    color: #ffffff;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    z-index: 10005;
+    font-family: 'Inter', sans-serif;
+}
+
+.wardrobe-container.show {
+    display: flex !important;
+}
+
+.wardrobe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0;
+    padding-bottom: 24px;
+    border-bottom: none;
+    background: transparent;
+    height: auto;
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+.wardrobe-container.show .wardrobe-header {
+    animation: fadeIn 0.5s ease forwards 0.2s;
+}
+
+.wardrobe-navigation {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+.wardrobe-container.show .wardrobe-navigation {
+    animation: fadeIn 0.5s ease forwards 0.3s;
+}
+
+.wardrobe-nav-item {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wardrobe-nav-item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.wardrobe-nav-item.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.wardrobe-tabs-tools {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.wardrobe-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0;
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    margin-bottom: 16px;
+}
+
+.wardrobe-content.card:hover {
+    border-color: rgba(255, 255, 255, 0.04);
+    background: #0E0E0E;
+}
+
+.wardrobe-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.wardrobe-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.wardrobe-tab-panel {
+    display: none;
+    animation: tabFadeIn 0.4s ease forwards;
+}
+
+.wardrobe-tab-panel.active {
+    display: block;
+}
+
+.wardrobe-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.outfit-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.outfit-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.outfit-card > i {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    flex-shrink: 0;
+}
+
+.outfit-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.outfit-info h3 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.wardrobe-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.wardrobe-card-actions > i {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.wardrobe-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 28px;
+    padding: 0 10px;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.wardrobe-icon-btn .btn-text {
+    white-space: nowrap;
+}
+
+.wardrobe-icon-btn.is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.wardrobe-icon-btn.is-disabled:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.wardrobe-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.wardrobe-icon-btn.delete:hover {
+    background: rgba(255, 68, 68, 0.1);
+    border-color: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+}
+
+#wardrobe-tab-save.content-section.active {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.wardrobe-save-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.wardrobe-save-panel {
+    width: min(560px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.wardrobe-save-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 18px;
+}
+
+.wardrobe-save-item .form-input {
+    width: 100%;
+}
+
+.wardrobe-save-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.wardrobe-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    color: rgba(255, 255, 255, 0.4);
+    gap: 12px;
+    text-align: center;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+}
+
+.wardrobe-empty-state i {
+    font-size: 54px;
+    opacity: 0.15;
+}
+
+.wardrobe-content .section-header {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wardrobe-content .section-header h3 {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .wardrobe-container {
+        width: min(96vw, 760px);
+        height: min(82vh, 760px);
+        padding: 24px 24px 12px 24px;
+    }
+
+    .wardrobe-grid {
+        gap: 10px;
+    }
+}

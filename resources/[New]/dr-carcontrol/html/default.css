@@ -1,0 +1,162 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap");
+
+* {
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  user-select: none;
+  font-family: "Montserrat", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 1px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 1px;
+}
+
+#mainDiv {
+  display: block;
+  width: 40%;
+  height: fit-content;
+  position: absolute;
+  /* left: 0;
+    right: 0;
+    bottom: 3%; */
+  margin: auto;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  /* background: radial-gradient(circle at center, #252525bb, #1f1f1fb0); */
+}
+
+#MDDiv {
+  width: 17%;
+  height: fit-content;
+  position: relative;
+  background: radial-gradient(circle at center, #252525bb, #1f1f1fb0);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+}
+
+#MDDTopDiv {
+  width: 90%;
+  height: 18%;
+  /* background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0.24%,
+    rgba(255, 255, 255, 0.17) 50.05%,
+    rgba(255, 255, 255, 0.04) 99.82%
+  ); */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 9px;
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+}
+
+.MDDBottomDiv {
+  width: 100%;
+  height: fit-content;
+  padding: 15px 15px 0px 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 15px 20px;
+  /* background-color: blue; */
+}
+
+.MDDBDDiv {
+  width: 25.5%;
+  height: 15%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.MDDBDDiv:hover {
+  border: 1px solid #ffe263;
+  background: #ffd15275;
+}
+
+.MDDBDDivDefault {
+
+  border: 1px solid #ffe263a6;
+  cursor: pointer;
+}
+
+.MDDBDDivActive {
+  border: 1px solid #ffe263a6;
+  cursor: pointer;
+}
+
+.MDDBDDivDeactive {
+  border: 1px solid #ffe263a6;
+}
+
+.MDDBDDivAlarm {
+  /* border: 1px solid rgba(155, 113, 75, 0.59);
+    background: linear-gradient(90deg, rgba(211, 101, 0, 0.61) 0%, rgba(211, 101, 0, 0.16) 125.86%); */
+  animation: blink 1s linear infinite;
+}
+
+@keyframes blink {
+  0% {
+    border: 1px solid #ffe263a6;
+  }
+  50% {
+    border: 1px solid #ffe263;
+    background: #ffd15275;
+  }
+  100% {
+    border: 1px solid #ffe263;
+    background: #ffd15275;
+  }
+}
+
+.MDDBDDTopLeftDiv {
+  width: 15%;
+  height: 15%;
+  position: absolute;
+  top: 12%;
+  left: 12%;
+  z-index: 22;
+  border-radius: 2px;
+}
+
+.MDDBDDTopLeftDivRed {
+  background: rgba(250, 250, 250, 0.589);
+  box-shadow: 0px 0px 10px 4px rgba(197, 192, 192, 0.548);
+}
+
+.MDDBDDTopLeftDivGreen {
+  background: #ffe263;
+  box-shadow: 0px 0px 10px 5px #ffe263a2;
+}
+
+#MDDBDDEngineOff {
+  display: none;
+}
+
+#MDDBDDEngineOn {
+  display: none;
+}

@@ -1,0 +1,2 @@
+-- Gang menu interactions (core logic in main.lua)
+-- Placeholder for extended menu features

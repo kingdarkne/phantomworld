@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Selection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(233, 69, 96, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        body.visible {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            height: 80vh;
+            display: flex;
+            gap: 20px;
+        }
+
+        .characters-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .character-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .character-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #e94560;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+            box-shadow: 0 20px 40px rgba(233, 69, 96, 0.3);
+        }
+
+        .character-card:hover::before {
+            opacity: 1;
+        }
+
+        .character-card.active {
+            border-color: #e94560;
+            background: linear-gradient(145deg, rgba(233, 69, 96, 0.2), rgba(233, 69, 96, 0.05));
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.4);
+            transform: scale(1.05);
+        }
+
+        .character-card.empty {
+            border-style: dashed;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .character-card.empty:hover {
+            border-color: #4ecca3;
+            background: rgba(78, 204, 163, 0.15);
+            box-shadow: 0 20px 40px rgba(78, 204, 163, 0.3);
+        }
+
+        .char-name {
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .char-info {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .empty-text {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .details-panel {
+            width: 380px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            border-radius: 25px;
+            padding: 35px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .details-title {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .detail-label {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .action-buttons {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 18px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #e94560, #c73e54);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-play:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(233, 69, 96, 0.5);
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #4ecca3, #3db892);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(78, 204, 163, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(78, 204, 163, 0.5);
+        }
+
+        .btn-delete {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 107, 107, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-screen.hidden {
+            display: none;
+        }
+
+        .loading-text {
+            color: #fff;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .create-form {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .create-form.active {
+            display: flex;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .scene-selector {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .scene-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scene-btn:hover, .scene-btn.active {
+            background: #e94560;
+            border-color: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading Characters...</div>
+    </div>
+
+    <div class="container" id="main-container" style="display: none;">
+        <div class="characters-panel">
+            <h1 class="panel-title">Select Character</h1>
+            <div class="characters-grid" id="characters-grid">
+                <!-- Characters will be inserted here -->
+            </div>
+        </div>
+
+        <div class="details-panel" id="details-panel">
+            <h2 class="details-title" id="details-title">Character Details</h2>
+            
+            <div id="details-content">
+                <div class="detail-item">
+                    <span class="detail-label">Name</span>
+                    <span id="detail-name">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Citizen ID</span>
+                    <span id="detail-citizenid">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Job</span>
+                    <span id="detail-job">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cash</span>
+                    <span id="detail-cash">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Bank</span>
+                    <span id="detail-bank">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Birth Date</span>
+                    <span id="detail-dob">-</span>
+                </div>
+            </div>
+
+            <div class="create-form" id="create-form">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="firstName" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="lastName" placeholder="Doe">
+                </div>
+                <div class="form-group">
+                    <label>Birth Date</label>
+                    <input type="date" id="dob">
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nationality</label>
+                    <input type="text" id="nationality" placeholder="American">
+                </div>
+            </div>
+
+            <div class="action-buttons" id="action-buttons">
+                <button class="btn btn-play" id="btn-play" style="display: none;">Play</button>
+                <button class="btn btn-create" id="btn-create" style="display: none;">Create Character</button>
+                <button class="btn btn-delete" id="btn-delete" style="display: none;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="scene-selector" id="scene-selector">
+        <button class="scene-btn active" data-scene="0">Casino</button>
+        <button class="scene-btn" data-scene="1">Beach</button>
+        <button class="scene-btn" data-scene="2">City</button>
+    </div>
+
+    <script>
+        let characters = [];
+        let selectedChar = null;
+        let selectedSlot = null;
+        let isCreating = false;
+        let config = {};
+
+        // Listen for messages from Lua
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            switch(data.action) {
+                case 'visible':
+                    if (data.data) {
+                        document.body.classList.add('visible');
+                    } else {
+                        document.body.classList.remove('visible');
+                    }
+                    break;
+                    
+                case 'loadingscreen':
+                    if (data.data === false) {
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('main-container').style.display = 'flex';
+                    }
+                    break;
+                    
+                case 'characterselection':
+                    characters = data.data || [];
+                    renderCharacters();
+                    break;
+                    
+                case 'opencreate':
+                    showCreateForm(data.slot);
+                    break;
+            }
+        });
+
+        function renderCharacters() {
+            const grid = document.getElementById('characters-grid');
+            grid.innerHTML = '';
+            
+            characters.forEach((char, index) => {
+                const card = document.createElement('div');
+                card.className = 'character-card' + (char.emptyslot ? ' empty' : '');
+                card.dataset.index = index;
+                card.dataset.id = char.id;
+                
+                if (char.emptyslot) {
+                    card.innerHTML = `
+                        <div class="empty-text">Empty Slot ${char.id}</div>
+                        <div class="char-info">Click to create new character</div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="char-name">${char.firstname} ${char.lastname}</div>
+                        <div class="char-info">
+                            Job: ${char.additionalInfo?.job || 'Unemployed'}<br>
+                            Cash: $${char.additionalInfo?.cash || 0}<br>
+                            Bank: $${char.additionalInfo?.bank || 0}
+                        </div>
+                    `;
+                }
+                
+                card.addEventListener('click', () => selectCharacter(index));
+                grid.appendChild(card);
+            });
+        }
+
+        function selectCharacter(index) {
+            // Update visual selection
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.character-card')[index]?.classList.add('active');
+            
+            const char = characters[index];
+            selectedChar = char;
+            selectedSlot = char.id;
+            
+            if (char.emptyslot) {
+                showCreateForm(char.id);
+            } else {
+                showCharacterDetails(char);
+                
+                // Preview character in game
+                fetch(`https://${GetParentResourceName()}/PreviewCharacter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ counter: index })
+                });
+            }
+        }
+
+        function showCharacterDetails(char) {
+            document.getElementById('details-content').style.display = 'block';
+            document.getElementById('create-form').classList.remove('active');
+            
+            document.getElementById('detail-name').textContent = `${char.firstname} ${char.lastname}`;
+            document.getElementById('detail-citizenid').textContent = char.citizenid || 'N/A';
+            document.getElementById('detail-job').textContent = char.additionalInfo?.job || 'Unemployed';
+            document.getElementById('detail-cash').textContent = `$${char.additionalInfo?.cash || 0}`;
+            document.getElementById('detail-bank').textContent = `$${char.additionalInfo?.bank || 0}`;
+            document.getElementById('detail-dob').textContent = char.additionalInfo?.dob || 'N/A';
+            
+            document.getElementById('btn-play').style.display = 'block';
+            document.getElementById('btn-create').style.display = 'none';
+            document.getElementById('btn-delete').style.display = 'block';
+            document.getElementById('details-title').textContent = 'Character Details';
+            
+            isCreating = false;
+        }
+
+        function showCreateForm(slot) {
+            document.getElementById('details-content').style.display = 'none';
+            document.getElementById('create-form').classList.add('active');
+            
+            document.getElementById('btn-play').style.display = 'none';
+            document.getElementById('btn-create').style.display = 'block';
+            document.getElementById('btn-delete').style.display = 'none';
+            document.getElementById('details-title').textContent = `Create Character (Slot ${slot})`;
+            
+            selectedSlot = slot;
+            isCreating = true;
+        }
+
+        // Button handlers
+        document.getElementById('btn-play').addEventListener('click', () => {
+            if (selectedChar && !selectedChar.emptyslot) {
+                fetch(`https://${GetParentResourceName()}/playcharacter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedChar.id)
+                });
+            }
+        });
+
+        document.getElementById('btn-create').addEventListener('click', () => {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const dob = document.getElementById('dob').value;
+            const gender = document.getElementById('gender').value;
+            const nationality = document.getElementById('nationality').value;
+            
+            if (!firstName || !lastName || !dob || !nationality) {
+                return;
+            }
+            
+            fetch(`https://${GetParentResourceName()}/CreateCharacter`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    DOB: dob,
+                    gender: gender,
+                    nationality: nationality,
+                    slot: selectedSlot
+                })
+            });
+        });
+
+        document.getElementById('btn-delete').addEventListener('click', () => {
+            if (selectedChar && !selectedChar.emptyslot) {
+                if (confirm(`Are you sure you want to delete ${selectedChar.firstname} ${selectedChar.lastname}?`)) {
+                    fetch(`https://${GetParentResourceName()}/DeleteCharacter`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(selectedChar.id)
+                    });
+                }
+            }
+        });
+
+        // Scene selector
+        document.querySelectorAll('.scene-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Could send scene change to Lua here
+            });
+        });
+
+        // Request config on load
+        fetch(`https://${GetParentResourceName()}/getConfig`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(resp => resp.json()).then(data => {
+            config = data;
+        });
+
+        // Request characters on load
+        fetch(`https://${GetParentResourceName()}/GetCharacters`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(resp => resp.json()).then(data => {
+            characters = data || [];
+            renderCharacters();
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Don't close, this is the character selection
+            }
+        });
+    </script>
+</body>
+</html>

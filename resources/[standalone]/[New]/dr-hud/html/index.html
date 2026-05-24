@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Phantom World HUD</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="hud-root" class="is-hidden">
+      <div class="hud-top-right">
+        <div class="hud-panel">
+          <div class="hud-header">
+            <div class="hud-server">
+              <div class="hud-title">
+                <div id="serverName" class="server-name">Server</div>
+                <div class="server-sub">
+                  <span id="playerName" class="sub-strong">Player</span>
+                  <span class="sub-dot">•</span>
+                  <span id="playerGang" class="sub-muted">No Gang</span>
+                  <span class="sub-dot">•</span>
+                  <span id="playerStreet" class="sub-muted">Unknown</span>
+                </div>
+              </div>
+              <div class="server-meta">
+                <div id="voiceWidget" class="voice-widget" aria-hidden="true">
+                  <span class="voice-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 11a7 7 0 0 1-14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span id="voiceMode" class="voice-text">VOICE</span>
+                </div>
+                <span id="playerId" class="pill">ID 0</span>
+                <span id="serverTime" class="pill">--:--</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-stats">
+            <div class="stat stat-cash">
+              <div class="stat-top">
+                <span class="stat-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 7h16v10H4V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M7 10h.01M17 14h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                <span class="k">Cash</span>
+              </div>
+              <span id="cash" class="v">$0</span>
+            </div>
+            <div class="stat stat-bank">
+              <div class="stat-top">
+                <span class="stat-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 10h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M6 10V19M10 10V19M14 10V19M18 10V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 10 12 5l9 5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="k">Bank</span>
+              </div>
+              <span id="bank" class="v">$0</span>
+            </div>
+            <div id="rankStat" class="stat stat-rank">
+              <div class="stat-top">
+                <span class="stat-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2 15 9l7 .7-5.2 4.4 1.7 6.8L12 17.8 5.5 20.9l1.7-6.8L2 9.7 9 9l3-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="k">Rank</span>
+              </div>
+              <span id="rank" class="v">0</span>
+            </div>
+            <div id="jobStat" class="stat stat-job">
+              <div class="stat-top">
+                <span class="stat-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 7V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M4 7h16v12H4V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="k">Job</span>
+              </div>
+              <span id="job" class="v">Unemployed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+  </html>
+

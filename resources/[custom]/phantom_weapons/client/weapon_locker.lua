@@ -1,0 +1,2 @@
+-- Weapon locker logic (core in main.lua)
+-- Placeholder for extended locker features

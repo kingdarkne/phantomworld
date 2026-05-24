@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<CWeaponComponentInfoList>
+  <Item>
+    <Name>COMPONENT_AT_AR_FLSH</Name>
+    <Model>components_pistol_mk2_flsh</Model>
+    <Object>components_pistol_mk2_flsh</Object>
+    <TextureName />
+    <ComponentType>Flashlight</ComponentType>
+    <WeaponType>WEAPON_PISTOL_MK2</WeaponType>
+    <AttachmentPoint>CAP_ATBARREL</AttachmentPoint>
+    <AccuracyModifier value="1.000000" />
+    <DamageModifier value="1.000000" />
+    <RangeModifier value="1.000000" />
+    <ReloadSpeedModifier value="1.000000" />
+    <ReloadSpeedMPModifier value="1.000000" />
+    <ClipSizeModifier value="0" />
+    <ClipSizeMPModifier value="0" />
+    <NetworkClipRecoveryModifier value="1.000000" />
+    <NetworkClipRecoveryMPModifier value="1.000000" />
+    <StatModifierType>None</StatModifierType>
+    <StatModifierValue value="0.000000" />
+    <Flags>0x40000000</Flags>
+  </Item>
+  <Item>
+    <Name>COMPONENT_AT_AR_SUPP</Name>
+    <Model>components_pistol_mk2_supp</Model>
+    <Object>components_pistol_mk2_supp</Object>
+    <TextureName />
+    <ComponentType>Suppressor</ComponentType>
+    <WeaponType>WEAPON_PISTOL_MK2</WeaponType>
+    <AttachmentPoint>CAP_ATBARREL</AttachmentPoint>
+    <AccuracyModifier value="1.000000" />
+    <DamageModifier value="1.000000" />
+    <RangeModifier value="1.000000" />
+    <ReloadSpeedModifier value="1.000000" />
+    <ReloadSpeedMPModifier value="1.000000" />
+    <ClipSizeModifier value="0" />
+    <ClipSizeMPModifier value="0" />
+    <NetworkClipRecoveryModifier value="1.000000" />
+    <NetworkClipRecoveryMPModifier value="1.000000" />
+    <StatModifierType>None</StatModifierType>
+    <StatModifierValue value="0.000000" />
+    <Flags>0x40000000</Flags>
+  </Item>
+  <Item>
+    <Name>COMPONENT_AT_PI_COMP</Name>
+    <Model>components_pistol_mk2_comp</Model>
+    <Object>components_pistol_mk2_comp</Object>
+    <TextureName />
+    <ComponentType>Compensator</ComponentType>
+    <WeaponType>WEAPON_PISTOL_MK2</WeaponType>
+    <AttachmentPoint>CAP_ATBARREL</AttachmentPoint>
+    <AccuracyModifier value="1.000000" />
+    <DamageModifier value="1.000000" />
+    <RangeModifier value="1.000000" />
+    <ReloadSpeedModifier value="1.000000" />
+    <ReloadSpeedMPModifier value="1.000000" />
+    <ClipSizeModifier value="0" />
+    <ClipSizeMPModifier value="0" />
+    <NetworkClipRecoveryModifier value="1.000000" />
+    <NetworkClipRecoveryMPModifier value="1.000000" />
+    <StatModifierType>None</StatModifierType>
+    <StatModifierValue value="0.000000" />
+    <Flags>0x40000000</Flags>
+  </Item>
+</CWeaponComponentInfoList>

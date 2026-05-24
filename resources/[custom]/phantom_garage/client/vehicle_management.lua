@@ -1,0 +1,2 @@
+-- Vehicle management (spawn/delete helpers)
+-- Core logic in main.lua, additional utilities here

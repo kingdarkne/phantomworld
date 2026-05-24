@@ -1,0 +1,243 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: transparent;
+    overflow: hidden;
+    user-select: none;
+}
+
+#menuContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    animation: slideIn 0.3s ease-out;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 13px 13px 0 0;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-header h2 {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.menu-content {
+    padding: 20px;
+}
+
+.option-group {
+    margin-bottom: 25px;
+}
+
+.option-group:last-child {
+    margin-bottom: 0;
+}
+
+.option-group h3 {
+    color: #ecf0f1;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.menu-btn:active {
+    transform: translateY(0);
+}
+
+.menu-btn i {
+    font-size: 20px;
+    color: #fff;
+    width: 30px;
+    text-align: center;
+}
+
+.menu-btn span {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+    text-align: left;
+}
+
+.menu-btn small {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    display: block;
+    margin-top: 3px;
+}
+
+.menu-btn[data-action="npc_robbery"] {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.menu-btn[data-action="npc_robbery"]:hover {
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.menu-btn[data-action="lockpick_robbery"] {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.menu-btn[data-action="lockpick_robbery"]:hover {
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
+
+.menu-btn[data-action="vault_hack"] {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+
+.menu-btn[data-action="vault_hack"]:hover {
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+}
+
+.menu-btn[data-action="shop_items"] {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+}
+
+.menu-btn[data-action="shop_items"]:hover {
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -55%);
+    }
+}
+
+.slide-out {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+/* Responsive design */
+@media (max-width: 450px) {
+    #menuContainer {
+        width: 350px;
+    }
+    
+    .menu-header h2 {
+        font-size: 18px;
+    }
+    
+    .menu-btn {
+        padding: 12px;
+    }
+    
+    .menu-btn span {
+        font-size: 14px;
+    }
+    
+    .menu-btn small {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 380px) {
+    #menuContainer {
+        width: 300px;
+    }
+    
+    .menu-content {
+        padding: 15px;
+    }
+    
+    .menu-btn {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .menu-btn i {
+        font-size: 18px;
+        width: 25px;
+    }
+    
+    .menu-btn span {
+        font-size: 13px;
+    }
+}

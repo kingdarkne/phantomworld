@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: cd web && pnpm install
+
+      - name: Build web
+        run: cd web && pnpm build
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release/web
+          mv web/build release/web/build
+          mv fxmanifest.lua release/
+          mv client.lua release/  # Add other root files as needed
+          find . -maxdepth 1 -type f -not -name 'release' -exec mv {} release/ \;
+
+      - name: Create zip archive
+        run: cd release && zip -r ../qs-loadingscreen.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: qs-loadingscreen.zip
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: "Release version ${{ github.ref_name }}"

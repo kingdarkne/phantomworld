@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Heists - Minigames</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Hacking Game -->
+    <div id="hackGame" class="game-container hidden">
+        <div class="game-panel">
+            <div class="game-header">
+                <div class="blink-text">⚠ SECURITY BYPASS</div>
+                <div class="timer" id="hackTimer">30.00</div>
+            </div>
+            <div class="game-info">Match the pairs before time runs out</div>
+            <div class="grid" id="hackGrid"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="hackProgress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thermite Game -->
+    <div id="thermiteGame" class="game-container hidden">
+        <div class="game-panel thermite">
+            <div class="game-header">
+                <div class="blink-text">🔥 THERMITE CHARGE</div>
+                <div class="timer" id="thermiteTimer">15.00</div>
+            </div>
+            <div class="game-info">Memorize the pattern, then replicate it</div>
+            <div class="grid thermite-grid" id="thermiteGrid"></div>
+            <div class="phase-indicator" id="thermitePhase">WATCH PATTERN</div>
+        </div>
+    </div>
+
+    <!-- Drilling Game -->
+    <div id="drillGame" class="game-container hidden">
+        <div class="game-panel drill">
+            <div class="game-header">
+                <div class="blink-text">🔩 VAULT DRILL</div>
+                <div class="timer" id="drillTimer">60.00</div>
+            </div>
+            <div class="drill-container">
+                <div class="drill-visual">
+                    <div class="drill-bit" id="drillBit"></div>
+                    <div class="drill-hole" id="drillHole"></div>
+                </div>
+                <div class="drill-controls">
+                    <div class="heat-gauge">
+                        <div class="heat-label">HEAT</div>
+                        <div class="heat-bar">
+                            <div class="heat-fill" id="heatFill"></div>
+                        </div>
+                    </div>
+                    <div class="depth-gauge">
+                        <div class="depth-label">DEPTH</div>
+                        <div class="depth-bar">
+                            <div class="depth-fill" id="depthFill"></div>
+                        </div>
+                    </div>
+                    <button class="drill-btn" id="drillBtn" onmousedown="startDrilling()" onmouseup="stopDrilling()" ontouchstart="startDrilling()" ontouchend="stopDrilling()">HOLD TO DRILL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

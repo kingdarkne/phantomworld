@@ -1,0 +1,2777 @@
+<!--
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://nextcorestudio.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Next Housing (by Junnho)</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="assets/elements/css/admin.css">
+    <link rel="stylesheet" href="assets/elements/css/job.css">
+    <link rel="stylesheet" href="assets/elements/css/garage.css">
+    <link rel="stylesheet" href="assets/elements/css/pap.css">
+    <link rel="stylesheet" href="assets/elements/css/wardrobe.css">
+    <link rel="stylesheet" href="assets/elements/css/multimodal.css">
+    <link rel="stylesheet" href="assets/elements/css/chat.css">
+    <link rel="stylesheet" href="assets/elements/css/icons.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="assets/elements/js/multimodal.js"></script>
+    <script src="assets/elements/js/dropdown.js"></script>
+    <script defer src="script.js"></script>
+    <script defer src="assets/elements/js/admin.js"></script>
+    <script defer src="assets/elements/js/manager.js"></script>
+
+    <audio id="doorbell-sound" preload="auto">
+        <source src="sounds/doorbell.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="door-sound" preload="auto">
+        <source src="sounds/door.mp3" type="audio/mpeg">
+    </audio>
+
+    <script defer src="assets/elements/js/job.js"></script>
+    <script defer src="assets/elements/js/pap.js"></script>
+    <script defer src="assets/elements/js/chat.js"></script>
+    <script defer src="assets/elements/js/garage.js"></script>
+    <script defer src="assets/elements/js/wardrobe.js"></script>
+
+</head>
+
+<body>
+
+    
+    <div id="dynamic-global-modal" class="pap-modal hidden">
+        <div class="pap-modal-overlay"></div>
+        <div class="pap-modal-content">
+            <div class="pap-modal-header">
+                <div>
+                    <div id="dynamic-modal-brand-title" class="pap-title">NEXT<span class="square-dot"></span>HOUSING</div>
+                    <div id="dynamic-modal-subtitle" class="pap-subtitle"></div>
+                </div>
+                <div class="header-right">
+                    <div class="meta-info">
+                        <div class="badge-version">v1.8.0</div>
+                        <div class="command-hint" id="dynamic-modal-hint"></div>
+                    </div>
+                    <button class="pap-close-btn" id="dynamic-modal-close" title="Close">&#10006;</button>
+                </div>
+            </div>
+            <div class="pap-modal-body"></div>
+            <div class="pap-modal-footer"></div>
+        </div>
+    </div>
+
+    <div id="help-messages" class="help-messages">
+        <div class="help-message" id="help-message-template" style="display: none;">
+            <div class="help-icon"></div>
+            <div class="help-text"></div>
+        </div>
+    </div>
+
+    <div id="nui-background" class="nui-background"></div>
+    <div id="container" class="container">
+        <div class="header">
+            <div>
+                <div class="title" id="headerTitle">NEXT<span class="square-dot"></span>HOUSING</div>
+                <div class="subtitle" data-translate="build_property_header">Property Creation</div>
+            </div>
+            <div class="header-right">
+                <div class="meta-info">
+                    <div class="badge-version">v1.8.0</div>
+                    <div class="command-hint">/nh</div>
+                </div>
+                <button class="close-btn" onclick="CloseMenu()" title="Close">&#10006;</button>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="edit">
+                <i class="ph ph-house"></i>
+                <span data-translate="manage">Manage</span>
+            </button>
+            <button class="tab-btn" data-tab="create">
+                <i class="ph ph-plus"></i>
+                <span data-translate="create">Create</span>
+            </button>
+            <button class="tab-btn" data-tab="shells" data-translate="shells_tab">
+                <i class="ph ph-cube"></i>
+                <span>Shells</span>
+            </button>
+            <button class="tab-btn" data-tab="agency" data-translate="agency_tab">
+                <i class="ph ph-bank"></i>
+                <span>Agency</span>
+            </button>
+            <button class="tab-btn" data-tab="settings" data-translate="settings_tab">
+                <i class="ph ph-gear-six"></i>
+                <span>Settings</span>
+            </button>
+            <button class="tab-btn" data-tab="extended" id="extended-tab-btn" style="display: none;">
+                <i class="ph ph-crown"></i>
+                <span id="extended-tab-label" data-translate="extended_tab">Extended</span>
+            </button>
+            <button id="list-mode-btn" class="list-mode-toggle" onclick="ToggleListMode()" style="display: none;">
+                <i class="ph ph-list-bullets"></i>
+                <span id="list-mode-btn-text" data-translate="list_mode">List Mode</span>
+            </button>
+        </div>
+
+        <div class="tab-panel" id="tab-edit">
+            <div class="dashboard-grid dashboard-grid-single manage-dashboard-grid">
+                <div class="card card-content manage-card-content">
+                    <div class="content-section active manage-content-section" id="section-manage-main">
+                        <div id="houses-list-view" class="houses-list-view" style="display: none;">
+                            <div class="card manage-list-main-card">
+                                <div class="section-header nh-agency-header manage-list-main-header">
+                                    <h3 data-translate="job_filter_all">All properties</h3>
+                                </div>
+                                <div class="card-content manage-list-main-content">
+                                    <div class="houses-list-container manage-houses-list-container">
+                                        <div class="job-houses-search manage-houses-search">
+                                            <i class="ph ph-magnifying-glass"></i>
+                                            <input
+                                                type="text"
+                                                id="manage-house-search-input"
+                                                class="job-houses-search-input manage-houses-search-input"
+                                                placeholder="Rechercher un logement..."
+                                            >
+                                        </div>
+                                        <div id="manage-houses-list" class="manage-houses-list pap-list">
+
+                                        </div>
+                                        <div id="manage-houses-loading" class="loading" style="display: none;">
+                                            <div class="spinner"></div>
+                                            <p data-translate="loading_houses">Loading properties...</p>
+                                        </div>
+                                        <div id="manage-houses-empty" class="empty-state" style="display: none;">
+                                            <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                            </svg>
+                                            <h2 data-translate="no_properties_created_title">Aucune
+                                                propriété créée
+                                            </h2>
+                                            <p data-translate="no_properties_created_message">Vous n'avez pas encore
+                                                créé de
+                                                propriétés.
+                                                Utilisez l'onglet "Create" pour créer votre
+                                                première propriété.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="create-form" id="manage-form-view">
+                            <div id="empty-state" class="empty-state" style="display: none;">
+                                <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                <h2 id="empty-state-title"></h2>
+                                <p id="empty-state-message"></p>
+                            </div>
+                            <div id="manage-loading-state" class="garage-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <p id="manage-loading-text" data-translate="loading_houses">Chargement des logements...
+                                </p>
+                            </div>
+
+                            <div id="house-info-state" class="form-section" style="display: none;">
+
+
+                                <div class="manage-grid">
+                                    <div class="card">
+                                        <div class="section-header nh-agency-header">
+                                            <h3 id="manage-basic-info-title">Basic Info</h3>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <span class="info-label">House ID</span>
+                                                    <span class="info-value"
+                                                        id="houseid">N/A</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="info-label">Builder</span>
+                                                    <span class="info-value"
+                                                        id="bname">N/A</span>
+                                                </div>
+                                            </div>
+                                            <div class="info-item full-width"
+                                                style="position: relative; padding-right: 48px;">
+                                                <span class="info-label">Owner</span>
+                                                <span class="info-value"
+                                                    id="oname">N/A</span>
+                                                <button id="edit-owner-btn" class="lock-toggle-btn"
+                                                    onclick="EditOwner()"
+                                                    title="Modifier le propriétaire"
+                                                    style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path
+                                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
+                                                        </path>
+                                                        <path
+                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card">
+                                        <div class="section-header nh-agency-header">
+                                            <h3 id="manage-status-price-title">Status & Price</h3>
+                                            <button id="delete-btn" class="action-btn" onclick="DeleteHouse()"
+                                                title="Delete house" style="display: none; margin-left: auto;">
+                                                <span class="btn-text">Supprimer cette
+                                                    propriété</span>
+                                            </button>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="info-row">
+                                                <div class="info-item" style="position: relative; padding-right: 48px;">
+                                                    <span class="info-label">Price</span>
+                                                    <span class="info-value"
+                                                        id="price_display">N/A</span>
+                                                    <button id="edit-price-btn" class="lock-toggle-btn"
+                                                        onclick="EditPrice()" title="Modifier le prix"
+                                                        style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                            stroke="currentColor" stroke-width="2"
+                                                            stroke-linecap="round" stroke-linejoin="round">
+                                                            <path
+                                                                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
+                                                            </path>
+                                                            <path
+                                                                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div class="info-item" style="position: relative; padding-right: 48px;">
+                                                    <span class="info-label">Status</span>
+                                                    <span class="info-value"
+                                                        id="lock">N/A</span>
+                                                    <button id="toggle-lock-btn" class="lock-toggle-btn"
+                                                        onclick="LockStatus()" title="Toggle Lock"
+                                                        style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                            stroke="currentColor" stroke-width="2"
+                                                            stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="5" y="11" width="14" height="10" rx="2" ry="2">
+                                                            </rect>
+                                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="info-item full-width">
+                                                <span class="info-label">Interior</span>
+                                                <span class="info-value"
+                                                    id="interiornow">N/A</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="interior-change-section" class="card full-width">
+                                <div class="section-header nh-agency-header">
+                                    <h3 id="manage-change-property-title">Changer la propriété</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <select id="interior-change" class="interior-select custom-select-target"
+                                            onchange="Preview2()" style="flex: 1;">
+                                            <optgroup label="Studio">
+                                                <option value="1">Studio 1</option>
+                                                <option value="3">Studio 2</option>
+                                            </optgroup>
+                                            <optgroup label="Houses">
+                                                <option value="6">House 1</option>
+                                                <option value="7">House 2</option>
+                                            </optgroup>
+                                            <optgroup label="Apartments">
+                                                <option value="2">Basic Apartment 1</option>
+                                                <option value="4">Basic Apartment 2</option>
+                                                <option value="5">Basic Apartment 3</option>
+                                                <option value="47">Modern 1 Apartment (View 1)</option>
+                                                <option value="48">Modern 2 Apartment (View 2)</option>
+                                                <option value="49">Modern 3 Apartment (View 3)</option>
+                                                <option value="50">Mody 1 Apartment (View 1)</option>
+                                                <option value="51">Mody 2 Apartment (View 2)</option>
+                                                <option value="52">Mody 3 Apartment (View 3)</option>
+                                                <option value="53">Vibrant 1 Apartment (View 1)</option>
+                                                <option value="54">Vibrant 2 Apartment (View 2)</option>
+                                                <option value="55">Vibrant 3 Apartment (View 3)</option>
+                                                <option value="56">Sharp 1 Apartment (View 1)</option>
+                                                <option value="57">Sharp 2 Apartment (View 2)</option>
+                                                <option value="58">Sharp 3 Apartment (View 3)</option>
+                                                <option value="59">Monochrome 1 Apartment (View 1)</option>
+                                                <option value="60">Monochrome 2 Apartment (View 2)</option>
+                                                <option value="61">Monochrome 3 Apartment (View 3)</option>
+                                                <option value="62">Seductive 1 Apartment (View 1)</option>
+                                                <option value="63">Seductive 2 Apartment (View 2)</option>
+                                                <option value="64">Seductive 3 Apartment (View 3)</option>
+                                                <option value="65">Regal 1 Apartment (View 1)</option>
+                                                <option value="66">Regal 2 Apartment (View 2)</option>
+                                                <option value="67">Regal 3 Apartment (View 3)</option>
+                                                <option value="68">Aqua 1 Apartment (View 1)</option>
+                                                <option value="69">Aqua 2 Apartment (View 2)</option>
+                                                <option value="70">Aqua 3 Apartment (View 3)</option>
+                                            </optgroup>
+                                            <optgroup label="Office (Maze Bank Tower)">
+                                                <option value="11">Executive Rich</option>
+                                                <option value="12">Executive Cool</option>
+                                                <option value="13">Executive Contrast</option>
+                                                <option value="14">Old Spice Warm</option>
+                                                <option value="15">Old Spice Classical</option>
+                                                <option value="16">Old Spice Vintage</option>
+                                                <option value="17">Power Broker Ice</option>
+                                                <option value="18">Power Broker Conservative</option>
+                                                <option value="19">Power Broker Polished</option>
+                                            </optgroup>
+                                            <optgroup label="Office (Arcaduis Business Centre)">
+                                                <option value="20">Executive Rich</option>
+                                                <option value="21">Executive Cool</option>
+                                                <option value="22">Executive Contrast</option>
+                                                <option value="23">Old Spice Warm</option>
+                                                <option value="24">Old Spice Classical</option>
+                                                <option value="25">Old Spice Vintage</option>
+                                                <option value="26">Power Broker Ice</option>
+                                                <option value="27">Power Broker Conservative</option>
+                                                <option value="28">Power Broker Polished</option>
+                                            </optgroup>
+                                            <optgroup label="Offices (Lom Bank)">
+                                                <option value="29">Executive Rich</option>
+                                                <option value="30">Executive Cool</option>
+                                                <option value="31">Executive Contrast</option>
+                                                <option value="32">Old Spice Warm</option>
+                                                <option value="33">Old Spice Classical</option>
+                                                <option value="34">Old Spice Vintage</option>
+                                                <option value="35">Power Broker Ice</option>
+                                                <option value="36">Power Broker Conservative</option>
+                                                <option value="37">Power Broker Polished</option>
+                                            </optgroup>
+                                            <optgroup label="Offices (Maze Bank West)">
+                                                <option value="38">Executive Rich</option>
+                                                <option value="39">Executive Cool</option>
+                                                <option value="40">Executive Contrast</option>
+                                                <option value="41">Old Spice Warm</option>
+                                                <option value="42">Old Spice Classical</option>
+                                                <option value="43">Old Spice Vintage</option>
+                                                <option value="44">Power Broker Ice</option>
+                                                <option value="45">Power Broker Conservative</option>
+                                                <option value="46">Power Broker Polished</option>
+                                            </optgroup>
+                                        </select>
+                                        <button id="visit-interior-btn" class="visit-btn" onclick="VisitInterior()"
+                                            title="Visiter l'intérieur en 3D">
+                                            <span class="btn-icon"><i class="ph ph-eye"></i></span>
+                                            <span class="btn-text">Visiter</span>
+                                        </button>
+                                    </div>
+                                    <div style="margin-top: 12px;">
+                                        <button id="reset-house-market-btn" class="visit-btn"
+                                            onclick="ResetHouseToMarket()">
+                                            <span id="reset-house-market-text">Remettre ce logement sur le
+                                                marché</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="show-more-options-container" class="manage-more-options-actions"
+                                style="display: none;">
+                                <button id="show-more-options-btn" class="show-more-btn pap-btn multimodal-action-btn" onclick="ToggleMoreOptions()">
+                                    <span id="show-more-options-text" class="btn-text">Afficher plus d'options</span>
+                                </button>
+                            </div>
+
+                            <div id="coords-sections-container" style="display: none;">
+                                <div class="manage-grid">
+                                    <div id="entrance-coords-section" class="card" style="display: none;">
+                                        <div class="section-header nh-agency-header">
+                                            <h3 id="entrance-location-title">Emplacement de
+                                                l'entrée</h3>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="coords-inputs">
+                                                <input id="entrancex" class="coord-input" type="text" placeholder="X" />
+                                                <input id="entrancey" class="coord-input" type="text" placeholder="Y" />
+                                                <input id="entrancez" class="coord-input" type="text" placeholder="Z" />
+                                                <div id="entrance-placeholder" class="coord-separator"
+                                                    aria-hidden="true"></div>
+                                                <button class="coords-btn" onclick="GetCoordsEntrance()">
+                                                    <span class="btn-icon"><i
+                                                            class="ph ph-map-pin"></i></span>
+                                                    <span class="btn-text">Position actuelle</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="garage-coords-section" class="card" style="display: none;">
+                                        <div class="section-header nh-agency-header">
+                                            <h3 id="garage-location-title">Emplacement du garage</h3>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="coords-inputs">
+                                                <input id="garagex-manage" class="coord-input" type="text"
+                                                    placeholder="X" />
+                                                <input id="garagey-manage" class="coord-input" type="text"
+                                                    placeholder="Y" />
+                                                <input id="garagez-manage" class="coord-input" type="text"
+                                                    placeholder="Z" />
+                                                <input id="garageh-manage" class="coord-input" type="text"
+                                                    placeholder="H" />
+                                                <button class="coords-btn" onclick="GetCoordsGarageManage()">
+                                                    <span class="btn-icon"><i
+                                                            class="ph ph-map-pin"></i></span>
+                                                    <span class="btn-text">Position actuelle</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="manage-more-options-actions">
+                                    <button id="close-more-options-btn" class="show-more-btn pap-btn multimodal-action-btn"
+                                        onclick="CloseMoreOptions()">
+                                        <span id="close-more-options-text" class="btn-text">Fermer les
+                                            paramètres
+                                            supplémentaires</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" id="edit-form-actions">
+            </div>
+        </div>
+        <div class="tab-panel" id="tab-agency">
+            <div class="dashboard-grid">
+
+                <div class="card card-sidebar">
+                    <div class="card-header">
+                        <span class="card-title">AGENCY</span>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item active" data-section="agency-configuration">
+                            <i class="ph ph-gear-six"></i>
+                            <span data-translate="agency_configuration">Agence Immobilière</span>
+                        </div>
+                        <div class="sidebar-item" data-section="agency-pap">
+                            <i class="ph ph-arrows-left-right"></i>
+                            <span data-translate="pap_section_title">Particulier à Particulier</span>
+                        </div>
+                        <div class="sidebar-item" data-section="agency-transaction">
+                            <i class="ph ph-credit-card"></i>
+                            <span data-translate="agency_transaction">Transaction</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-content">
+
+                    <div class="content-section active" id="section-agency-configuration">
+                        <div class="section-header">
+                            <h3 data-translate="agency_configuration">CONFIGURATION</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="enable_job">Activer le
+                                        métier</span>
+                                    <span class="setting-desc" data-translate="enable_job_hint">Si
+                                        désactivé, le menu
+                                        job ne sera pas accessible.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="job-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="direct_purchase_enabled">Achat sans
+                                        agence</span>
+                                    <span class="setting-desc" data-translate="direct_purchase_hint">Les joueurs peuvent
+                                        acheter sans passer par l'agence (l'agence
+                                        récupère l'argent quand
+                                        même)</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="direct-purchase-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="customize_command">Personnaliser la
+                                        commande</span>
+                                </div>
+                                <input id="job-command" class="form-input" type="text" placeholder="realestate" />
+                                <span class="setting-desc" data-translate="command_hint">Commande pour ouvrir
+                                    l'interface job (par défaut: /realestate)</span>
+                                <span class="setting-desc" style="font-style: italic;"
+                                    data-translate="command_note">Note: L'ancienne commande peut rester active jusqu'au
+                                    prochain redémarrage du serveur.</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="job_name_label">Nom du
+                                        métier</span>
+                                </div>
+                                <input id="job-name" class="form-input" type="text" placeholder="realestate" />
+                                <span class="setting-desc" data-translate="job_name_hint">Nom du métier dans votre
+                                    système d'emploi (donne accès au menu de gestion immobilière, sans droits
+                                    administrateur).</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="treasury_withdraw_min_grade_label">Grade
+                                        minimum pour retirer de la trésorerie</span>
+                                </div>
+                                <input id="treasury-withdraw-min-grade" class="form-input" type="number" placeholder="0"
+                                    min="0" value="0" />
+                                <span class="setting-desc" data-translate="treasury_withdraw_min_grade_hint">Grade
+                                    minimum requis pour pouvoir retirer de l'argent de la trésorerie (0
+                                    = tous les
+                                    grades)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-agency-pap">
+                        <div class="section-header">
+                            <h3 data-translate="pap_section_title">PARTICULIER À PARTICULIER</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="pap_enable_title">Activer le
+                                        système
+                                        PaP</span>
+                                    <span class="setting-desc" data-translate="pap_enable_hint">Permet aux joueurs de
+                                        vendre/louer leurs propriétés
+                                        à d'autres joueurs directement.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="pap-enabled" checked /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="pap_allow_rent_title">Autoriser les
+                                        locations</span>
+                                    <span class="setting-desc" data-translate="pap_allow_rent_hint">Si
+                                        désactivé, seules
+                                        les ventes seront possibles.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="pap-allow-rent" checked /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="pap_command_title">Commande PaP</span>
+                                </div>
+                                <input id="pap-command" class="form-input" type="text" placeholder="classifieds"
+                                    value="classifieds" />
+                                <span class="setting-desc" data-translate="pap_command_hint">Commande
+                                    utilisée par les
+                                    joueurs pour accéder au panneau de vente entre particuliers (par
+                                    défaut:
+                                    /classifieds)</span>
+                            </div>
+                            <div class="manage-grid">
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" data-translate="pap_listing_fee_title">Frais de
+                                            publication</span>
+                                    </div>
+                                    <input id="pap-listing-fee" class="form-input" type="number" placeholder="0" min="0"
+                                        value="0" />
+                                    <span class="setting-desc" data-translate="pap_listing_fee_hint">Montant
+                                        à payer
+                                        pour créer une annonce (0 = gratuit).</span>
+                                </div>
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" data-translate="pap_max_listings_title">Limite
+                                            d'annonces</span>
+                                    </div>
+                                    <input id="pap-max-listings" class="form-input" type="number" placeholder="3"
+                                        min="1" value="3" />
+                                    <span class="setting-desc" data-translate="pap_max_listings_hint">Nombre maximum
+                                        d'annonces actives qu'un joueur peut avoir.</span>
+                                </div>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="pap_listing_duration_title">Durée des
+                                        annonces</span>
+                                </div>
+                                <input id="pap-listing-duration" class="form-input" type="number" placeholder="14"
+                                    min="1" value="14" />
+                                <span class="setting-desc" data-translate="pap_listing_duration_hint">Nombre de jours
+                                    avant qu'une annonce n'expire automatiquement.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-agency-transaction">
+                        <div class="section-header">
+                            <h3 data-translate="agency_transaction">TRANSACTION</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="currency_symbol_label">Symbole de la
+                                        devise</span>
+                                </div>
+                                <input id="currency-symbol" class="form-input" type="text" placeholder="$"
+                                    maxlength="5" />
+                                <span class="setting-desc" data-translate="currency_symbol_hint">Symbole
+                                    utilisé pour
+                                    afficher les montants (ex: $, €,
+                                    £, ¥)</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="rent_payment_settings_title">Paramètres
+                                        de prélèvement de loyer</span>
+                                </div>
+                                <select id="rent-payment-mode" class="setting-select custom-select-target"
+                                    style="width: 100%;">
+                                    <option value="minutes" data-translate="rent_payment_mode_minutes">Minutes</option>
+                                    <option value="hours" data-translate="rent_payment_mode_hours">Heures</option>
+                                </select>
+                                <span class="setting-desc" data-translate="rent_payment_mode_hint">Choisissez si le
+                                    prélèvement se fait en minutes ou en heures</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="rent_payment_interval_label">Intervalle
+                                        de prélèvement</span>
+                                </div>
+                                <input id="rent-payment-interval" class="form-input" type="number" placeholder="1"
+                                    min="1" />
+                                <span class="setting-desc" data-translate="rent_payment_interval_hint">Tous les combien
+                                    de temps (selon le mode choisi) le loyer est
+                                    prélevé</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="form-actions" id="agency-form-actions">
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-settings">
+            <div class="dashboard-grid">
+
+                <div class="card card-sidebar">
+                    <div class="card-header">
+                        <span class="card-title">SETTINGS</span>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item" data-section="settings-languages">
+                            <i class="ph ph-globe"></i>
+                            <span data-translate="languages">Languages</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-help">
+                            <i class="ph ph-lifebuoy"></i>
+                            <span data-translate="help">Help</span>
+                        </div>
+                        <div class="sidebar-item active" data-section="settings-markers">
+                            <i class="ph ph-palette"></i>
+                            <span data-translate="markers">Apparence</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-garage">
+                            <i class="ph ph-car"></i>
+                            <span data-translate="garage_settings">Garage</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-stash">
+                            <i class="ph ph-archive-box"></i>
+                            <span data-translate="stash_settings">Coffres</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-wardrobe">
+                            <i class="ph ph-t-shirt"></i>
+                            <span data-translate="wardrobe_settings">Vestiaire</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-burglary">
+                            <i class="ph ph-mask-happy"></i>
+                            <span data-translate="burglary_settings">Cambriolage</span>
+                        </div>
+                        <div class="sidebar-item" data-section="settings-beta">
+                            <i class="ph ph-flask"></i>
+                            <span data-translate="beta_settings">Bêta</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-content">
+
+                    <div class="content-section" id="section-settings-languages">
+                        <div class="section-header">
+                            <h3>LANGUAGE</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Language</span>
+                                </div>
+                                <select id="language-select" class="setting-select custom-select-target"
+                                    style="width: 100%;" aria-label="Language">
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                    <option value="es">Español</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="pt">Português</option>
+                                    <option value="ru">
+                                        Русский
+                                    </option>
+                                    <option value="zh">
+                                        中文</option>
+                                    <option value="ja">
+                                        日本語
+                                    </option>
+                                    <option value="ar">
+                                        العربية
+                                    </option>
+                                    <option value="hi">
+                                        हिन्दी
+                                    </option>
+                                    <option value="bn">
+                                        বাংলা
+                                    </option>
+                                    <option value="tr">Türkçe</option>
+                                </select>
+                                <span id="language-help" class="setting-desc">Choisissez votre langue
+                                    préférée pour
+                                    cette interface.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section active" id="section-settings-markers">
+                        <div class="section-header">
+                            <h3 data-translate="markers">APPARENCE</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="interaction_icons">Icônes
+                                        d'interaction</span>
+                                    <span class="setting-desc" data-translate="interaction_icons_help">Masquer les
+                                        icônes d'interaction (entrées, sorties,
+                                        coffres, garages).</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="sprites-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item blips-setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="map_blips">Blips sur la carte</span>
+                                    <span class="setting-desc" data-translate="map_blips_help">Masquer les blips des
+                                        maisons sur la carte.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="blips-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item preview-setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="house_preview_placeholders_title">Prévisualisations des logements</span>
+                                    <span class="setting-desc" data-translate="house_preview_placeholders_help">Permet d'afficher des images de preview des propriétés quand aucune image n'a été téléversée par le vendeur.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="house-preview-placeholders-enabled" checked /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="sprite_height_offset">Hauteur des
+                                        marqueurs</span>
+                                    <span class="setting-desc" data-translate="sprite_height_offset_help">Ajustez la
+                                        hauteur des marqueurs d'interaction.</span>
+                                </div>
+                                <input type="range" id="sprite-height-offset" class="sprite-height-slider" min="-2.0"
+                                    max="2.0" step="0.1" value="1.0" style="width: 100%;" />
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.3); width: 100%;">
+                                    <span>-2.0</span>
+                                    <span id="sprite-height-offset-value" class="setting-value-display">1.0</span>
+                                    <span>2.0</span>
+                                </div>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="entrance_display_distance_label">Distance d'affichage des
+                                        entrées</span>
+                                    <span class="setting-desc" data-translate="entrance_display_distance_hint">Ajustez
+                                        la distance à laquelle les icônes
+                                        d'entrée apparaissent.</span>
+                                </div>
+                                <input type="range" id="entrance-display-distance" class="sprite-height-slider"
+                                    min="1.0" max="100.0" step="1.0" value="20.0" style="width: 100%;" />
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.3); width: 100%;">
+                                    <span>1.0</span>
+                                    <span id="entrance-display-distance-value" class="setting-value-display">20.0</span>
+                                    <span>100.0</span>
+                                </div>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="chest_display_distance_label">Chest/Locker Sprite
+                                        Distance</span>
+                                    <span class="setting-desc" data-translate="chest_display_distance_hint">Adjust the
+                                        distance at which chest and locker icons appear.</span>
+                                </div>
+                                <input type="range" id="chest-display-distance" class="sprite-height-slider" min="1.0"
+                                    max="10.0" step="1.0" value="2.0" style="width: 100%;" />
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.3); width: 100%;">
+                                    <span>1.0</span>
+                                    <span id="chest-display-distance-value" class="setting-value-display">2.0</span>
+                                    <span>10.0</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-settings-garage">
+                        <div class="section-header">
+                            <h3 data-translate="garage_settings">GARAGE</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="garage_enabled">Enable Garages</span>
+                                    <span class="setting-desc" data-translate="garage_enabled_help">If disabled, garage markers and garage coordinates are hidden in /nh.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="garage-enabled" checked /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item" id="garage-show-all-vehicles-setting">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="garage_show_all_vehicles">Afficher tous
+                                        les véhicules de tous les garages</span>
+                                    <span class="setting-desc" data-translate="garage_show_all_vehicles_hint">Si
+                                        activé,
+                                        vous verrez tous vos véhicules stockés dans le
+                                        garage de votre maison. Si
+                                        désactivé, vous ne verrez que les
+                                        véhicules stockés dans le garage de cette
+                                        propriété spécifique.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="garage-show-all-vehicles" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-settings-stash">
+                        <div class="section-header">
+                            <h3 data-translate="stash_settings">COFFRES</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="stash_enable_title">Activer les
+                                        Coffres</span>
+                                    <span class="setting-desc" data-translate="stash_enabled_help">Si
+                                        désactivé, les
+                                        coffres ne seront plus accessibles dans aucune
+                                        propriétés.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="stash-enabled" checked /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="stash_system_label">Système de
+                                        Coffre</span>
+                                </div>
+                                <select id="stash-system" class="setting-select custom-select-target"
+                                    style="width: 100%;">
+                                    <option value="ox_inventory">ox-inventory</option>
+                                    <option value="qbcore">qb-inventory</option>
+                                    <option value="esx_inventory">esx-inventory</option>
+                                    <option value="auto" data-translate="stash_system_auto">Détection
+                                        Automatique
+                                    </option>
+                                </select>
+                                <span class="setting-desc"
+                                    data-translate="stash_system_hint">Sélectionnez le
+                                    système de
+                                    coffre utilisé sur votre serveur.</span>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="stash-custom-coords-label">Personnaliser la position des coffres</span>
+                                    <span class="setting-desc" id="stash-custom-coords-help">Quand active, vous pouvez definir des coords de coffre par type de logement (Studio 1, House 1, etc.).</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="stash-custom-coords-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column" id="stash-global-coords-settings" style="display: none;">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="stash-global-coords-title">Position globale du coffre par type</span>
+                                    <span class="setting-desc" id="stash-global-coords-help">Choisissez un type de logement puis definissez la position du coffre. Cela s'applique a tous les logements de ce type.</span>
+                                </div>
+                                <select id="stash-global-interior-select" class="setting-select custom-select-target"
+                                    style="width: 100%;" aria-label="Stash interior type"></select>
+                                <div class="coords-inputs">
+                                    <input id="stash-global-x" class="coord-input" type="text" placeholder="X" />
+                                    <input id="stash-global-y" class="coord-input" type="text" placeholder="Y" />
+                                    <input id="stash-global-z" class="coord-input" type="text" placeholder="Z" />
+                                    <div id="stash-global-placeholder" class="coord-separator" aria-hidden="true"></div>
+                                    <button class="coords-btn" onclick="GetCoordsStashSettings()">
+                                        <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                        <span class="btn-text">Position actuelle</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-settings-wardrobe">
+                        <div class="section-header">
+                            <h3 data-translate="wardrobe_settings">VESTIAIRE</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="wardrobe_enable_title">Système de
+                                        Vestiaire</span>
+                                    <span class="setting-desc" data-translate="wardrobe_enable_hint">Si
+                                        activé, les
+                                        joueurs pourront accéder au vestiaire dans leurs
+                                        propriétés.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="wardrobe-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label"
+                                        data-translate="wardrobe_system_title">Système
+                                        d'apparence</span>
+                                </div>
+                                <select id="wardrobe-system" class="setting-select custom-select-target"
+                                    style="width: 100%;">
+                                    <option value="illenium-appearance">illenium-appearance</option>
+                                    <option value="qb-clothing">qb-clothing</option>
+                                    <option value="fivem-appearance">fivem-appearance</option>
+                                    <option value="rcore_clothing">rcore_clothing</option>
+                                    <option value="esx_skin">esx_skin</option>
+                                    <option value="auto" data-translate="wardrobe_system_auto">
+                                        Auto-détecter</option>
+                                </select>
+                                <span class="setting-desc"
+                                    data-translate="wardrobe_system_hint">Sélectionnez le
+                                    système
+                                    de vêtements installés sur votre serveur.</span>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="wardrobe-custom-coords-label">Personnaliser la position du vestiaire</span>
+                                    <span class="setting-desc" id="wardrobe-custom-coords-help">Quand active, vous pouvez definir des coords de vestiaire par type de logement (Studio 1, House 1, etc.).</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="wardrobe-custom-coords-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <div class="setting-item column" id="wardrobe-global-coords-settings" style="display: none;">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="wardrobe-global-coords-title">Position globale du vestiaire par type</span>
+                                    <span class="setting-desc" id="wardrobe-global-coords-help">Choisissez un type de logement puis definissez la position du vestiaire. Cela s'applique a tous les logements de ce type.</span>
+                                </div>
+                                <select id="wardrobe-global-interior-select" class="setting-select custom-select-target"
+                                    style="width: 100%;" aria-label="Wardrobe interior type"></select>
+                                <div class="coords-inputs">
+                                    <input id="wardrobe-global-x" class="coord-input" type="text" placeholder="X" />
+                                    <input id="wardrobe-global-y" class="coord-input" type="text" placeholder="Y" />
+                                    <input id="wardrobe-global-z" class="coord-input" type="text" placeholder="Z" />
+                                    <div id="wardrobe-global-placeholder" class="coord-separator" aria-hidden="true"></div>
+                                    <button class="coords-btn" onclick="GetCoordsWardrobeSettings()">
+                                        <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                        <span class="btn-text">Position actuelle</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-settings-burglary">
+                        <div class="section-header">
+                            <h3 data-translate="burglary_settings">CAMBRIOLAGE</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="burglary_enabled_title">Activer les
+                                        Cambriolages</span>
+                                    <span class="setting-desc" data-translate="burglary_enabled_help">Si
+                                        désactivé, les
+                                        joueurs ne pourront plus cambrioler de maisons.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="burglary-enabled" /><span
+                                        class="slider round"></span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-settings-beta">
+                        <div class="section-header">
+                            <h3 data-translate="beta_settings_title">BÊTA</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="enable_custom_shells">Activer les
+                                        Intérieurs Personnalisés</span>
+                                    <span class="setting-desc" data-translate="enable_custom_shells_hint">Active
+                                        l'onglet "Intérieurs Personnalisés" dans le
+                                        menu admin. Fonctionnalité en
+                                        bêta.</span>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="custom-shells-enabled" disabled /><span
+                                        class="slider round"></span></label>
+                            </div>
+                            <span class="setting-desc" data-translate="custom_shells_temporarily_disabled_notice">Nous avons temporairement désactivé cette option. Elle reviendra prochainement.</span>
+                        </div>
+                    </div>
+
+
+                    <div class="content-section" id="section-settings-help">
+                        <div class="section-header">
+                            <h3 data-translate="help">HELP</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info settings-help-discord">
+                                    <span class="setting-label" data-translate="help_option">Need help about the script?</span>
+                                    <p class="setting-desc">
+                                        <span data-translate="found_bug">Found a bug? Let us know:</span>
+                                        <a href="https://discord.gg/DPQarEF65Y" target="_blank" class="discord-link" rel="noopener noreferrer">https://discord.gg/DPQarEF65Y</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="form-actions" id="settings-form-actions">
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-extended">
+            <div class="dashboard-grid">
+                <div class="card card-sidebar">
+                    <div class="card-header">
+                        <span class="card-title">EXTENDED</span>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item active" data-section="extended-branding">
+                            <i class="ph ph-crown"></i>
+                            <span data-translate="extended_branding">Branding</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-content">
+                    <div class="content-section active" id="section-extended-branding">
+                        <div class="section-header">
+                            <h3 id="extended-settings-title" data-translate="extended_settings_title">NEXT HOUSING EXTENDED</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="extended-script-title-label" data-translate="extended_script_title_label">Script title</span>
+                                </div>
+                                <input id="extended-script-title" class="form-input" type="text"
+                                    placeholder="Next Housing" maxlength="48" />
+                                <span class="setting-desc" id="extended-script-title-help" data-translate="extended_script_title_help">Available only with Next Housing Extended.</span>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="extended-per-menu-toggle-label" data-translate="extended_per_menu_toggle_label">Enable per-menu titles</span>
+                                    <span class="setting-desc" id="extended-per-menu-toggle-help" data-translate="extended_per_menu_toggle_help">When enabled, each menu can have its own title.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="extended-per-menu-titles-enabled" />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="extended-square-dot-toggle-label" data-translate="extended_square_dot_toggle_label">Enable square dot separator</span>
+                                    <span class="setting-desc" id="extended-square-dot-toggle-help" data-translate="extended_square_dot_toggle_help">When disabled, titles are displayed without square dots between words.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="extended-square-dot-enabled" />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="extended-logo-toggle-label" data-translate="extended_logo_toggle_label">Enable header logo</span>
+                                    <span class="setting-desc" id="extended-logo-toggle-help" data-translate="extended_logo_toggle_help">When enabled, a logo is shown on the left of the title and subtitle.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="extended-logo-enabled" />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item column" id="extended-logo-settings">
+                                <div class="setting-info">
+                                    <span class="setting-label" id="extended-logo-url-label" data-translate="extended_logo_url_label">Logo URL</span>
+                                    <span class="setting-desc" id="extended-logo-url-help" data-translate="extended_logo_url_help">You can paste a URL or upload a file. Uploaded logos are compressed and saved in base64.</span>
+                                </div>
+                                <input id="extended-logo-url" class="form-input" type="text"
+                                    placeholder="https://example.com/logo.png" maxlength="450000" />
+                                <input id="extended-logo-data" type="hidden" />
+                                <div class="extended-logo-actions">
+                                    <input id="extended-logo-upload" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display: none;" />
+                                    <button type="button" id="extended-logo-upload-btn" class="extended-logo-action-btn" data-translate="extended_logo_upload_btn">Upload logo</button>
+                                    <button type="button" id="extended-logo-reset-btn" class="extended-logo-action-btn secondary" data-translate="extended_logo_reset_btn">Default logo</button>
+                                </div>
+                                <div class="extended-logo-preview-wrap">
+                                    <img id="extended-logo-preview" alt="Logo preview" />
+                                </div>
+                            </div>
+                            <div id="extended-menu-titles-settings" style="display: none;">
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" id="extended-script-title-nh-label" data-translate="extended_script_title_nh_label">Main /nh menu</span>
+                                    </div>
+                                    <input id="extended-script-title-nh" class="form-input" type="text"
+                                        placeholder="Next Housing" maxlength="48" />
+                                </div>
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" id="extended-script-title-agency-label" data-translate="extended_script_title_agency_label">Agency menu</span>
+                                    </div>
+                                    <input id="extended-script-title-agency" class="form-input" type="text"
+                                        placeholder="Next Housing" maxlength="48" />
+                                </div>
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" id="extended-script-title-pap-label" data-translate="extended_script_title_pap_label">PaP menu</span>
+                                    </div>
+                                    <input id="extended-script-title-pap" class="form-input" type="text"
+                                        placeholder="Next Housing" maxlength="48" />
+                                </div>
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" id="extended-script-title-garage-label" data-translate="extended_script_title_garage_label">Garage menu</span>
+                                    </div>
+                                    <input id="extended-script-title-garage" class="form-input" type="text"
+                                        placeholder="Next Housing" maxlength="48" />
+                                </div>
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" id="extended-script-title-wardrobe-label" data-translate="extended_script_title_wardrobe_label">Wardrobe menu</span>
+                                    </div>
+                                    <input id="extended-script-title-wardrobe" class="form-input" type="text"
+                                        placeholder="Next Housing" maxlength="48" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" id="extended-form-actions">
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-shells">
+            <div class="dashboard-grid">
+
+                <div class="card card-sidebar">
+                    <div class="card-header">
+                        <span class="card-title">SHELLS</span>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item active" data-section="shells-list">
+                            <i class="ph ph-archive-box"></i>
+                            <span data-translate="shells_list">Intérieurs
+                                Personnalisés</span>
+                        </div>
+                        <div class="sidebar-item" data-section="shells-create">
+                            <i class="ph ph-plus"></i>
+                            <span data-translate="create_shell">Créer un
+                                Intérieur</span>
+                        </div>
+                        <div class="sidebar-item" data-section="shells-edit" style="display: none;">
+                            <i class="ph ph-pencil-simple"></i>
+                            <span data-translate="edit_shell">Modifier l'Intérieur</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-content">
+
+                    <div class="content-section active" id="section-shells-list">
+                        <div class="section-header">
+                            <h3 data-translate="available_shells">INTÉRIEURS
+                                PERSONNALISÉS</h3>
+                        </div>
+                        <div id="shell-teleport-warning" class="shell-teleport-warning" style="display: none;">
+                            <div class="warning-content">
+                                <span class="warning-icon"><i class="ph ph-warning-circle"></i></span>
+                                <span class="warning-text">Utilisez le noclip ou <a href="#" id="shell-return-link"
+                                        class="warning-link">appuyez ici</a> pour revenir
+                                    là où vous étiez avant</span>
+                            </div>
+                        </div>
+                        <div id="shells-grid" class="shells-grid">
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-shells-create">
+                        <div class="section-header">
+                            <h3 data-translate="create_shell_title">CRÉER UN
+                                INTÉRIEUR</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Shell Name</span>
+                                </div>
+                                <input id="shell-name-create" class="form-input" type="text"
+                                    placeholder="Example: MyMLO Shell" style="width: 100%;" />
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Shell Model (for object shells)</span>
+                                </div>
+                                <input id="shell-model-create" class="form-input" type="text"
+                                    placeholder="Example: starter_apa02 (leave empty for MLO/IPL)"
+                                    style="width: 100%;" />
+                                <span class="setting-desc">If you provide a model, it will be detected as an object
+                                    shell. Otherwise, provide an IPL name below for IPL shells, or leave both empty for
+                                    MLO shells.</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">IPL Name (for IPL shells)</span>
+                                </div>
+                                <input id="shell-ipl-create" class="form-input" type="text"
+                                    placeholder="Example: ex_dt1_11_office_02b (leave empty if using model above)"
+                                    style="width: 100%;" />
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Shell Coordinates</span>
+                                </div>
+                                <span class="setting-desc">Coordinates provided by the shell creator (not for
+                                    door/stash)</span>
+                                <div class="coords-inputs">
+                                    <input id="shell-base-x" class="coord-input" type="text" placeholder="X" />
+                                    <input id="shell-base-y" class="coord-input" type="text" placeholder="Y" />
+                                    <input id="shell-base-z" class="coord-input" type="text" placeholder="Z" />
+                                    <div class="coord-separator" aria-hidden="true"></div>
+                                    <button class="coords-btn" onclick="ShellGetBaseCoords()">
+                                        <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                        <span class="btn-text">Get Current Position</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" id="section-shells-edit" style="display: none;">
+                        <div class="section-header">
+                            <h3 data-translate="edit_shell_title">MODIFIER L'INTÉRIEUR</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Shell Name</span>
+                                </div>
+                                <input id="shell-name-edit" class="form-input" type="text" style="width: 100%;" />
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Shell Model (for object shells)</span>
+                                </div>
+                                <input id="shell-model-edit" class="form-input" type="text"
+                                    placeholder="Example: starter_apa02 (leave empty for MLO/IPL)"
+                                    style="width: 100%;" />
+                                <span class="setting-desc">If you provide a model, it will be detected as an object
+                                    shell. Otherwise, provide an IPL name below for IPL shells, or leave both empty for
+                                    MLO shells.</span>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">IPL Name (for IPL shells)</span>
+                                </div>
+                                <input id="shell-ipl-edit" class="form-input" type="text"
+                                    placeholder="Example: ex_dt1_11_office_02b (leave empty if using model above)"
+                                    style="width: 100%;" />
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Interior Entry</span>
+                                </div>
+                                <div class="coords-inputs">
+                                    <input id="shell-entry-x-edit" class="coord-input" type="text" placeholder="X" />
+                                    <input id="shell-entry-y-edit" class="coord-input" type="text" placeholder="Y" />
+                                    <input id="shell-entry-z-edit" class="coord-input" type="text" placeholder="Z" />
+                                    <div class="coord-separator" aria-hidden="true"></div>
+                                    <button class="coords-btn" onclick="ShellGetEntryCoordsEdit()">
+                                        <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                        <span class="btn-text">Get Current Position</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="setting-item column">
+                                <div class="setting-info">
+                                    <span class="setting-label">Stash Location</span>
+                                </div>
+                                <div class="coords-inputs">
+                                    <input id="shell-stash-x-edit" class="coord-input" type="text" placeholder="X" />
+                                    <input id="shell-stash-y-edit" class="coord-input" type="text" placeholder="Y" />
+                                    <input id="shell-stash-z-edit" class="coord-input" type="text" placeholder="Z" />
+                                    <div class="coord-separator" aria-hidden="true"></div>
+                                    <button class="coords-btn" onclick="ShellGetStashCoordsEdit()">
+                                        <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                        <span class="btn-text">Get Current Position</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="form-actions" id="shells-form-actions">
+                <div class="action-row" id="shells-action-row" style="display: none;">
+                    <button type="button" class="action-btn primary" id="shells-save-btn" onclick="CreateShell()"
+                        style="display: none;">
+                        <span class="btn-icon"><i class="ph ph-check"></i></span>
+                        <span class="btn-text">Create Shell</span>
+                    </button>
+                    <button type="button" class="action-btn primary" id="shells-save-edit-btn" onclick="SaveShellEdit()"
+                        style="display: none;">
+                        <span class="btn-icon"><i class="ph ph-floppy-disk"></i></span>
+                        <span class="btn-text">Save Changes</span>
+                    </button>
+                    <button type="button" class="action-btn secondary" id="shells-cancel-btn"
+                        onclick="CancelShellEdit()" style="display: none;">
+                        <span class="btn-icon"><i class="ph ph-x"></i></span>
+                        <span class="btn-text">Cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-create">
+            <div class="dashboard-grid dashboard-grid-single">
+                <div class="card card-content">
+                    <div class="content-section active" id="section-create-main">
+                        <div class="section-header">
+                            <h3 id="create-main-title" data-translate="build_property_header">Création de propriétés</h3>
+                        </div>
+                        <div class="settings-list create-settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="assign_to_player">ASSIGN TO
+                                        PLAYER</span>
+                                    <span class="setting-desc" data-translate="assign_player_hint_detail">Si
+                                        coché, le logement
+                                        sera
+                                        attribué directement à ce joueur. La
+                                        tarification n'est pas prise en compte avec
+                                        l'attribution directe.</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="statuschange" onchange="StatusChange()" />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item column" id="player2" style="display: none;">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="player_id_field">PLAYER ID <span
+                                            style="color: #ff4444;">*</span></span>
+                                    <span class="setting-desc">ID serveur du joueur cible.</span>
+                                </div>
+                                <input id="player" class="form-input" type="number" data-placeholder="enter_server_id"
+                                    placeholder="Enter server ID" style="width: 100%;" />
+                            </div>
+                            <div class="setting-item column" id="money2">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="house_price">HOUSE PRICE <span
+                                            style="color: #ff4444;">*</span></span>
+                                    <span class="setting-desc" data-translate="house_price_market_hint">Prix de base du
+                                        marché.
+                                        L'agence immobilière pourra ajuster ce montant.</span>
+                                </div>
+                                <input id="money" class="form-input" type="number" data-placeholder="enter_price"
+                                    placeholder="Enter price in $" style="width: 100%;" />
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="interior">INTERIOR</span>
+                                    <span class="setting-desc"
+                                        data-translate="interior_select_hint">Sélectionnez
+                                        l'intérieur de la
+                                        propriété.</span>
+                                </div>
+                                <div class="interior-row">
+                                    <select id="interior-select" class="setting-select custom-select-target"
+                                        onchange="Preview()">
+                                        <optgroup label="Studio">
+                                            <option value="1">Studio 1</option>
+                                            <option value="3">Studio 2</option>
+                                        </optgroup>
+                                        <optgroup label="Houses">
+                                            <option value="6">House 1</option>
+                                            <option value="7">House 2</option>
+                                        </optgroup>
+                                        <optgroup label="Apartments">
+                                            <option value="2">Basic Apartment 1</option>
+                                            <option value="4">Basic Apartment 2</option>
+                                            <option value="5">Basic Apartment 3</option>
+                                            <option value="47">Modern 1 Apartment (View 1)</option>
+                                            <option value="48">Modern 2 Apartment (View 2)</option>
+                                            <option value="49">Modern 3 Apartment (View 3)</option>
+                                            <option value="50">Mody 1 Apartment (View 1)</option>
+                                            <option value="51">Mody 2 Apartment (View 2)</option>
+                                            <option value="52">Mody 3 Apartment (View 3)</option>
+                                            <option value="53">Vibrant 1 Apartment (View 1)</option>
+                                            <option value="54">Vibrant 2 Apartment (View 2)</option>
+                                            <option value="55">Vibrant 3 Apartment (View 3)</option>
+                                            <option value="56">Sharp 1 Apartment (View 1)</option>
+                                            <option value="57">Sharp 2 Apartment (View 2)</option>
+                                            <option value="58">Sharp 3 Apartment (View 3)</option>
+                                            <option value="59">Monochrome 1 Apartment (View 1)</option>
+                                            <option value="60">Monochrome 2 Apartment (View 2)</option>
+                                            <option value="61">Monochrome 3 Apartment (View 3)</option>
+                                            <option value="62">Seductive 1 Apartment (View 1)</option>
+                                            <option value="63">Seductive 2 Apartment (View 2)</option>
+                                            <option value="64">Seductive 3 Apartment (View 3)</option>
+                                            <option value="65">Regal 1 Apartment (View 1)</option>
+                                            <option value="66">Regal 2 Apartment (View 2)</option>
+                                            <option value="67">Regal 3 Apartment (View 3)</option>
+                                            <option value="68">Aqua 1 Apartment (View 1)</option>
+                                            <option value="69">Aqua 2 Apartment (View 2)</option>
+                                            <option value="70">Aqua 3 Apartment (View 3)</option>
+                                        </optgroup>
+                                        <optgroup label="Office (Maze Bank Tower)">
+                                            <option value="11">Executive Rich</option>
+                                            <option value="12">Executive Cool</option>
+                                            <option value="13">Executive Contrast</option>
+                                            <option value="14">Old Spice Warm</option>
+                                            <option value="15">Old Spice Classical</option>
+                                            <option value="16">Old Spice Vintage</option>
+                                            <option value="17">Power Broker Ice</option>
+                                            <option value="18">Power Broker Conservative</option>
+                                            <option value="19">Power Broker Polished</option>
+                                        </optgroup>
+                                        <optgroup label="Office (Arcaduis Business Centre)">
+                                            <option value="20">Executive Rich</option>
+                                            <option value="21">Executive Cool</option>
+                                            <option value="22">Executive Contrast</option>
+                                            <option value="23">Old Spice Warm</option>
+                                            <option value="24">Old Spice Classical</option>
+                                            <option value="25">Old Spice Vintage</option>
+                                            <option value="26">Power Broker Ice</option>
+                                            <option value="27">Power Broker Conservative</option>
+                                            <option value="28">Power Broker Polished</option>
+                                        </optgroup>
+                                        <optgroup label="Offices (Lom Bank)">
+                                            <option value="29">Executive Rich</option>
+                                            <option value="30">Executive Cool</option>
+                                            <option value="31">Executive Contrast</option>
+                                            <option value="32">Old Spice Warm</option>
+                                            <option value="33">Old Spice Classical</option>
+                                            <option value="34">Old Spice Vintage</option>
+                                            <option value="35">Power Broker Ice</option>
+                                            <option value="36">Power Broker Conservative</option>
+                                            <option value="37">Power Broker Polished</option>
+                                        </optgroup>
+                                        <optgroup label="Offices (Maze Bank West)">
+                                            <option value="38">Executive Rich</option>
+                                            <option value="39">Executive Cool</option>
+                                            <option value="40">Executive Contrast</option>
+                                            <option value="41">Old Spice Warm</option>
+                                            <option value="42">Old Spice Classical</option>
+                                            <option value="43">Old Spice Vintage</option>
+                                            <option value="44">Power Broker Ice</option>
+                                            <option value="45">Power Broker Conservative</option>
+                                            <option value="46">Power Broker Polished</option>
+                                        </optgroup>
+                                    </select>
+                                    <button id="visit-interior-btn-create" class="visit-btn"
+                                        onclick="VisitInteriorCreate()"
+                                        title="Visiter l'intérieur en 3D">
+                                        <span class="btn-icon"><i class="ph ph-eye"></i></span>
+                                        <span class="btn-text">Visiter</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="setting-item column">
+                                    <div class="setting-info">
+                                        <span class="setting-label" data-translate="house_location">HOUSE LOCATION <span
+                                                style="color: #ff4444;">*</span></span>
+                                        <span class="setting-desc"
+                                            data-translate="house_location_hint">Définit
+                                            l'entrée
+                                            extérieure
+                                            de
+                                            la propriété. Seuls les administrateurs
+                                            peuvent modifier son emplacement.</span>
+                                    </div>
+                                    <div class="coords-inputs">
+                                        <input id="housex" class="coord-input" type="text" placeholder="X" />
+                                        <input id="housey" class="coord-input" type="text" placeholder="Y" />
+                                        <input id="housez" class="coord-input" type="text" placeholder="Z" />
+                                        <div id="house-heading-placeholder" class="coord-separator"
+                                            aria-hidden="true"></div>
+                                        <button class="coords-btn" onclick="GetCoords()">
+                                            <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                            <span class="btn-text" data-translate="get_current_position">Get Current
+                                                Position</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="setting-item column" id="garage-create-section">
+                                    <div class="setting-info">
+                                        <span class="setting-label" data-translate="garage_location">GARAGE
+                                            LOCATION</span>
+                                        <span class="setting-desc"
+                                            data-translate="garage_location_hint">Définit
+                                            l'entrée du
+                                            garage.
+                                            Laissez les champs vides pour ne pas attribuer de garage personnel au
+                                            logement.</span>
+                                    </div>
+                                    <div class="coords-inputs">
+                                        <input id="garagex" class="coord-input" type="text" placeholder="X" />
+                                        <input id="garagey" class="coord-input" type="text" placeholder="Y" />
+                                        <input id="garagez" class="coord-input" type="text" placeholder="Z" />
+                                        <input id="garageh" class="coord-input" type="text" placeholder="H" />
+                                        <button class="coords-btn" onclick="GetCoordsH()">
+                                            <span class="btn-icon"><i class="ph ph-map-pin"></i></span>
+                                            <span class="btn-text" data-translate="get_current_position">Get Current
+                                                Position</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="give_builder_keys">GIVE BUILDER
+                                        KEYS</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="givebuilderkey" checked />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <span class="setting-label" data-translate="belongs_to_agency">APPARTIENT
+                                        À L'AGENCE</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="belongstoagency" />
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div id="create-form-actions">
+                                <div class="action-row">
+                                    <button type="button" class="create-market-btn pap-btn multimodal-action-btn" id="create-house-finish-btn"
+                                        onclick="Finish()">
+                                        <span class="btn-icon"><i class="ph ph-check"></i></span>
+                                        <span id="create-house-finish-text" data-translate="create_house">Create House</span>
+                                    </button>
+                                    <button type="button" class="create-market-btn pap-btn multimodal-action-btn" id="create-house-reset-btn" onclick="Reset()">
+                                        <span class="btn-icon"><i class="ph ph-arrows-clockwise"></i></span>
+                                        <span id="create-house-reset-text" data-translate="reset_form">Reset Form</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="preview-container">
+        <img id="preview-image" alt="Preview" />
+    </div>
+
+
+
+
+    <div id="garage-container" class="garage-container" style="display: none;">
+
+        <div class="header garage-header">
+            <div>
+                <div class="title">NEXT<span class="square-dot"></span>HOUSING</div>
+                <div class="subtitle" id="garage-subtitle">Garage personnel</div>
+            </div>
+            <div class="header-right">
+                <div class="meta-info">
+                    <div class="badge-version">v1.8.0</div>
+                    <span id="garage-vehicle-count" class="command-hint"></span>
+                </div>
+                <button class="close-btn" onclick="CloseGarageMenu()" title="Close">&#10006;</button>
+            </div>
+        </div>
+
+        
+        <div class="garage-separator"></div>
+
+        
+        <div class="garage-content">
+            <div id="garage-loading" class="garage-loading" style="display: none;">
+                <div class="garage-spinner"></div>
+                <p id="garage-loading-text">Loading vehicles...</p>
+            </div>
+
+            <div id="garage-empty" class="garage-empty" style="display: none;">
+                <svg class="garage-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                </svg>
+                <h2 id="garage-empty-title">No vehicles</h2>
+                <p id="garage-empty-desc">You have no vehicles in this garage.</p>
+            </div>
+
+            <div class="garage-vehicles-scroll">
+                <div id="garage-vehicles-list" class="garage-vehicles-list" style="display: none;"></div>
+            </div>
+        </div>
+
+        
+        <div id="garage-pagination" class="garage-pagination" style="display: none;">
+            <button id="garage-prev-btn" class="garage-page-btn" onclick="GaragePreviousPage()">
+                <i class="ph ph-caret-left"></i>
+                <span>Previous</span>
+            </button>
+            <span id="garage-page-info" class="garage-page-info">Page 1</span>
+            <button id="garage-next-btn" class="garage-page-btn" onclick="GarageNextPage()">
+                <span>Next</span>
+                <i class="ph ph-caret-right"></i>
+            </button>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div id="job-interface" class="job-interface hidden">
+        <div class="job-container">
+
+            <div class="job-header">
+                <div>
+                    <div class="job-title">NEXT<span class="square-dot"></span>HOUSING</div>
+                    <div class="subtitle" data-translate="job_title">AGENCE IMMOBILIERE</div>
+                </div>
+                <div class="header-right">
+                    <div class="meta-info">
+                        <div class="badge-version">v1.8.0</div>
+                        <div class="command-hint" id="job-command-hint">/realestate</div>
+                    </div>
+                    <button class="close-btn" id="job-close-btn" title="Close">&#10006;</button>
+                </div>
+            </div>
+
+            <div class="job-tabs">
+                <button class="job-tab-btn active" data-tab="houses">
+                    <span data-translate="job_tab_houses">Proprietes</span>
+                </button>
+                <button class="job-tab-btn" data-tab="contracts">
+                    <span data-translate="job_tab_contracts">Contrats</span>
+                </button>
+                <button class="job-tab-btn" data-tab="map" id="job-map-tab-btn" style="display: none;">
+                    <span>Carte</span>
+                </button>
+                <button class="job-tab-btn" data-tab="treasury">
+                    <span data-translate="job_tab_treasury">Tresorerie</span>
+                </button>
+                <button class="job-tab-btn refresh-btn-tab" id="refresh-current-tab-btn" title="Recharger les donnees">
+                    <i class="ph ph-arrows-clockwise"></i>
+                </button>
+            </div>
+
+
+            <div class="job-tab-panel active" id="job-tab-houses">
+
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="job-houses-layout">
+                            <aside class="job-houses-sidebar">
+                                <div class="job-houses-sidebar-header">
+                                    <span class="job-houses-sidebar-title">FILTRES</span>
+                                    <div class="job-houses-sidebar-dot"></div>
+                                </div>
+                                <div class="job-houses-sidebar-menu">
+                                    <button type="button" class="job-house-filter-btn active" data-filter="all">
+                                        <i class="ph ph-list-bullets"></i>
+                                        <span data-translate="job_filter_all">Tous les logements</span>
+                                    </button>
+                                    <button type="button" class="job-house-filter-btn" data-filter="vacant">
+                                        <i class="ph ph-door-open"></i>
+                                        <span data-translate="job_filter_vacant">Proprietes vacantes</span>
+                                    </button>
+                                    <button type="button" class="job-house-filter-btn" data-filter="agency">
+                                        <i class="ph ph-buildings"></i>
+                                        <span data-translate="job_filter_agency">Proprietes de l'agence</span>
+                                    </button>
+                                    <button type="button" class="job-house-filter-btn" data-filter="sold">
+                                        <i class="ph ph-key"></i>
+                                        <span data-translate="job_filter_sold">Autres (deja achetees)</span>
+                                    </button>
+                                </div>
+                                <div class="job-filters-hidden">
+                                    <select id="house-filter-type" class="filter-select">
+                                        <option value="all" data-translate="job_filter_all" selected>Tous les logements
+                                        </option>
+                                        <option value="vacant" data-translate="job_filter_vacant">Proprietes vacantes
+                                        </option>
+                                        <option value="agency" data-translate="job_filter_agency">Proprietes de l'agence
+                                        </option>
+                                        <option value="sold" data-translate="job_filter_sold">Autres (deja achetees)
+                                        </option>
+                                    </select>
+                                </div>
+                            </aside>
+
+                            <div class="job-houses-main">
+                                <div class="job-houses-main-header">
+                                    <h3 id="job-houses-filter-title" data-translate="job_filter_all">Tous les logements
+                                    </h3>
+                                </div>
+
+                                <div class="job-houses-search">
+                                    <i class="ph ph-magnifying-glass"></i>
+                                    <input type="text" id="house-search-input" class="job-houses-search-input"
+                                        placeholder="Rechercher un logement..." autocomplete="off" />
+                                </div>
+
+                                <div class="houses-list-container">
+                                    <div id="houses-list" class="houses-list">
+
+                                    </div>
+                                    <div id="job-loading" class="loading hidden">
+                                        <div class="spinner"></div>
+                                        <p data-translate="job_loading_houses">Chargement des logements...</p>
+                                    </div>
+                                    <div id="job-empty-state" class="empty-state hidden">
+                                        <p data-translate="job_no_houses">Aucun logement trouve</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="job-tab-panel" id="job-tab-contracts">
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="job-houses-main job-contracts-main">
+                            <div class="job-houses-main-header job-contracts-main-header">
+                                <h3 data-translate="job_tab_contracts">Contrats</h3>
+                            </div>
+                            <div class="contracts-container">
+                                <div id="contracts-list" class="contracts-list">
+
+                                </div>
+                                <div id="contracts-loading" class="loading hidden">
+                                    <div class="spinner"></div>
+                                    <p data-translate="job_loading_contracts">Loading contracts...</p>
+                                </div>
+                                <div id="contracts-empty-state" class="empty-state hidden">
+                                    <p data-translate="job_no_contracts">No contracts found</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="job-tab-panel" id="job-tab-map">
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="job-map-layout">
+                            <aside class="job-map-sidebar">
+                                <div class="job-map-sidebar-header">
+                                    <h3 id="job-map-sidebar-title">Carte des logements</h3>
+                                </div>
+
+                                <div class="job-map-search">
+                                    <i class="ph ph-magnifying-glass"></i>
+                                    <input type="text" id="job-map-search-input" class="job-map-search-input"
+                                        placeholder="Rechercher un logement..." autocomplete="off" />
+                                </div>
+
+                                <div class="job-map-filter-grid">
+                                    <label class="job-map-filter-label" for="job-map-status-filter">Statut</label>
+                                    <select id="job-map-status-filter" class="filter-select">
+                                        <option value="all">Tous</option>
+                                        <option value="vacant">Vacant</option>
+                                        <option value="agency">Agence</option>
+                                        <option value="sold">Vendu</option>
+                                        <option value="pap">PaP</option>
+                                    </select>
+                                    <label class="job-map-checkbox">
+                                        <input type="checkbox" id="job-map-only-agency" />
+                                        <span>Agence uniquement</span>
+                                    </label>
+                                </div>
+
+                                <div class="job-map-stats">
+                                    <div class="job-map-stat-item">
+                                        <span class="job-map-stat-label">Total</span>
+                                        <span class="job-map-stat-value" id="job-map-stat-total">0</span>
+                                    </div>
+                                    <div class="job-map-stat-item">
+                                        <span class="job-map-stat-label">Affiches</span>
+                                        <span class="job-map-stat-value" id="job-map-stat-visible">0</span>
+                                    </div>
+                                </div>
+
+                                <div id="job-map-calibration-panel" class="job-map-calibration-panel">
+                                    <div class="job-map-calibration-header">
+                                        <h4>Calibration temporaire</h4>
+                                        <p>Mode simple: 4 points, capture sur la map, auto-affine.</p>
+                                        <div class="job-map-calibration-header-actions">
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-copy-simple">Copier config</button>
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-toggle-advanced">Mode expert</button>
+                                        </div>
+                                    </div>
+
+                                    <div id="job-map-calib-toolbar" class="job-map-calibration-toolbar job-map-advanced-only hidden">
+                                        <label class="job-map-calibration-step" for="job-map-calib-step">
+                                            Pas
+                                            <input type="number" id="job-map-calib-step" min="0.1" max="500"
+                                                step="0.1" value="4.0" />
+                                        </label>
+                                        <div class="job-map-calibration-actions">
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-apply">Appliquer</button>
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-reset">Reset</button>
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-copy">Copier</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="job-map-calibration-nudge-row">
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="left">
+                                            Gauche
+                                        </button>
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="right">
+                                            Droite
+                                        </button>
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="up">
+                                            Haut
+                                        </button>
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="down">
+                                            Bas
+                                        </button>
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="rotleft">
+                                            Rot-
+                                        </button>
+                                        <button type="button" class="job-map-calibration-btn" data-calib-nudge="rotright">
+                                            Rot+
+                                        </button>
+                                    </div>
+
+                                    <div class="job-map-calibration-section">
+                                        <span class="job-map-calibration-label">Auto-calibration (4 points)</span>
+                                        <p class="job-map-calibration-help">
+                                            Saisis les coords monde, clique "Capture", puis clique l'emplacement reel sur la carte.
+                                        </p>
+                                        <div class="job-map-calibration-ref-list">
+                                            <div class="job-map-calibration-ref-row" data-calib-ref="1">
+                                                <span class="job-map-calibration-ref-tag">P1</span>
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref1-worldx" step="0.1" placeholder="worldX" />
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref1-worldy" step="0.1" placeholder="worldY" />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref1-mapx" step="0.1" placeholder="mapX" readonly />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref1-mapy" step="0.1" placeholder="mapY" readonly />
+                                                <button type="button" class="job-map-calibration-btn"
+                                                    data-calib-capture-ref="1">Capture</button>
+                                                <button type="button"
+                                                    class="job-map-calibration-btn job-map-calibration-btn-mini"
+                                                    data-calib-clear-ref="1">X</button>
+                                            </div>
+                                            <div class="job-map-calibration-ref-row" data-calib-ref="2">
+                                                <span class="job-map-calibration-ref-tag">P2</span>
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref2-worldx" step="0.1" placeholder="worldX" />
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref2-worldy" step="0.1" placeholder="worldY" />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref2-mapx" step="0.1" placeholder="mapX" readonly />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref2-mapy" step="0.1" placeholder="mapY" readonly />
+                                                <button type="button" class="job-map-calibration-btn"
+                                                    data-calib-capture-ref="2">Capture</button>
+                                                <button type="button"
+                                                    class="job-map-calibration-btn job-map-calibration-btn-mini"
+                                                    data-calib-clear-ref="2">X</button>
+                                            </div>
+                                            <div class="job-map-calibration-ref-row" data-calib-ref="3">
+                                                <span class="job-map-calibration-ref-tag">P3</span>
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref3-worldx" step="0.1" placeholder="worldX" />
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref3-worldy" step="0.1" placeholder="worldY" />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref3-mapx" step="0.1" placeholder="mapX" readonly />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref3-mapy" step="0.1" placeholder="mapY" readonly />
+                                                <button type="button" class="job-map-calibration-btn"
+                                                    data-calib-capture-ref="3">Capture</button>
+                                                <button type="button"
+                                                    class="job-map-calibration-btn job-map-calibration-btn-mini"
+                                                    data-calib-clear-ref="3">X</button>
+                                            </div>
+                                            <div class="job-map-calibration-ref-row" data-calib-ref="4">
+                                                <span class="job-map-calibration-ref-tag">P4</span>
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref4-worldx" step="0.1" placeholder="worldX" />
+                                                <input type="number" class="job-map-calibration-ref-input"
+                                                    id="job-map-calib-ref4-worldy" step="0.1" placeholder="worldY" />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref4-mapx" step="0.1" placeholder="mapX" readonly />
+                                                <input type="number" class="job-map-calibration-ref-readonly"
+                                                    id="job-map-calib-ref4-mapy" step="0.1" placeholder="mapY" readonly />
+                                                <button type="button" class="job-map-calibration-btn"
+                                                    data-calib-capture-ref="4">Capture</button>
+                                                <button type="button"
+                                                    class="job-map-calibration-btn job-map-calibration-btn-mini"
+                                                    data-calib-clear-ref="4">X</button>
+                                            </div>
+                                        </div>
+                                        <div class="job-map-calibration-actions">
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-autosolve">Auto-affine</button>
+                                            <button type="button" class="job-map-calibration-btn"
+                                                id="job-map-calib-affine-reset">Reset affine</button>
+                                        </div>
+                                        <div id="job-map-calib-capture-state" class="job-map-calibration-capture-state"></div>
+                                    </div>
+
+                                    <div id="job-map-calib-bounds-section" class="job-map-calibration-section job-map-advanced-only hidden">
+                                        <span class="job-map-calibration-label">Bounds</span>
+                                        <div class="job-map-calibration-grid">
+                                            <label class="job-map-calibration-field">
+                                                <span>minX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bounds-minx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>maxX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bounds-maxx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>minY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bounds-miny" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>maxY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bounds-maxy" step="0.1" />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div id="job-map-calib-rect-section" class="job-map-calibration-section job-map-advanced-only hidden">
+                                        <span class="job-map-calibration-label">ImageRect</span>
+                                        <div class="job-map-calibration-grid">
+                                            <label class="job-map-calibration-field">
+                                                <span>minX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-rect-minx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>maxX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-rect-maxx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>minY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-rect-miny" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>maxY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-rect-maxy" step="0.1" />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div id="job-map-calib-projection-section" class="job-map-calibration-section job-map-advanced-only hidden">
+                                        <span class="job-map-calibration-label">ProjectionCorrection</span>
+                                        <div class="job-map-calibration-grid">
+                                            <label class="job-map-calibration-field">
+                                                <span>TopOffsetX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-topx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>TopOffsetY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-topy" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>BottomOffsetX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bottomx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>BottomOffsetY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-bottomy" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>CurveX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-curvex" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>CurveY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-curvey" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>WarpYPower</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-warpy" step="0.01" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>MapOffsetX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-mapoffsetx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>MapOffsetY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-mapoffsety" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>RotationDeg</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-rotationdeg" step="0.05" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>ScaleX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-scalex" step="0.01" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>ScaleY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-scaley" step="0.01" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AnchorX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-anchorx" step="0.01" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AnchorY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-anchory" step="0.01" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineA</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affinea" step="0.0001" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineB</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affineb" step="0.0001" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineC</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affinec" step="0.0001" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineD</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affined" step="0.0001" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineTX</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affinetx" step="0.1" />
+                                            </label>
+                                            <label class="job-map-calibration-field">
+                                                <span>AffineTY</span>
+                                                <input type="number" class="job-map-calibration-input"
+                                                    id="job-map-calib-affinety" step="0.1" />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <label id="job-map-calib-inverty-wrap" class="job-map-checkbox job-map-advanced-only hidden">
+                                        <input type="checkbox" id="job-map-calib-inverty" />
+                                        <span>InvertY</span>
+                                    </label>
+
+                                    <textarea id="job-map-calibration-output" class="job-map-calibration-output job-map-advanced-only hidden"
+                                        readonly></textarea>
+                                </div>
+
+                                <div id="job-map-houses-list" class="job-map-houses-list"></div>
+                                <div id="job-map-empty" class="empty-state hidden">
+                                    <p>Aucun logement ne correspond au filtre.</p>
+                                </div>
+                            </aside>
+
+                            <section class="job-map-main">
+                                <div id="job-map-loading" class="loading hidden">
+                                    <div class="spinner"></div>
+                                    <p>Chargement de la carte...</p>
+                                </div>
+                                <div id="job-map-unavailable" class="empty-state hidden">
+                                    <p>La carte premium n'est pas disponible.</p>
+                                </div>
+                                <div id="job-map-canvas-wrap" class="job-map-canvas-wrap">
+                                    <div id="job-agency-map" class="job-agency-map"></div>
+                                </div>
+                                <div class="job-map-legend">
+                                    <div class="job-map-legend-item">
+                                        <span class="job-map-dot vacant"></span>
+                                        <span>Vacant</span>
+                                    </div>
+                                    <div class="job-map-legend-item">
+                                        <span class="job-map-dot agency"></span>
+                                        <span>Agence</span>
+                                    </div>
+                                    <div class="job-map-legend-item">
+                                        <span class="job-map-dot sold"></span>
+                                        <span>Vendu</span>
+                                    </div>
+                                    <div class="job-map-legend-item">
+                                        <span class="job-map-dot pap"></span>
+                                        <span>PaP</span>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="job-tab-panel" id="job-tab-treasury">
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="treasury-container">
+                            <div class="treasury-header">
+                                <div class="treasury-balance-card">
+                                    <div class="treasury-balance-label" data-translate="job_treasury_balance_label">
+                                        Treasury
+                                        balance</div>
+                                    <div class="treasury-balance-amount" id="treasury-balance">0 $</div>
+                                </div>
+                            </div>
+
+                            <div class="treasury-stats">
+                                <div class="treasury-stat-card">
+                                    <div class="treasury-stat-number" id="treasury-sales-count">0</div>
+                                    <div class="treasury-stat-label" data-translate="job_treasury_sales_label">
+                                        Properties
+                                        sold
+                                    </div>
+                                </div>
+                                <div class="treasury-stat-card">
+                                    <div class="treasury-stat-number" id="treasury-rents-count">0</div>
+                                    <div class="treasury-stat-label" data-translate="job_treasury_rents_label">Active
+                                        rentals
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="treasury-withdraw-section">
+                                <div class="config-card full-width treasury-withdraw-card">
+                                    <div class="treasury-withdraw-overlay hidden" id="treasury-withdraw-overlay">
+                                        <div class="treasury-withdraw-overlay-content">
+                                            <i class="ph ph-lock overlay-icon"></i>
+                                            <p class="overlay-message"
+                                                data-translate="treasury_withdraw_insufficient_grade_message">Vous devez
+                                                evoluer dans votre carriere pour acceder a la tresorerie</p>
+
+
+                                        </div>
+                                    </div>
+                                    <div class="card-header">
+                                        <span class="card-icon"><i class="ph ph-currency-dollar"></i></span>
+                                        <h4 data-translate="job_treasury_withdraw_title">Withdraw from treasury</h4>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label class="form-label"
+                                                data-translate="job_treasury_withdraw_amount_label">Amount
+                                                to withdraw ($)</label>
+                                            <input type="number" id="treasury-withdraw-amount" class="form-input"
+                                                data-translate-placeholder="job_treasury_withdraw_amount_placeholder"
+                                                placeholder="Enter amount" min="1">
+                                        </div>
+                                        <button class="action-btn primary treasury-withdraw-btn"
+                                            id="treasury-withdraw-btn">
+                                            <span class="btn-icon"><i class="ph ph-money-wavy"></i></span>
+                                            <span class="btn-text"
+                                                data-translate="job_treasury_withdraw_btn">Withdraw</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="treasury-loading" class="loading hidden">
+                                <div class="spinner"></div>
+                                <p data-translate="job_treasury_loading">Loading treasury...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="job-bottom-spacer" aria-hidden="true"></div>
+        </div>
+    </div>
+
+    
+    <div id="pap-interface" class="pap-interface hidden">
+        <div class="pap-container">
+            <div class="pap-header">
+                <div>
+                    <div id="pap-title" class="pap-title">NEXT<span class="square-dot"></span>HOUSING</div>
+                    <div class="subtitle pap-subtitle" data-translate="pap_subtitle">petites annonce - vente et location</div>
+                </div>
+                <div class="header-right">
+                    <div class="meta-info">
+                        <div class="badge-version">v1.8.0</div>
+                        <div class="command-hint" id="pap-command-hint">/classifieds</div>
+                    </div>
+                    <button class="pap-close-btn" onclick="hidePapInterface()" title="Close">&#10006;</button>
+                </div>
+            </div>
+
+            <div class="pap-tabs">
+                <button class="pap-tab-btn" data-tab="listings" onclick="papSwitchTab('listings')">
+                    <span data-translate="pap_tab_listings">Annonces</span>
+                </button>
+                <button class="pap-tab-btn active" data-tab="my-properties" onclick="papSwitchTab('my-properties')">
+                    <span data-translate="pap_tab_my_properties">Mes Proprietes</span>
+                </button>
+                <button class="pap-tab-btn" data-tab="contracts" onclick="papSwitchTab('contracts')">
+                    <span data-translate="pap_tab_contracts">Contrats</span>
+                </button>
+                <div class="pap-tabs-tools">
+                    <div id="pap-listings-toolbar-controls-top" class="pap-listings-toolbar-controls hidden">
+                        <select id="pap-filter-type" class="pap-filter-select"
+                            onchange="if(typeof papFilterListings === 'function') papFilterListings()">
+                            <option value="all">Tout</option>
+                            <option value="sale">Vente</option>
+                            <option value="rent">Location</option>
+                        </select>
+                        <select id="pap-filter-sort" class="pap-filter-select"
+                            onchange="if(typeof papSortListings === 'function') papSortListings()">
+                            <option value="recent">Recent</option>
+                            <option value="price-low">Prix croissant</option>
+                            <option value="price-high">Prix decroissant</option>
+                        </select>
+                    </div>
+                    <button class="pap-refresh-btn"
+                        onclick="if(typeof papRefreshCurrentTab === 'function') papRefreshCurrentTab()"
+                        title="Recharger">
+                        <i class="ph ph-arrows-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+
+            
+            <div class="pap-tab-panel job-tab-panel active" id="pap-tab-my-properties">
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="job-houses-main">
+                            <div class="job-houses-main-header">
+                                <h3 data-translate="pap_tab_my_properties">MES PROPRIETES</h3>
+                            </div>
+
+                            <div class="houses-list-container">
+                                <div id="pap-my-properties-list" class="houses-list"></div>
+                                <div id="pap-my-properties-loading" class="pap-loading hidden">
+                                    <div class="spinner"></div>
+                                    <p data-translate="pap_loading">Loading...</p>
+                                </div>
+                                <div id="pap-my-properties-empty" class="pap-empty-state hidden">
+                                    <p data-translate="pap_no_properties">No properties found</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="pap-tab-panel job-tab-panel" id="pap-tab-listings">
+                <div class="job-dashboard-grid">
+                    <div class="job-card-content">
+                        <div class="job-houses-main">
+                            <div class="job-houses-main-header">
+                                <h3 id="pap-listings-main-title" data-translate="pap_tab_listings">ANNONCES</h3>
+                            </div>
+
+                            <div class="job-houses-search">
+                                <i class="ph ph-magnifying-glass"></i>
+                                <input type="text" id="pap-listings-search-input" class="job-houses-search-input"
+                                    placeholder="Rechercher une annonce..." autocomplete="off"
+                                    oninput="papHandleListingsSearch(this.value)" />
+                            </div>
+
+                            <div id="pap-listings-unified" class="houses-list-container">
+                                <section id="pap-my-listings-section" class="pap-listings-subsection hidden">
+                                    <div class="pap-listings-separator">
+                                        <span id="pap-my-listings-section-title" data-translate="pap_tab_my_listings">My listings</span>
+                                    </div>
+                                    <div id="pap-my-listings-list" class="pap-list"></div>
+                                    <div id="pap-my-listings-loading" class="pap-loading hidden">
+                                        <div class="spinner"></div>
+                                        <p data-translate="pap_loading">Loading...</p>
+                                    </div>
+                                    <div id="pap-my-listings-empty" class="pap-empty-state hidden">
+                                        <p data-translate="pap_no_my_listings">You have no listings</p>
+                                    </div>
+                                </section>
+
+                                <section id="pap-public-listings-section" class="pap-listings-subsection">
+                                    <div class="pap-listings-separator">
+                                        <span id="pap-listings-section-title" data-translate="pap_tab_listings">Listings</span>
+                                    </div>
+                                    <div id="pap-listings-list" class="pap-list"></div>
+                                    <div id="pap-listings-loading" class="pap-loading hidden">
+                                        <div class="spinner"></div>
+                                        <p data-translate="pap_loading">Loading...</p>
+                                    </div>
+                                    <div id="pap-listings-empty" class="pap-empty-state hidden">
+                                        <p data-translate="pap_no_listings">No listings</p>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="pap-tab-panel" id="pap-tab-contracts">
+                <div class="pap-list-container pap-management-container">
+                    <div id="pap-management-unified" class="pap-management-unified">
+                        <div id="pap-management-view-offers" class="pap-listings-subsection">
+                            <div class="pap-listings-separator">
+                                <span id="pap-offers-section-title" data-translate="pap_mgmt_my_offers">Mes
+                                    offres</span>
+                            </div>
+                            <div id="pap-offers-list" class="pap-list"></div>
+                            <div id="pap-offers-loading" class="pap-loading hidden">
+                                <div class="spinner"></div>
+                                <p data-translate="pap_loading_offers">Loading offers...</p>
+                            </div>
+                            <div id="pap-offers-empty" class="pap-empty-state hidden">
+                                <p data-translate="pap_no_offers">No offers</p>
+                            </div>
+                        </div>
+
+                        <div id="pap-management-view-contracts" class="pap-listings-subsection">
+                            <div class="pap-listings-separator">
+                                <span id="pap-contracts-section-title" data-translate="pap_mgmt_my_contracts">Mes
+                                    contrats</span>
+                            </div>
+                            <div id="pap-contracts-list" class="pap-list"></div>
+                            <div id="pap-contracts-loading" class="pap-loading hidden">
+                                <div class="spinner"></div>
+                                <p data-translate="pap_loading_contracts">Loading contracts...</p>
+                            </div>
+                            <div id="pap-contracts-empty" class="pap-empty-state hidden">
+                                <p data-translate="pap_no_contracts">No contracts</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="pap-bottom-spacer" aria-hidden="true"></div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    <div id="player-contract-interface" class="player-contract-interface hidden">
+        <div class="contract-paper-wrapper">
+            <div class="contract-paper">
+                <div class="contract-header">
+                    <h1 data-translate="job_contract_title">CONTRAT IMMOBILIER</h1>
+                    <div class="contract-number"><span data-translate="job_contract_number_prefix">No.</span> <span
+                            id="contract-number-display">-</span></div>
+                </div>
+                <div class="contract-body">
+                    <div class="contract-section">
+                        <h3 data-translate="job_contract_parties">PARTIES</h3>
+                        <div class="contract-parties">
+                            <div class="party">
+                                <strong data-translate="job_contract_seller_label">Vendeur/Loueur (Agent
+                                    Immobilier):</strong>
+                                <p id="contract-agent-name">-</p>
+                            </div>
+                            <div class="party">
+                                <strong data-translate="job_contract_buyer_label">Acheteur/Locataire:</strong>
+                                <p id="contract-player-name">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contract-section">
+                        <h3 data-translate="job_contract_property_section">BIEN IMMOBILIER</h3>
+                        <div class="contract-property">
+                            <p><strong data-translate="job_contract_property_label_contract">Logement:</strong>
+                                <span id="contract-house-id">-</span>
+                            </p>
+                            <p><strong data-translate="job_contract_location_label_contract">Emplacement:</strong>
+                                <span id="contract-house-location">-</span>
+                            </p>
+                            <p><strong data-translate="job_contract_interior_label">Interieur:</strong> <span
+                                    id="contract-house-interior">-</span></p>
+                            <p><strong data-translate="job_contract_garage_label">Garage:</strong> <span
+                                    id="contract-house-garage">-</span></p>
+                        </div>
+                    </div>
+                    <div class="contract-section">
+                        <h3 data-translate="job_contract_conditions">CONDITIONS</h3>
+                        <div class="contract-conditions">
+                            <p><strong data-translate="job_contract_type_label_contract">Type:</strong> <span
+                                    id="contract-type-display">-</span></p>
+                            <p id="contract-price-display"><strong
+                                    data-translate="job_contract_price_label">Prix:</strong> <span>-</span></p>
+                            <p id="contract-duration-display" style="display: none;"><strong
+                                    data-translate="job_contract_duration_label_contract">Duree:</strong>
+                                <span>-</span>
+                            </p>
+                            <p id="contract-monthly-display" style="display: none;"><strong
+                                    data-translate="job_contract_monthly_rent_label">Loyer mensuel:</strong>
+                                <span>-</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="contract-signature-section">
+                        <div class="signature-line">
+                            <p data-translate="job_contract_agent_signature">Signature de l'agent</p>
+                            <div class="signature-box agent-signature">
+                                <img src="images/signature.webp" alt="Signature" class="signature-img" style="height: 140px !important; width: auto !important; max-width: none !important; max-height: none !important; transform: translateY(-12px) !important;">
+                            </div>
+                        </div>
+                        <div class="signature-line">
+                            <p data-translate="job_contract_player_signature">Votre signature</p>
+                            <div class="signature-box player-signature">
+                                <button class="signature-clear-icon" id="clear-signature-icon"
+                                    title="Effacer la signature" onclick="clearSignature()">X</button>
+                                <canvas id="player-signature-canvas" class="signature-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contract-footer">
+                    <div class="buttons-container">
+                        <button class="contract-btn sign-btn" id="sign-contract-btn"
+                            data-translate="job_contract_accept" onclick="signContract()">Accept</button>
+                        <button class="contract-btn decline-btn" id="decline-contract-btn"
+                            data-translate="job_contract_decline" onclick="declineContract()">Decline</button>
+                    </div>
+                    <p class="signature-error-message" id="signature-error-message"
+                        data-translate="job_contract_signature_required">You must sign to accept the contract</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+    <div id="pap-contract-interface" class="pap-contract-interface hidden">
+        <div class="contract-paper-wrapper pap-contract-paper-wrapper">
+            <div class="contract-paper pap-contract-paper">
+                <div class="contract-header">
+                    <h1 data-translate="job_contract_title">REAL ESTATE CONTRACT</h1>
+                    <div class="contract-number"><span data-translate="job_contract_number_prefix">No.</span> <span
+                            id="pap-contract-number">-</span></div>
+                </div>
+                <div class="contract-body">
+                    <div class="contract-section">
+                        <h3 data-translate="job_contract_parties">PARTIES</h3>
+                        <div class="contract-parties">
+                            <div class="party">
+                                <strong data-translate="pap_contract_seller">Seller</strong>
+                                <p id="pap-contract-seller-name">-</p>
+                            </div>
+                            <div class="party">
+                                <strong data-translate="pap_contract_buyer">Buyer</strong>
+                                <p id="pap-contract-buyer-name">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contract-section contract-property">
+                        <h3 data-translate="job_contract_property_section">PROPERTY</h3>
+                        <p><strong data-translate="job_contract_property_label_contract">Property:</strong> <span
+                                id="pap-contract-property-name">-</span></p>
+                        <p><strong data-translate="job_contract_location_label_contract">Location:</strong> <span
+                                id="pap-contract-property-location">-</span></p>
+                        <p><strong data-translate="job_contract_interior_label">Interior:</strong> <span
+                                id="pap-contract-property-interior">-</span></p>
+                        <p><strong data-translate="job_contract_garage_label">Garage:</strong> <span
+                                id="pap-contract-property-garage">-</span></p>
+                    </div>
+                    <div class="contract-section contract-conditions">
+                        <h3 data-translate="job_contract_conditions">CONDITIONS</h3>
+                        <p><strong data-translate="job_contract_type_label_contract">Type:</strong> <span
+                                id="pap-contract-type">-</span></p>
+                        <p><strong data-translate="job_contract_price_label">Price:</strong> <span
+                                id="pap-contract-price">-</span></p>
+                        <p id="pap-contract-duration-row" style="display: none;"><strong
+                                data-translate="job_contract_duration_label_contract">Duration:</strong> <span
+                                id="pap-contract-duration">-</span></p>
+                        <p id="pap-contract-rent-price-row" style="display: none;"><strong
+                                data-translate="job_contract_monthly_rent_label">Monthly rent:</strong> <span
+                                id="pap-contract-monthly-rent">-</span></p>
+                    </div>
+                    <div class="contract-signature-section">
+                        <div class="signature-line">
+                            <p data-translate="pap_contract_seller_signature">Seller signature</p>
+                            <div class="signature-box agent-signature">
+                                <img src="images/signature.webp" alt="Signature" class="signature-img" style="height: 140px !important; width: auto !important; max-width: none !important; max-height: none !important; transform: translateY(-12px) !important;">
+                            </div>
+                        </div>
+                        <div class="signature-line">
+                            <p data-translate="pap_contract_buyer_signature">Buyer signature</p>
+                            <div class="signature-box player-signature">
+                                <button class="signature-clear-btn" onclick="papClearSignature()">X</button>
+                                <canvas id="pap-signature-canvas" class="signature-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contract-footer">
+                    <div class="buttons-container">
+                        <button class="contract-btn sign-btn" onclick="papSignContract()"
+                            data-translate="pap_contract_accept">Accept</button>
+                        <button class="contract-btn decline-btn" onclick="papDeclineContract()"
+                            data-translate="pap_contract_decline">Decline</button>
+                    </div>
+                    <p class="signature-error-message" id="pap-signature-error"
+                        data-translate="pap_error_signature_required">You must sign to accept the contract</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="wardrobe-container" class="wardrobe-container" style="display: none;">
+        <div class="header wardrobe-header">
+            <div>
+                <div class="title">NEXT<span class="square-dot"></span>HOUSING</div>
+                <div class="subtitle" data-translate="wardrobe_menu_subtitle">Garde-robe personnelle</div>
+            </div>
+            <div class="header-right">
+                <div class="meta-info">
+                    <div class="badge-version">v1.8.0</div>
+                    <span id="wardrobe-outfit-count" class="command-hint"></span>
+                </div>
+                <button class="close-btn" onclick="CloseWardrobe()" title="Close">&#10006;</button>
+            </div>
+        </div>
+
+        <div class="tab-bar wardrobe-navigation">
+            <button class="tab-btn wardrobe-nav-item active" data-wardrobe-tab="outfits" type="button">
+                            <i class="ph ph-t-shirt"></i>
+                <span data-translate="wardrobe_change_outfit">Mes Tenues</span>
+            </button>
+            <button class="tab-btn wardrobe-nav-item" data-wardrobe-tab="save" type="button">
+                <i class="ph ph-floppy-disk"></i>
+                <span data-translate="wardrobe_save_outfit">Sauvegarder</span>
+            </button>
+            <button class="tab-btn wardrobe-nav-item" data-wardrobe-tab="manage" type="button">
+                <i class="ph ph-gear-six"></i>
+                <span data-translate="wardrobe_manage_outfits">Gérer</span>
+            </button>
+            <div class="wardrobe-tabs-tools">
+                <button class="pap-refresh-btn" id="wardrobe-refresh-btn" title="Rafraîchir">
+                    <i class="ph ph-arrows-clockwise"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="wardrobe-content card card-content">
+            <div id="wardrobe-tab-outfits" class="wardrobe-tab-panel content-section active">
+                <div id="wardrobe-outfits-list" class="wardrobe-grid"></div>
+                <div id="wardrobe-outfits-empty" class="wardrobe-empty-state" style="display: none;">
+                    <i class="ph ph-t-shirt"></i>
+                    <p data-translate="wardrobe_no_outfit_saved">Aucune tenue sauvegardée</p>
+                </div>
+            </div>
+
+            <div id="wardrobe-tab-save" class="wardrobe-tab-panel content-section">
+                <div class="section-header">
+                    <h3 data-translate="wardrobe_input_save_title">SAUVEGARDER LA TENUE</h3>
+                </div>
+                <div class="wardrobe-save-center">
+                    <div class="wardrobe-save-panel">
+                        <div class="setting-item column wardrobe-save-item">
+                            <div class="setting-info">
+                                <span class="setting-label" data-translate="wardrobe_input_name_label">Nom de la tenue</span>
+                                <span class="setting-desc" data-translate="wardrobe_input_name_desc">Donnez un nom à votre tenue</span>
+                            </div>
+                            <input type="text" id="wardrobe-new-name" class="form-input"
+                                data-translate-placeholder="wardrobe_input_placeholder" placeholder="Ma tenue"
+                                maxlength="20">
+                        </div>
+                        <div class="wardrobe-save-actions">
+                            <button class="action-btn secondary" onclick="SaveWardrobeOutfit()">
+                                <i class="ph ph-floppy-disk btn-icon"></i>
+                                <span class="btn-text" data-translate="wardrobe_save_btn">Enregistrer la tenue</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="wardrobe-tab-manage" class="wardrobe-tab-panel content-section">
+                <div id="wardrobe-manage-list" class="wardrobe-grid"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+
+
+
+

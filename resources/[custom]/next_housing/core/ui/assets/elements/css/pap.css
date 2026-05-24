@@ -1,0 +1,1153 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+.pap-interface {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(1100px, 92vw);
+    height: min(80vh, 800px);
+    background: #000000;
+    border-radius: 20px;
+    padding: 32px 32px 16px 32px;
+    color: white;
+    flex-direction: column;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.pap-interface:not(.hidden) {
+    display: flex;
+}
+
+.pap-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+}
+
+.pap-interface:not(.hidden) .pap-header {
+    animation: papFadeIn 0.5s ease forwards 0.2s;
+}
+
+.pap-title {
+    margin-bottom: 0;
+}
+
+.pap-tabs-tools {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pap-tab-btn {
+    transition: all 0.2s ease;
+}
+
+.pap-refresh-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    line-height: 1;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pap-refresh-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls .pap-filter-select {
+    min-width: 170px;
+    height: 32px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown {
+    min-width: 170px;
+    width: 170px;
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown .custom-dropdown-trigger {
+    min-height: 32px;
+    height: 32px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    gap: 10px;
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown .custom-dropdown-trigger:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown.open .custom-dropdown-trigger {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 1100px) {
+    .pap-tabs-tools .pap-listings-toolbar-controls .pap-filter-select {
+        min-width: 150px;
+    }
+
+    .pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown {
+        min-width: 150px;
+    }
+}
+
+@media (max-width: 900px) {
+    .pap-tabs {
+        flex-wrap: wrap;
+    }
+
+    .pap-tabs-tools {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+    }
+
+    .pap-tabs-tools .pap-listings-toolbar-controls {
+        flex: 1;
+    }
+
+    .pap-tabs-tools .pap-listings-toolbar-controls .pap-filter-select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pap-tabs-tools .pap-listings-toolbar-controls .custom-dropdown {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+.pap-tab-panel {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+    flex-direction: column;
+    min-height: 0;
+}
+
+@media (max-width: 768px) {
+    .pap-interface {
+        width: 95vw;
+        max-height: 95vh;
+    }
+}
+
+.pap-tab-panel.active {
+    display: flex;
+}
+
+#pap-tab-my-properties .job-card-content > .job-houses-main {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+.pap-bottom-spacer {
+    flex: 0 0 20px;
+    min-height: 20px;
+}
+
+@media (max-width: 480px) {
+    .pap-bottom-spacer {
+        flex-basis: 16px;
+        min-height: 16px;
+    }
+}
+
+.pap-toggle-group {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.pap-toggle-btn {
+    padding: 6px 16px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.pap-toggle-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.pap-filter-select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px 32px 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 14px;
+}
+
+.pap-filter-select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pap-list-container {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+
+.pap-interface {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+
+#pap-tab-contracts #pap-management-unified {
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+#pap-tab-contracts .pap-list-container {
+    background: #0E0E0E;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    overflow: hidden;
+    padding: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#pap-tab-contracts #pap-management-unified {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 18px 0 18px;
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+#pap-tab-contracts #pap-management-unified::-webkit-scrollbar-track {
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+#pap-tab-listings .job-card-content > .job-houses-main {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+#pap-tab-my-properties .job-houses-main,
+#pap-tab-listings .job-houses-main {
+    padding-right: 0;
+}
+
+#pap-tab-my-properties .job-houses-main-header,
+#pap-tab-listings .job-houses-main-header {
+    margin-right: 22px;
+}
+
+#pap-tab-listings .job-houses-search {
+    width: auto;
+    margin: 0 22px 12px 4px;
+}
+
+#pap-tab-my-properties .houses-list-container,
+#pap-tab-listings #pap-listings-unified {
+    padding-right: 22px;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+#pap-tab-contracts #pap-management-unified {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+#pap-tab-my-properties #pap-my-properties-list,
+#pap-tab-listings .pap-listings-subsection {
+    padding-right: 0;
+    box-sizing: border-box;
+}
+
+#pap-tab-my-properties .houses-list-container::-webkit-scrollbar,
+#pap-tab-listings #pap-listings-unified::-webkit-scrollbar,
+#pap-tab-contracts #pap-management-unified::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+#pap-tab-my-properties .houses-list-container::-webkit-scrollbar-track,
+#pap-tab-listings #pap-listings-unified::-webkit-scrollbar-track,
+#pap-tab-contracts #pap-management-unified::-webkit-scrollbar-track {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    background: transparent;
+}
+
+#pap-tab-my-properties .houses-list-container:not(.is-scrolling)::-webkit-scrollbar-thumb,
+#pap-tab-listings #pap-listings-unified:not(.is-scrolling)::-webkit-scrollbar-thumb,
+#pap-tab-contracts #pap-management-unified:not(.is-scrolling)::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+}
+
+#pap-tab-my-properties .houses-list-container.is-scrolling,
+#pap-tab-listings #pap-listings-unified.is-scrolling,
+#pap-tab-contracts #pap-management-unified.is-scrolling {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+#pap-tab-my-properties .houses-list-container.is-scrolling::-webkit-scrollbar-thumb,
+#pap-tab-listings #pap-listings-unified.is-scrolling::-webkit-scrollbar-thumb,
+#pap-tab-contracts #pap-management-unified.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.pap-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 14px;
+    padding: 0 4px 14px 4px;
+    flex-shrink: 0;
+}
+
+.pap-main-header h3 {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: none;
+}
+
+#pap-tab-listings .pap-listings-separator,
+#pap-tab-contracts .pap-listings-separator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 4px 0;
+}
+
+#pap-tab-listings .pap-listings-separator::before,
+#pap-tab-listings .pap-listings-separator::after,
+#pap-tab-contracts .pap-listings-separator::before,
+#pap-tab-contracts .pap-listings-separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#pap-tab-listings .pap-listings-separator span,
+#pap-tab-contracts .pap-listings-separator span {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+}
+
+#pap-tab-listings .pap-listings-subsection.hidden,
+#pap-tab-contracts .pap-listings-subsection.hidden {
+    display: none;
+}
+
+#pap-tab-listings .pap-listings-subsection,
+#pap-tab-contracts .pap-listings-subsection {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+}
+
+#pap-tab-listings #pap-my-listings-list,
+#pap-tab-listings #pap-listings-list,
+#pap-tab-contracts #pap-offers-list,
+#pap-tab-contracts #pap-contracts-list,
+#pap-tab-contracts #pap-expired-list {
+    padding: 4px 0 20px 0;
+}
+
+#pap-tab-listings #pap-my-listings-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    padding-bottom: 16px;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-listing-actions {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 12px;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-btn {
+    min-height: 32px;
+    font-size: 11px;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-delete-btn-subtle {
+    width: 100%;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: #ffffff;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    align-self: stretch;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-delete-btn-subtle:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #151515;
+    color: #ffffff;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-delete-btn-subtle i {
+    font-size: 11px;
+}
+
+#pap-tab-listings #pap-my-listings-list .pap-listing-card.my-listing .pap-delete-btn-subtle span {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    font-weight: 600;
+}
+
+.pap-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    padding: 4px 0 20px 0;
+}
+
+#pap-management-view-contracts .pap-list,
+#pap-management-view-expired .pap-list {
+    grid-template-columns: 1fr;
+}
+
+.pap-loading,
+.pap-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.4);
+    gap: 16px;
+    padding: 40px;
+}
+
+#pap-tab-contracts #pap-offers-empty,
+#pap-tab-contracts #pap-contracts-empty,
+#pap-tab-contracts #pap-expired-empty,
+#pap-tab-listings #pap-my-listings-empty,
+#pap-tab-listings #pap-listings-empty {
+    height: auto;
+    min-height: 180px;
+    margin: 8px 0 18px 0;
+    padding: 0 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.015);
+    box-shadow: none;
+    justify-content: center;
+    gap: 8px;
+}
+
+#pap-tab-contracts #pap-offers-empty p,
+#pap-tab-contracts #pap-contracts-empty p,
+#pap-tab-contracts #pap-expired-empty p,
+#pap-tab-listings #pap-my-listings-empty p,
+#pap-tab-listings #pap-listings-empty p {
+    margin: 0;
+    max-width: 320px;
+    text-align: center;
+    line-height: 1.35;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+}
+
+.pap-loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: papSpin 1s linear infinite;
+}
+
+
+.pap-property-card,
+.pap-listing-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+}
+
+.pap-property-card:hover,
+.pap-listing-card:hover {
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+
+.pap-contract-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.pap-contract-card:hover {
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.pap-contract-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pap-contract-header h4 {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.1px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pap-contract-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.pap-badge {
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-badge.sale {
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pap-badge.rent {
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pap-badge.pending {
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pap-badge.accepted {
+    color: rgba(255, 255, 255, 0.84);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pap-badge.completed {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pap-badge.cancelled,
+.pap-badge.terminated {
+    color: rgba(255, 255, 255, 0.66);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pap-contract-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+#pap-management-view-contracts .pap-contract-info,
+#pap-management-view-expired .pap-contract-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0 12px;
+}
+
+.pap-contract-info .pap-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: #101010;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    min-width: 0;
+}
+
+#pap-management-view-contracts .pap-contract-info .pap-info-item,
+#pap-management-view-expired .pap-contract-info .pap-info-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+#pap-management-view-contracts .pap-contract-info .pap-info-item:last-child,
+#pap-management-view-expired .pap-contract-info .pap-info-item:last-child {
+    border-bottom: none;
+}
+
+.pap-contract-info .pap-info-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+#pap-management-view-contracts .pap-contract-info .pap-info-label,
+#pap-management-view-expired .pap-contract-info .pap-info-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.pap-contract-info .pap-info-value {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pap-contract-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pap-btn-chat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    height: 32px;
+}
+
+.pap-btn-chat:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #151515;
+}
+
+
+
+
+
+.pap-contract-actions .pap-waiting-text,
+.pap-contract-actions .pap-completed-text,
+.pap-contract-actions .pap-terminated-text {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.65);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.pap-property-image,
+.pap-listing-image {
+    width: 100%;
+    height: 220px;
+    background: rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+#pap-tab-my-properties .pap-property-image::after,
+#pap-tab-listings .pap-listing-image::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+    pointer-events: none;
+}
+
+.pap-property-image img,
+.pap-listing-image img,
+.pap-image-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pap-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #151515;
+}
+
+.pap-image-placeholder img {
+    width: 64px;
+    height: 64px;
+    opacity: 0.2;
+    object-fit: contain;
+}
+
+.pap-image-placeholder i {
+    font-size: 72px;
+    opacity: 0.2;
+    color: #fff;
+}
+
+.pap-property-badge,
+.pap-listing-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(1.5px);
+    z-index: 2;
+}
+
+.pap-property-badge.rented {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-property-badge.transaction {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-property-badge.listing {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-listing-badge.sale {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-listing-badge.rent {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pap-offers-badge,
+.pap-status-badge.transaction {
+    position: absolute;
+    left: 12px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+    z-index: 2;
+}
+
+.pap-offers-badge {
+    top: 12px;
+}
+
+.pap-status-badge.transaction {
+    bottom: 12px;
+}
+
+#pap-tab-listings .pap-property-badge.rented,
+#pap-tab-listings .pap-property-badge.transaction,
+#pap-tab-listings .pap-property-badge.listing,
+#pap-tab-listings .pap-listing-badge.sale,
+#pap-tab-listings .pap-listing-badge.rent,
+#pap-tab-listings .pap-status-badge.transaction,
+#pap-tab-listings .pap-offers-badge {
+    background: rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.pap-property-header,
+.pap-listing-header {
+    padding: 10px 12px 8px 12px;
+    background: #101010;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pap-header-title-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.pap-property-header h4,
+.pap-listing-header h4 {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.1px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pap-property-info,
+.pap-listing-info {
+    padding: 8px 12px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.pap-info-item,
+.pap-info-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    font-size: 11px;
+}
+
+.pap-info-row {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.pap-info-row span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 5px 6px;
+    border-radius: 7px;
+    background: #101010;
+    border: 1px solid rgba(255, 255, 255, 0.045);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pap-listing-description {
+    margin-top: 4px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: #101010;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 10.5px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.pap-info-label {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.pap-info-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.pap-property-actions,
+.pap-listing-actions {
+    padding: 8px 12px 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pap-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pap-property-actions .pap-btn,
+.pap-listing-actions .pap-btn,
+.pap-contract-actions .pap-btn {
+    height: 32px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #101010;
+    color: #ffffff;
+}
+
+.pap-property-actions .pap-btn:hover,
+.pap-listing-actions .pap-btn:hover,
+.pap-contract-actions .pap-btn:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: #151515;
+}
+
+.pap-btn.primary {
+    background: #fff;
+    color: #000;
+}
+
+.pap-btn.primary:hover {
+    background: #e0e0e0;
+}
+
+.pap-property-actions .pap-btn.primary,
+.pap-listing-actions .pap-btn.primary,
+.pap-property-actions .pap-btn.secondary,
+.pap-listing-actions .pap-btn.secondary {
+    background: #101010;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pap-property-actions .pap-btn.primary:hover,
+.pap-listing-actions .pap-btn.primary:hover,
+.pap-property-actions .pap-btn.secondary:hover,
+.pap-listing-actions .pap-btn.secondary:hover {
+    background: #151515;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.pap-btn.secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pap-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pap-listing-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+#pap-tab-listings .pap-listing-price {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 620px) {
+    #pap-tab-listings #pap-my-listings-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pap-rented-text,
+.pap-transaction-text {
+    width: 100%;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+/* Stable scrollbar mode for PAP to avoid sticky scroll-state artifacts. */
+#pap-tab-my-properties .houses-list-container,
+#pap-tab-listings #pap-listings-unified,
+#pap-tab-contracts #pap-management-unified,
+#pap-tab-contracts .pap-list-container {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
+}
+
+#pap-tab-my-properties .houses-list-container::-webkit-scrollbar,
+#pap-tab-listings #pap-listings-unified::-webkit-scrollbar,
+#pap-tab-contracts #pap-management-unified::-webkit-scrollbar,
+#pap-tab-contracts .pap-list-container::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+}
+
+#pap-tab-my-properties .houses-list-container::-webkit-scrollbar-thumb,
+#pap-tab-listings #pap-listings-unified::-webkit-scrollbar-thumb,
+#pap-tab-contracts #pap-management-unified::-webkit-scrollbar-thumb,
+#pap-tab-contracts .pap-list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 2px !important;
+}

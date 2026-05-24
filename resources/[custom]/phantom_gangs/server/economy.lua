@@ -1,0 +1,2 @@
+-- Gang economy - handled in territories.lua income loop
+-- Placeholder for extended gang economy features

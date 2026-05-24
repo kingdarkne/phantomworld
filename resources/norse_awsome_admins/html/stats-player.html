@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Player Intelligence Panel</title>
+    <link rel="stylesheet" href="stats-player.css">
+</head>
+<body>
+    <div id="player-panel" class="panel hidden">
+        <header class="panel-header">
+            <div class="panel-title">
+                <span id="player-initials" class="player-initials">??</span>
+                <div>
+                    <div id="player-name" class="player-name">Player</div>
+                    <div id="player-subtitle" class="player-subtitle">offline</div>
+                </div>
+            </div>
+            <div class="panel-actions">
+                <button id="refresh-btn"><i class="fa-solid fa-rotate"></i>Refresh</button>
+                <button id="close-btn"><i class="fa-solid fa-xmark"></i>Close</button>
+            </div>
+        </header>
+
+        <section class="panel-section grid balances">
+            <article class="kpi">
+                <div class="kpi-label">Cash</div>
+                <div id="cash-value" class="kpi-value">$0</div>
+                <div class="kpi-controls">
+                    <input id="cash-input" type="number" min="0" placeholder="Set amount">
+                    <button data-account="money" class="kpi-set-btn">Apply</button>
+                </div>
+            </article>
+            <article class="kpi">
+                <div class="kpi-label">Bank</div>
+                <div id="bank-value" class="kpi-value">$0</div>
+                <div class="kpi-controls">
+                    <input id="bank-input" type="number" min="0" placeholder="Set amount">
+                    <button data-account="bank" class="kpi-set-btn">Apply</button>
+                </div>
+            </article>
+            <article class="kpi">
+                <div class="kpi-label">Black Money</div>
+                <div id="black-value" class="kpi-value">$0</div>
+                <div class="kpi-controls">
+                    <input id="black-input" type="number" min="0" placeholder="Set amount">
+                    <button data-account="black_money" class="kpi-set-btn">Apply</button>
+                </div>
+            </article>
+            <article class="profile-meta">
+                <div>Job: <span id="player-job">Unknown</span></div>
+                <div>Playtime: <span id="player-playtime">0h</span></div>
+                <div>Status: <span id="player-status">Offline</span></div>
+            </article>
+        </section>
+
+        <section class="panel-section split">
+            <article class="card">
+                <header>
+                    <h3>Inventory</h3>
+                    <div class="inventory-actions">
+                        <input id="inventory-item" placeholder="Item name">
+                        <input id="inventory-count" type="number" min="1" value="1">
+                        <button id="inventory-remove-btn">Take Item</button>
+                    </div>
+                </header>
+                <div id="inventory-list" class="list empty">No inventory data</div>
+            </article>
+            <article class="card">
+                <header>
+                    <h3>Owned Vehicles</h3>
+                    <div class="vehicle-actions">
+                        <input id="vehicle-plate" placeholder="Plate">
+                        <button id="vehicle-delete-btn" class="danger">Impound</button>
+                    </div>
+                </header>
+                <div id="vehicle-list" class="list empty">No vehicles</div>
+            </article>
+        </section>
+
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous"></script>
+    <script src="stats-player.js"></script>
+</body>
+</html>

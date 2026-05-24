@@ -1,0 +1,29 @@
+# LeSiiN Custom Weapons - Add these lines to your server.cfg
+# Place these after your other resources
+
+# ========== CUSTOM WEAPONS BY LESIIN ==========
+start custom_weapons/AK-47
+start custom_weapons/AR-15
+start custom_weapons/DesertEagle
+start custom_weapons/FN FNX45
+start custom_weapons/Glock17
+start custom_weapons/Hunting Rifle
+start custom_weapons/M1911
+start custom_weapons/M4
+start custom_weapons/M70
+start custom_weapons/M9A3
+start custom_weapons/MAC-10
+start custom_weapons/MK14
+start custom_weapons/Mossberg500
+start custom_weapons/Remington870
+start custom_weapons/SCAR-H
+start custom_weapons/Shiv
+start custom_weapons/UZI
+
+# OR you can use ensure instead of start:
+# ensure custom_weapons/AK-47
+# ensure custom_weapons/AR-15
+# ... etc for all weapons
+
+# Make sure these are started BEFORE qb-core/qb-inventory
+# so the weapons are properly registered in the system

@@ -1,0 +1,86 @@
+/*
+  ------------------------------------------------------------------------------------------------
+    Next Housing - Complete housing system
+  ------------------------------------------------------------------------------------------------
+  _   _ ________   _________ _____ ____  _____  ______ 
+ | \ | |  ____\ \ / /__   __/ ____/ __ \|  __ \|  ____|
+ |  \| | |__   \ V /   | | | |   | |  | | |__) | |__   
+ | . ` |  __|   > <    | | | |   | |  | |  _  /|  __|  
+ | |\  | |____ / . \   | | | |___| |__| | | \ \| |____ 
+ |_| \_|______/_/ \_\  |_|  \_____\____/|_|  \_\______|                                                       
+                                                       
+  ------------------------------------------------------------------------------------------------
+    Created for Nextcore Studio by Junnho
+  ------------------------------------------------------------------------------------------------
+    
+    Author: Nextcore Studio
+    Copyright © 2025 Junnho. All rights reserved.
+    Copyright © 2025 Nextcore Studio. All rights reserved.
+    License: EULA (see LICENSE file)
+    
+    Documentation: https://www.nextcorestudio.com/docs/next-housing/
+    Website: https://www.nextcorestudio.com/
+    Script Page: https://www.nextcorestudio.com/scripts/next-housing/
+    Tebex: https://junnho.tebex.io/package/7057755
+
+--------------------------------------------------------------------------------------------------
+*/
+i.ph {
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.sidebar-menu .sidebar-item i,
+.tab-btn i,
+.job-tab-btn i,
+.pap-tab-btn i,
+.btn-icon i,
+.card-icon i,
+.warning-icon i,
+.pap-refresh-btn i,
+.garage-card-icon i {
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.lightbox-close i,
+.lightbox-nav i {
+    font-size: 20px !important;
+    line-height: 1 !important;
+}
+
+@keyframes nhRefreshSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.nh-refresh-icon-spinning {
+    display: inline-block;
+    transform-origin: 50% 50%;
+    animation: nhRefreshSpin var(--nh-refresh-spin-duration, 650ms) linear 1;
+}
+
+#tab-edit #section-manage-main .visit-btn .btn-icon i,
+#tab-edit #section-manage-main .coords-btn .btn-icon i,
+#tab-create #section-create-main .visit-btn .btn-icon i,
+#tab-create #section-create-main .coords-btn .btn-icon i {
+    font-size: 15px !important;
+    line-height: 1 !important;
+}
+
+.house-image-placeholder i.ph,
+.house-images-container .no-images i.ph,
+.pap-image-placeholder i.ph {
+    font-size: 34px !important;
+    line-height: 1 !important;
+}
+
+.pap-list .house-image-placeholder i.ph {
+    font-size: 28px !important;
+    line-height: 1 !important;
+}

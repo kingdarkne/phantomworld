@@ -1,0 +1,442 @@
+#   ____  ____   _____
+#  / __ \|  _ \ / ____|
+# | |  | | |_) | |     ___  _ __ ___
+# | |  | |  _ <| |    / _ \| '__/ _ \
+# | |__| | |_) | |___| (_) | | |  __/
+#  \___\_\____/ \_____\___/|_|  \___|
+
+## FiveM Documentation
+## https://aka.cfx.re/server-commands
+
+## QBCore Documentation
+## https://docs.qbcore.org
+
+## You CAN edit the following:
+#
+# --- Host panel (browser / txAdmin — NOT configured by endpoint_add; ask provider if URL fails) ---
+# Given by host: http://135.148.136.32:5214 — also try https://135.148.136.32:5214
+# If you see ERR_CONNECTION_REFUSED: service may be down, firewall, or port typo (e.g. 50214 vs 5214). Editing this file does not start the panel.
+#
+# --- Game server (FiveM client connect / FXServer listen — must match host "game server port" + port forwarding) ---
+# Test: using port 5214 to match the number your host listed. If FXServer won't start ("address already in use") or players cannot connect, revert to 29668 below.
+endpoint_add_tcp "0.0.0.0:5214"
+endpoint_add_udp "0.0.0.0:5214"
+sv_maxclients 48
+set steam_webApiKey none
+sets tags "dracula, nopixel4, illegal, qbcore"
+
+## You MAY edit the following:
+sv_licenseKey "cfxk_1J1J2AwrgCrYJnUOC4Ifx_4ZbEb6"
+# Server name (shows in FiveM server list / browser)
+sv_hostname "PHANTOM WORLD"
+# Project title and short description (used in some in-game/server UIs)
+sets sv_projectName "Phantom World"
+sets sv_projectDesc "Enjoy a new city — join the discord discord.gg/phantomworld"
+sets locale "en-US"
+load_server_icon myLogo.png
+set sv_enforceGameBuild 3095
+# MySQL: see mysql.cfg (semicolon form, one line — avoids mysql:// URL encoding issues).
+exec mysql.cfg
+# If you still get Error 1045 after restart: the password is wrong in the panel, OR Gravelhost "Remote MySQL"
+# does not allow your game server IP (console shows e.g. ns1009222.ip-135-148-136.us). In the panel add Remote
+# Access / whitelist for % or that server IP, then save. Do not commit mysql.cfg to public repos.
+#
+# Local PC only (same machine as MySQL): comment the line above and use:
+# set mysql_connection_string "host=127.0.0.1;user=root;password=Eax2323$$;database=9903ef012b;port=3306;charset=utf8mb4"
+# One-time DB: run `resources/npwd/import.sql` in HeidiSQL / MySQL Workbench (creates npwd_* tables). QBX `players` needs `phone_number` (qbx_core / qbx_npwd).
+# `vehicle_financing` for qbx_vehicleshop is auto-created on resource start; you can still run `resources/qbx_vehicleshop/vehshop.sql` manually if needed.
+
+# Chat (merged from server.cfg.23)
+set resources_useSystemChat true
+set qbx_chat:joinMessage "^2%s joined the server"
+set qbx_chat:quitMessage "^1%s left the server (%s)"
+
+# Voice — full pma-voice options in voice.cfg (Dracula overrides at end of that file)
+exec voice.cfg
+
+sets Discord "https://discord.gg/phantomworld"
+sets developed_by "Dracula"
+# QBCore locale config
+setr qb_locale "en"
+# QBX: qb-core compatibility bridge (GetCoreObject, QBCore callbacks, DrawText, etc.)
+setr qbx:enablebridge true
+# Silence Qbox "Welcome to Qbox!" banner in console (optional)
+setr qbx:acknowledge true
+
+# Qbox extended (merged from server.cfg.23)
+set qbx:enableQueue "true"
+set qbx:bucketLockdownMode "inactive"
+set qbx:discordLink "discord.gg/phantomworld"
+set qbx:max_jobs_per_player 1
+set qbx:max_gangs_per_player 1
+set qbx:setjob_replaces "true"
+set qbx:setgang_replaces "true"
+set qbx:cleanPlayerGroups "true"
+set qbx:allowMethodOverrides "true"
+set qbx:disableOverrideWarning "false"
+setr qbx:enableVehiclePersistence "false"
+setr qbx:vehiclePersistenceType "semi"
+setr qbx:enableGroupManagement "false"
+
+# In-chat MOTD HTML (from server.cfg.23 — Phantom branding; edit or remove if you do not want chat HTML)
+setr qbx:motd "<p style='padding: 1rem; background-color: #141517; border: 1px solid #373a40; border-radius: 0.5rem; text-align: center;'><span style='color: rgb(200, 200, 40);'>Welcome to Phantom World!</span><br>Discord: <span id='link' style='color: rgb(100, 100, 255);' onclick='window.invokeNative(\"openUrl\", \"https://discord.gg/phantomworld\")'>discord.gg/phantomworld</span></p><style>span#link:hover { cursor: pointer; }</style>"
+
+# Renewed-Weathersync / CD disable (from server.cfg.23; dr-weathersync is primary weather script)
+setr weather_disablecd true
+
+# Ox lib / ox_target / ox_inventory defaults — Phantom-specific overrides immediately below
+exec ox.cfg
+
+# NPWD — https://projecterror.dev/docs/npwd/start/installation/
+# `standalone` avoids double PlayerLoaded (NPWD qbx bridge + qbx_npwd both registering). qbx_npwd handles Qbox integration.
+set npwd:framework "standalone"
+# Camera (Fivemanage / Imgur / Discord): see NPWD docs → Setting up Camera Functionality. Leave empty until you add a token.
+set SCREENSHOT_BASIC_TOKEN ""
+# Voice messages: pair with NPWD_AUDIO_TOKEN + voiceMessage in resources/npwd/config.json
+set NPWD_AUDIO_TOKEN ""
+# Optional: log reported tweets/marketplace to Discord (use set, not setr)
+# set NPWD_DISCORD_TOKEN "https://discord.com/api/webhooks/..."
+
+# loadscreen (merged from server.cfg.23; dr-loadscreen is ensured later)
+setr loadscreen:externalShutdown true
+set loadscreen:primaryColor "#f1e542"
+set loadscreen:shadowColor "#1a18077f"
+
+# QBCore-style scripts: false = draw-text / E-key zones where the script supports it; true = qb-target third eye.
+setr UseTarget false
+# ox_inventory: 0 = shop stashes use marker + E (no ox_target zones); 1 = third-eye zones at shops.
+setr inventory:target 0
+setr dr-appearance:locale "en"
+# illenium-appearance (same locale key as server.cfg.23 / Qbox template)
+setr illenium-appearance:locale "en"
+# ox_inventory config (keep backend only, disable its UI keybinds)
+set inventory:framework "qbx"
+set inventory:keys "[]"
+set inventory:enablekeys "[]"
+set inventory:enablestealcommand 0
+
+# qbx_hud top strip (rank / job lines)
+setr qbx_hud:showRank 1
+setr qbx_hud:showJob 1
+
+# These resources will start by default.
+ensure mapmanager
+ensure spawnmanager
+ensure sessionmanager
+ensure basic-gamemode
+# hardcap off — conflicts with qbx_core built-in queue (qbx:enableQueue); it stops hardcap when queue runs
+# ensure hardcap
+ensure baseevents
+# Default Cfx chat (qbx_core OnPlayerLoaded uses exports.chat:addMessage for MOTD; admin menu uses chat:addSuggestion)
+ensure chat
+# Nodecraft Pro — `resources/[nodecraft]/playerlist` (panel allowlist / connection logs). On Docker host: home/container/resources/[nodecraft]
+ensure [nodecraft]
+# ensure [gameplay]    # disabled for QBX-native boot (many qb-core scripts inside)
+
+# Core framework & extra stuff
+# Now running Qbox (`qbx_core`) instead of legacy QBCore.
+# qbx_core registers QB-compat exports on the `qb-core` name (see bridge `__cfx_export_qb-core_*`).
+# The old core folder was renamed to `qb-core-legacy` so it does not steal the `qb-core` resource name
+# (a stopped real `qb-core` resource made `exports['qb-core']:GetCoreObject()` fail for all scripts).
+# ensure qb-core-legacy          # reference only — do not start alongside qbx_core
+ensure ox_lib
+# ox_target: QBX + ox_inventory world/ped targeting; qbx_cityhall uses it when useTarget is true. Keep qb-target for scripts that still call exports['qb-target'].
+ensure ox_target
+ensure PolyZone
+ensure qb-target
+ensure oxmysql
+ensure ox_inventory
+# Do NOT `ensure [qb]`: it starts qb-inventory, qb-clothing, qb-banking, apartments, etc., then this cfg
+# stops many of them. Scripts that query MySQL on start then get stopped → stale oxmysql Lua refs → nested ref errors.
+ensure qbx_core
+# Belt-and-suspenders if something auto-starts these; harmless when they were never started.
+stop qb-core-legacy
+stop qb-inventory
+stop qb-cityhall
+stop qb-weathersync
+stop qb-vehiclekeys
+stop qb-garages
+stop qb-vehicleshop
+# Explicit `[qb]` scripts to run (everything in the folder minus conflicting/disabled packs — see resources/[qb]/).
+ensure qb-smallresources
+ensure qb-interior
+ensure qb-weapons
+ensure qb-prison
+ensure qb-management
+ensure qb-drugs
+# qb-pawnshop off — use qbx_pawnshop later (avoid two pawn systems)
+ensure qb-minigames
+ensure qb-doorlock
+ensure qb-doorlock-main
+ensure qb-radargun
+ensure qb-drones
+ensure qb-securityjob
+ensure qb-menu
+ensure qb-input
+ensure qb-trucker
+ensure qb-garbagejob
+ensure qb-towjob
+ensure qb-delivery
+# Shared QBCore resolver for dr-* scripts (must load before resources that depend on it).
+ensure dr-qbx-compat
+# Character / skin UI (ox_lib + qbx_core above; see docs/SPAWN_APPEARANCE_ORDER.md — run illenium SQL if needed).
+ensure illenium-appearance
+# Multichar + spawn: Qbox built-in (qbx_core `characters.useExternalCharacters = false`). Not renzu_*.
+stop renzu_spawn
+stop renzu_multicharacter
+# Single clothing stack — illenium replaces qb-clothing (same DB table names; illenium owns `player_outfits` schema).
+stop qb-clothing
+ensure qbx_vehicles
+# QBX City Hall + ID cards (uses `qbx_cityhall-main` + `qbx_idcard` — legacy `qb-cityhall` stays off; it expects qb-inventory)
+ensure qbx_idcard
+ensure qbx_cityhall-main
+# Dependency required by qbx_idcard
+ensure MugShotBase64
+# disable default ps-hud – qbx_hud + phantom top strip (replaces dr-hud)
+stop ps-hud
+ensure XNLRankBar
+ensure dr-starterpack
+stop dr-hud
+ensure qbx_hud
+ensure dr-admincar
+# ensure 0r_lib        # disabled (old 0r_houses only)
+ensure interact
+ensure object_gizmo
+ensure ox_doorlock
+ensure fivem-freecam
+ensure ps-housing-2.0.7
+# Built-in Qbox multichar does not use renzu_* (stays stopped if something auto-starts them).
+ensure dr-rankxp
+# cdn-fuel — keep for vehicle fuel; qbx_garages does not bundle fuel logic
+ensure interact-sound
+ensure cdn-fuel
+# Qbox: keys + garages + vehicle shop (see resources/qbx_*)
+ensure qbx_vehiclekeys
+ensure qbx_vehicleshop
+# Los Santos Customs / Benny's (ox_lib + qbx_core); pays cash then bank via qbx_core
+ensure qbx_customs
+# Qbox scripts that live under `resources/[qbx]/` (same as `ensure [qbx]` — listed explicitly: some hosts/containers
+# fail to start bracket-named resource groups, or SFTP mangles `[qbx]`). Order: qbx_medical before qbx_ambulancejob.
+ensure qbx_medical
+ensure qbx_ambulancejob
+ensure qbx_chat_theme
+ensure qbx_apartments
+ensure qbx_spawn
+ensure qbx_garages
+ensure qbx_houserobbery
+ensure qbx_pawnshop
+ensure qbx_streetraces
+# qbx_hud ensured above with dr-hud stopped
+# qb-menu, qb-input, jobs in `[qb]` are ensured with qbx_core above (avoid ensure [qb]).
+ensure xt-robnpcs
+ensure jobs_creator
+# OMES Banking (in-building + banker peds) – stop qb-banking to avoid double banking at same spots
+stop qb-banking
+ensure omes_banking
+# Resource groups: txAdmin shows "Start" until listed here.
+ensure [standalone]
+# `resources/[New]/` — Dracula scripts (was under [standalone]/[New]/; moved so `ensure [New]` works)
+ensure [New]
+# Qbox queue vs connectqueue — do not run both (connectqueue lives under [standalone]/connectqueue)
+stop connectqueue
+# dr-hud is under [New]/ — started here; stop it so only qbx_hud draws money/HUD (avoids double HUD).
+stop dr-hud
+# Legacy qb-policejob is started by [standalone]; swap to Qbox police (resources/qbx_police)
+stop qb-policejob
+ensure qbx_police
+# `[standalone]/loadingscreen` also registers a global loadscreen — stop it so `dr-loadscreen` wins (re-ensure below).
+stop loadingscreen
+ensure dr-loadscreen
+ensure [heists]
+# Old duplicate resources removed from resources/ — see _archive/ (not scanned as resources).
+# qb-apartments stopped; multichar/spawn is Qbox built-in (`resources/[Newmaps]/[qb]/qbx_core` config).
+stop qb-apartments
+# qb-weathersync removed – dr-weathersync is the only weather script
+ensure y_burgershot-main
+# lusty94_shops merged into ox_inventory `data/shops.lua` (single shop system). Re-enable only if you add missing items (weed, veh_*, heist tools) to ox_inventory.
+stop lusty94_shops
+# ensure separate-mode  # disabled for QBX-native boot (contains many qb-core scripts)
+ensure dr-ownerlabel
+ensure dr-ownervest
+ensure [voice]
+# NPWD + qbx_npwd — pma-voice from `ensure [voice]` above; screenshot-basic must run before npwd.
+ensure screenshot-basic
+ensure npwd
+ensure qbx_npwd
+ensure payphones
+# Phone: legacy qb-phone off — use NPWD + qbx_npwd
+stop qb-phone
+# qbx_phone requires qbx_apartments; use NPWD instead unless you add apartments.
+stop qbx_phone
+ensure [defaultmaps]
+# Categories below: add resource subfolders (each with fxmanifest.lua) so they start.
+# [standalone] + [heists] are ensured earlier in this file. [scripts]/[multiplayer]/[Newmaps] add here when populated.
+# See resources/WHERE_TO_PUT_RESOURCES.txt for where to put new resources.
+# ensure [scripts]
+# ensure [multiplayer]
+ensure [interactions]
+ensure [minigames]
+ensure [Graphics]
+# vMenu: set permissions + options BEFORE starting vMenu
+# (Inline the active parts of `resources/vMenu/config/permissions.cfg` so we don't
+# spam the console with "No such command ..." errors during `exec`.)
+setr vmenu_use_permissions true
+setr vmenu_menu_staff_only false
+setr vmenu_disable_player_stats_setup false
+setr vmenu_menu_toggle_key "F5"
+setr vmenu_noclip_toggle_key "F2"
+setr vmenu_keymapping_id "Default"
+setr vmenu_keep_spawned_vehicles_persistent false
+setr vmenu_auto_ban_cheaters false
+setr vmenu_auto_ban_cheaters_ban_message "You have been automatically banned. If you believe this was done by error, please contact the server owner for support."
+setr vmenu_log_ban_actions true
+setr vmenu_log_kick_actions true
+setr vmenu_use_els_compatibility_mode false
+setr vmenu_handle_invisibility true
+setr vmenu_quit_session_in_rockstar_editor false
+setr vmenu_server_info_message "About this server, discord: vespura.com/discord"
+setr vmenu_server_info_website_url "www.vespura.com"
+setr vmenu_teleport_to_wp_keybind_key 168
+setr vmenu_disable_spawning_as_default_character false
+setr vmenu_enable_animals_spawn_menu false
+setr vmenu_pvp_mode 0
+setr keep_player_head_props true
+setr vmenu_player_names_distance 500.0
+setr vmenu_disable_entity_outlines_tool false
+setr vmenu_default_ban_message_information "Please contact the staff team by going to (support url) if you want to appeal this ban"
+setr vmenu_enable_weather_sync false
+setr vmenu_enable_dynamic_weather false
+setr vmenu_dynamic_weather_timer 15
+setr vmenu_current_weather "clear"
+setr vmenu_blackout_enabled false
+setr vmenu_weather_change_duration 30
+setr vmenu_enable_snow false
+setr vmenu_enable_time_sync true
+setr vmenu_freeze_time false
+setr vmenu_ingame_minute_duration 2000
+setr vmenu_current_hour 7
+setr vmenu_current_minute 0
+setr vmenu_sync_to_machine_time false
+setr vmenu_using_chameleon_colours false
+setr vmenu_prevent_extras_when_damaged false
+setr vmenu_allowed_engine_damage_for_extra_change 800
+setr vmenu_allowed_body_damage_for_extra_change 800
+setr vmenu_mp_ped_preview true
+setr vmenu_override_voicechat_default_range 0.0
+
+# vMenu ACL (if txAdmin logs "Access denied for command add_ace", enable cfg execution for ACE in txAdmin or paste these into the server CFG it runs with full rights)
+add_ace group.admin "vMenu.DontKickMe" allow
+add_ace group.admin "vMenu.DontBanMe" allow
+add_ace group.admin "vMenu.Everything" allow
+add_ace group.admin "vMenu.Staff" allow
+add_ace group.moderator "vMenu.Staff" allow
+add_ace builtin.everyone "vMenu.Staff" allow
+
+add_principal group.admin group.moderator
+
+add_ace group.moderator "vMenu.OnlinePlayers.Summon" allow
+add_ace group.moderator "vMenu.OnlinePlayers.Kill" allow
+add_ace group.moderator "vMenu.OnlinePlayers.Kick" allow
+add_ace group.moderator "vMenu.OnlinePlayers.TempBan" allow
+add_ace group.moderator "vMenu.OnlinePlayers.ViewBannedPlayers" allow
+
+add_ace group.admin "vMenu.OnlinePlayers.Identifiers" allow
+add_ace group.admin "vMenu.OnlinePlayers.PermBan" allow
+add_ace group.admin "vMenu.OnlinePlayers.Unban" allow
+
+add_ace group.moderator "vMenu.MiscSettings.TeleportSaveLocation" allow
+add_ace group.moderator "vMenu.MiscSettings.EntitySpawner" allow
+add_ace group.developer "vMenu.MiscSettings.DevTools" allow
+add_ace group.moderator "vMenu.VoiceChat.StaffChannel" allow
+
+# Addon vehicles — start before vMenu so cars2 streams before the spawner menu
+ensure [vehicles]
+# Addon engine sounds (SpiritsCreations pack in resources/Audio_Pack). MUST be before cars2 if vehicles use <audioNameHash> from this pack.
+ensure Audio_Pack
+ensure cars2
+# vMenu folder: resources/vMenu — menu toggle F5 (string key name; NPWD uses M for phone). Spawner uses config/addons.json (matches cars2).
+ensure vMenu
+# [New] scripts: `ensure [New]` above (plus explicit `ensure dr-*` lines below where needed).
+# Multichar: Qbox built-in (qbx_core). dr-multicharacter + dr-spawnselector stay stopped — they conflict with qbx_core flow.
+stop dr-multicharacter
+stop dr-spawnselector
+
+# Loading screen (backup stops — primary fix is `stop loadingscreen` + `ensure dr-loadscreen` right after `ensure [standalone]`)
+stop ls_loadingscreen-main
+
+ensure dr-mapblips
+ensure dr-serverinfo
+ensure aihelp
+ensure dr-membership
+ensure dr-storerobbery
+ensure dr-mainmenu
+ensure OT_pushvehicle
+# [vehicles] + cars2 are ensured above (before vMenu)
+# FiveM Vehicle Pack: `vehicles.cfg` uses `start 1`, `start 2`, … — those resources must exist as `resources/1`, etc.
+# Uncomment when your pack is laid out that way (see pack README). The container resource is ensured below.
+# Clothing packs (EUP etc.). If you add illenium-appearance as its own resource, keep it near ox_lib/qbx_core above, not only here.
+ensure [clothing]
+ensure [gangs]
+# ensure [Newmaps]
+
+# New scripts added to resources folder (QBCore-compatible where applicable)
+ensure mnr_cayo
+ensure patoche_bridge
+ensure UpgradedSandy
+# interact_duplicate available
+ensure interact_duplicate
+# Missing or renamed pack — FXServer was logging "Couldn't find resource Fishnet Socks cDev". Re-enable when the folder name matches exactly.
+# ensure "Fishnet Socks cDev"
+ensure Solara
+ensure AzuraPlatV2-Branded
+# Root resources not covered by `ensure [group]` lines above
+ensure dr-aihelp
+ensure dr-vehdamage
+ensure ox_cayobar
+ensure ox_cayobar-main
+ensure server
+ensure cfx-server-data-master
+# "FiveM Vehicle Pack" is optional (minimal fxmanifest + optional vehicles.cfg). If FXServer prints "Couldn't find resource",
+# the folder is missing from this machine's `resources/` path, or rename to e.g. FiveM-Vehicle-Pack and match `ensure` exactly.
+# Uncomment when the folder exists and you want it loaded:
+# ensure "FiveM Vehicle Pack"
+# exec "resources/FiveM Vehicle Pack/vehicles.cfg"
+#
+# Custom scripts
+ensure dr-wanted
+
+# EasyAdmin (staff menu — dr-mainmenu Admin button runs `easyadmin`)
+ensure EasyAdmin
+
+## Permissions ##
+# Base Qbox permissions (merged from server.cfg.23 — also satisfies vMenu note about permissions.cfg)
+exec permissions.cfg
+
+add_ace group.admin admin allow
+add_ace group.admin easyadmin allow
+add_principal identifier.fivem:13816790 group.admin
+add_principal identifier.discord:769964740008083526 group.admin
+# Add your FiveM ID below (replace 00000000 with your ID - see server console when you join)
+add_principal identifier.fivem:14311541 group.admin
+
+# Resources
+# add_ace resource.qb-core command allow   # OLD: qb-core
+add_ace resource.qbx_core command allow
+
+# Gods
+add_ace qbcore.god command allow
+
+# Inheritance
+add_principal qbcore.god group.admin
+add_principal qbcore.god qbcore.admin
+add_principal qbcore.admin qbcore.mod
+
+# Players
+add_principal identifier.discord:769964740008083526 qbcore.god
+add_principal identifier.discord:413173364216168449 qbcore.god
+
+# Optional server tuning (misc.cfg is mostly commented examples; one active line: busy spinner)
+exec misc.cfg
+
+setr ox:primaryColor yellow
+setr ox:primaryShade 4

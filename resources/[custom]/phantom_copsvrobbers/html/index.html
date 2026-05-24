@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Cops vs Robbers</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="lobby" class="hidden">
+        <div class="lobby-panel">
+            <div class="lobby-header">
+                <h1>⚔️ COPS VS ROBBERS</h1>
+                <div class="lobby-timer" id="lobbyTimer">00:60</div>
+            </div>
+            <div class="team-list">
+                <div class="team cops">
+                    <div class="team-header">
+                        <div class="team-icon">👮</div>
+                        <div class="team-name">COPS</div>
+                    </div>
+                    <div class="team-players" id="copsList"></div>
+                </div>
+                <div class="vs-divider">VS</div>
+                <div class="team robbers">
+                    <div class="team-header">
+                        <div class="team-icon">💀</div>
+                        <div class="team-name">ROBBERS</div>
+                    </div>
+                    <div class="team-players" id="robbersList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+-- Vehicle storage logic (core in main.lua)
+-- Additional storage utilities

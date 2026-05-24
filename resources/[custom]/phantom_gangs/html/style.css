@@ -1,0 +1,141 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.gang-panel {
+    background: linear-gradient(145deg, #0a0a1a 0%, #1a1a3e 100%);
+    border: 1px solid rgba(255, 50, 50, 0.3);
+    border-radius: 20px;
+    padding: 30px;
+    width: 500px;
+    box-shadow: 0 0 40px rgba(255, 50, 50, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.gang-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gang-header h1 {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
+}
+
+.gang-tag {
+    background: linear-gradient(135deg, #ff3232, #cc0000);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.gang-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-value {
+    color: #ff3232;
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.territory-map {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.territory-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.territory-card.owned {
+    border-color: rgba(255, 50, 50, 0.3);
+    background: rgba(255, 50, 50, 0.05);
+}
+
+.territory-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 50, 50, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.territory-info {
+    flex: 1;
+}
+
+.territory-name {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.territory-type {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+}
+
+.territory-income {
+    color: #00ff64;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+}

@@ -1,0 +1,2 @@
+-- Ammu-Nation specific logic (core in main.lua)
+-- Placeholder for extended store features

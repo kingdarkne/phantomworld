@@ -1,0 +1,536 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');@import url('https://fonts.cdnfonts.com/css/pricedown');@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Yantramanav:wght@100;300;400;500;700;900&display=swap');@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Yantramanav:wght@100;300;400;500;700;900&display=swap');
+
+/* Menu */
+div#openmenu { display: none; position: absolute; width: 50%; top: 45%; left: 50%; transform: translate(-50%,-50%); }
+.brand-logo { width: 25%; } /* when using an svg all you need to change is the width and it will resize it */
+
+/* Menu tab & panel styles */
+.text-tabcolor { color: rgb(255, 255, 255)!important; }
+.bg-active-tab { background: rgb(23 23 23)!important; }
+.bg-panel { background: rgb(30 30 30)!important; }
+.q-tab-panels { border-top-right-radius: 12px!important; border-bottom-right-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+.q-splitter__panel.q-splitter__before { border-top-left-radius: 12px!important; border-bottom-left-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+.q-tabs--vertical.q-tabs--not-scrollable .q-tabs__content { border-top-left-radius: 12px!important; border-bottom-left-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+
+/* Menu text styles */
+.text-h6 { color: rgb(255, 255, 255)!important; }
+.text-h7 { color: rgba(255, 255, 255, 0.8)!important; }
+
+/* Menu buttons & checkboxes & toggle switch icons styles */
+.text-textbutton { color: rgb(0, 0, 0)!important; }
+.bg-bgbutton { background: rgba(241, 229, 66, 0.651)!important; }
+.q-checkbox__inner { color: rgb(255 255 255 / 70%)!important; }
+.text-checkbox { color: rgba(241, 229, 66, 0.651)!important; }
+.q-checkbox__svg { color: rgb(0, 0, 0)!important; }
+.q-checkbox__inner--truthy .q-checkbox__bg { box-shadow: 0px 0px 3px 3px rgb(220 20 60 / 15%)!important; } /* if you want the checkboxes to have a glow/shadow */
+.text-toggleicons { color: rgb(0, 0, 0)!important; }
+
+/* Menu misc */
+hr { opacity: 0.1!important; } /* horizontal line that seperates sections */
+.q-mb-md { margin-bottom: 0px!important; } /* removes extra top padding */
+.q-mb-md-d { padding-left: 10px!important; padding-bottom: 10px!important;} /* keeps q-items aligned */
+.q-item { padding: 8px 0px!important; } /* keeps q-items aligned */
+.q-item__section--avatar { min-width: 40px!important } /* keeps q-items aligned */
+.q-item__section--side { padding-right: 0px!important; } /* keeps q-items aligned */
+.q-splitter--vertical>.q-splitter__separator { width: 0px!important; } /* keeps navigation tab panel seamless */
+div#q-loading-bar { display: none!important; } /* makes sure there's no ajax load from quasar */
+::-webkit-scrollbar { display: none!important; } /* makes sure there's no ugly scrollbar on menu*/
+
+/* Hud radial styles */
+.text-health { color: rgb(33, 171, 97)!important; }
+.text-stress { color: rgb(255, 0, 0)!important; }
+.text-nos { color: rgb(255, 72, 133)!important; }
+.text-cruise { color: rgb(255, 72, 133)!important; }
+.text-armed { color: rgb(255, 72, 133)!important; }
+.text-harness { color: rgb(182, 72, 255)!important; }
+.text-oxygen { color: rgb(138, 168, 189)!important; }
+.text-parachute { color: rgb(0, 0, 0)!important; }
+.text-dev { color: rgb(0, 0, 0)!important; }
+.text-gauge { color: rgb(255, 255, 255)!important; }
+
+#main-container {
+  width: 100%;
+  height: auto;
+}
+
+/* Bottom-right: phantom strip + money-change pop (above minimap) */
+#top-right-stack {
+  position: absolute;
+  right: 0.85vw;
+  bottom: 14vh;
+  top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  z-index: 1000;
+  max-width: min(460px, 94vw);
+  pointer-events: none;
+  transform: scale(1);
+  transform-origin: bottom right;
+}
+
+#top-right-stack #money-container {
+  pointer-events: auto;
+}
+
+.phantom-strip-wrap {
+  width: 100%;
+  pointer-events: auto;
+}
+
+.phantom-strip-glass {
+  padding: 0.85rem 1.05rem 0.95rem;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 8px 28px rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: right;
+  font-family: 'Work Sans', 'Yantramanav', sans-serif;
+  font-size: 1.38vh;
+}
+
+.phantom-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.phantom-server-name {
+  font-weight: 700;
+  font-size: 1.65vh;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  line-height: 1.25;
+}
+
+.phantom-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.phantom-chip {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 1.22vh;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.phantom-id {
+  background: rgba(147, 197, 253, 0.18);
+  border-color: rgba(147, 197, 253, 0.35);
+}
+
+.phantom-line2 {
+  margin-top: 0.45rem;
+  opacity: 0.95;
+  font-size: 1.22vh;
+  font-weight: 500;
+  line-height: 1.35;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.phantom-line3 {
+  margin-top: 0.45rem;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.phantom-line-money {
+  margin-top: 0.4rem;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.phantom-line-money .p-v.money-cash {
+  color: #86efac;
+  font-weight: 700;
+}
+
+.phantom-line-money .p-v.money-bank {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.phantom-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 1.2vh;
+}
+
+.phantom-pill .p-l {
+  opacity: 0.7;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.98vh;
+  letter-spacing: 0.04em;
+}
+
+.phantom-pill .p-v {
+  font-weight: 700;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phantom-voice {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.15vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  opacity: 0.9;
+}
+
+.phantom-voice.is-talking {
+  color: #fef08a;
+  opacity: 1;
+}
+
+.phantom-mic {
+  font-size: 0.75vh;
+  opacity: 0.9;
+}
+
+/* Money: no second glass card — balances are on phantom strip; keep container for +/- delta pop only */
+#money-container.money-glass-wrap {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+#money-container.money-glass-wrap .money-rows {
+  display: none !important;
+}
+
+#money-container.money-glass-wrap .money-delta {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 0.2rem 0.45rem;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.money-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.money-pane-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.6rem;
+}
+
+.money-label {
+  flex-shrink: 0;
+  font-family: 'Work Sans', 'Yantramanav', sans-serif;
+  font-size: 1.05vh;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.money-amt-wrap {
+  flex: 1;
+  text-align: right;
+  min-width: 0;
+}
+
+.money-line {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(26px, 3.2vh, 40px);
+  line-height: 1.05;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.money-sign {
+  font-family: 'Pricedown Bl', sans-serif;
+  color: #00ac31;
+  margin-right: 0.12em;
+  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.65), 1px -1px 0 rgba(0, 0, 0, 0.65), -1px 1px 0 rgba(0, 0, 0, 0.65), 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.money-val {
+  font-family: 'Pricedown Bl', sans-serif;
+  color: #ffffff;
+  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.65), 1px -1px 0 rgba(0, 0, 0, 0.65), -1px 1px 0 rgba(0, 0, 0, 0.65), 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.money-val-bank {
+  color: #00ac31;
+}
+
+.money-delta {
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 2.4rem;
+  text-align: right;
+}
+
+.money-delta-line {
+  margin: 0;
+  font-family: 'Pricedown Bl', sans-serif;
+  font-size: clamp(32px, 3.8vh, 50px);
+  line-height: 1;
+  text-align: right;
+}
+
+.money-delta-plus {
+  color: #00ac31;
+  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.65), 1px -1px 0 rgba(0, 0, 0, 0.65), -1px 1px 0 rgba(0, 0, 0, 0.65), 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.money-delta-minus {
+  color: #e63946;
+  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.65), 1px -1px 0 rgba(0, 0, 0, 0.65), -1px 1px 0 rgba(0, 0, 0, 0.65), 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.money-delta-sign {
+  margin-right: 0.15em;
+}
+
+/* Player HUD */
+
+#playerhud {
+  position: absolute;
+  display: flex;
+  left: 3vh;
+  bottom: 0.2vw;
+}
+
+.q-ml-xl {
+  margin-left: -22px!important; /* Change this to space radials */
+}
+
+/* Vehicle HUD */
+
+speed:after {
+  content: "MPH"; /* If using KPH change this content from MPH */
+  display: block;
+  padding-top: 3px;
+  padding-left: 2px;
+  padding-right: 2px;
+  padding-bottom: 8px;
+  font-weight: 900;
+}
+
+altitude:after {
+  content: "ALT";
+  display: block;
+  padding-top: 10px;
+  padding-left: 2px;
+  padding-right: 2px;
+  font-weight: 900;
+}
+
+speed {
+  transform: rotate(150deg);
+  font-size: 2.4vh;
+  position: fixed; 
+  color: #fff; 
+  text-align: center;
+  font-weight: 600;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7); 
+}
+
+altitude {
+  transform: rotate(135deg);
+  font-size: 2.4vh;
+  position: fixed; 
+  color: #fff; 
+  text-align: center;
+  font-weight: 600;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7); 
+}
+
+.border {
+  bottom: 7.9%;
+  left: 1.3%;
+  width: 0%;
+  text-align: center;
+}
+
+.square {
+  bottom: 6.30%;
+  width: 29vh;
+  height: 18.5vh;
+  border: 4px solid #bababa;
+  position: absolute;
+  display: inline-block;
+}
+
+.circle {
+  bottom: 6.9%;
+  width: 27vh;
+  height: 22.9vh;
+  border: 4px solid #bababa;
+  position: absolute;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+/* Animation */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Compass */
+.baseplate {
+  position: relative;
+  margin: 0 auto;
+  top: -0.8vh;
+	width: 150px;
+  height: auto;
+}
+
+.street-container {
+  position: relative;
+  top: 0.5vh;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.4vh;
+  letter-spacing: 0.7px;
+  text-decoration: none;
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: none;
+  font-weight: 800;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.street1 {
+  position: absolute;
+  margin: 0 auto;
+  right: 55%;
+  text-align: right!important;
+  color: rgb(255, 255, 255);
+}
+
+.street2 {
+  position: absolute;
+  margin: 0 auto;
+  left: 55%;
+  text-align: left!important;
+  color: rgb(255, 255, 255);
+}
+
+.pointer {
+  position: absolute;
+  margin: 0 auto;
+  top: -2%;
+  left: 0;
+  right: 0;
+  font-family: 'Yantramanav', sans-serif;
+  color: rgb(255, 255, 255);
+  font-size: 2.2vh;
+  text-align: center;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+}
+
+.degrees {
+  position: absolute;
+  margin: 0 auto;
+  top: 80%;
+  left: 0;
+  right: 0;
+  opacity: 0.8;
+  font-family: 'Yantramanav', sans-serif;
+  color: rgb(255, 255, 255);
+  font-size: 1.5vh;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%);
+}
+
+.bezel {
+  position: relative;
+  width:100%;
+  height: 2vh;
+  font-family: 'Yantramanav', sans-serif;
+  font-size: 0.35vh;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.bearing {
+  position: relative;
+  width:100%;
+  top: -0.5vh;
+  height: 3.5vh;
+  padding-left: 0.12vw;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 2.3vh;
+  letter-spacing: 0.7px;
+  text-decoration: none;
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: none;
+  font-weight: 600;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}

@@ -1,0 +1,374 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+body {
+  overflow: hidden;
+}
+
+.container {
+  display: none;
+  height: 100vh;
+}
+
+.cityhall-main-container {
+  position: relative;
+  background-position: center center;
+  backface-visibility: hidden;
+  width: 100vh;
+  height: 70vh;
+  margin: 0 auto;
+  top: 15vh;
+  background-size: cover;
+  border-bottom: solid 1px #ffe263;
+  background: radial-gradient(
+    circle,
+    rgba(43, 43, 43, 0.555) 0%,
+    rgba(41, 41, 41, 0.541) 100%
+  );
+  border-radius: 1px;
+  box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.226);
+}
+
+.cityhall-header {
+  position: relative;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 6vh;
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+  line-height: 10vh;
+  width: 97vh;
+  top: 2vh;
+  left: 1.5vh;
+  border-radius: 1px;
+  height: 10vh;
+  cursor: help;
+  background: radial-gradient(
+    circle,
+    rgba(172, 172, 172, 0.178) 0%,
+    rgba(172, 172, 172, 0.164) 100%
+  ) !important;
+}
+
+.cityhall-option-blocks {
+  position: relative;
+  height: 33vh;
+  width: 65vh;
+  margin: 0 auto;
+  top: 13vh;
+  border-radius: 1px;
+  background: none !important;
+}
+
+.cityhall-identity-page {
+  display: none;
+  position: relative;
+  height: 40vh;
+  width: 80vh;
+  margin: 0 auto;
+  top: 10vh;
+  border-radius: 1px;
+  background: rgba(37, 37, 37, 0.418);
+}
+
+.cityhall-job-page {
+  display: none;
+  position: relative;
+  height: 40vh;
+  width: 80vh;
+  margin: 0 auto;
+  top: 10vh;
+  border-radius: 1px;
+  overflow-y: auto;
+  background: rgba(37, 37, 37, 0.418);
+}
+
+.cityhall-job-page::-webkit-scrollbar-track {
+  background: #171717;
+  /* color of the tracking area */
+}
+
+.cityhall-job-page::-webkit-scrollbar-thumb {
+  background-color: #ffe263;
+  /* color of the scroll thumb */
+}
+
+.cityhall-job-page::-webkit-scrollbar {
+  width: 2vh;
+}
+
+.cityhall-job-page::-webkit-scrollbar-track {
+  border-radius: 20px;
+  border: 3px solid #171717;
+}
+
+.cityhall-job-page::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  border: 3px solid #171717;
+}
+
+.cityhall-option-block {
+  cursor: pointer;
+  position: relative;
+  width: 30vh;
+  height: 30vh;
+  display: inline-block;
+  margin-right: 2vh;
+  margin-bottom: 2vh;
+  left: 1vh;
+  top: 1vh;
+  text-align: center;
+  background: rgba(255, 255, 255, 0) !important;
+  transition: all 0.1s linear;
+  /* border-bottom: 2px solid #ffe263; */
+  border: solid 0.5px #ffd5639f;
+  border-radius: 1px;
+}
+
+.cityhall-option-block:hover {
+  background: #ffd15275 !important;
+  border: solid 0.5px #ffd563d0;
+  transform: scale(0.9);
+  opacity: 0.9;
+}
+
+.cityhall-option-block > i {
+  cursor: pointer;
+  font-size: 16vh;
+  line-height: 21vh;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cityhall-option-block > p {
+  cursor: pointer;
+  color: rgb(255, 255, 255);
+  text-shadow: 0px 0px 10px white;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 0.1vh;
+  font-size: 2.6vh;
+}
+
+.identity-page-blocks {
+  position: relative;
+  height: 100%;
+  width: 25%;
+  padding: 1vh;
+}
+
+.identity-page-block {
+  width: 100%;
+  height: 15%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(77, 79, 87, 0.075) 100%
+  ) !important;
+  /* border-left: solid 1px rgb(14, 151, 71); */
+  transition: all 0.1s ease-in-out;
+  border-radius: 1px;
+  cursor: pointer;
+  border-left: solid 1px #eeeeee67;
+}
+
+.identity-page-block:hover {
+  border-left: solid 1px #ffe263;
+  transform: scale(0.9);
+  /* border: solid 1px #ffd563d0; */
+  background: #ffd15244 !important;
+  transition: 0.2s;
+}
+
+/* .identity-page-block>p:hover {
+    color: #2873a7;
+    transition: ease-in 0.3s;
+} */
+
+.identity-page-block > p {
+  position: relative;
+  text-align: center;
+  line-height: 6vh;
+  font-family: "Poppins", sans-serif;
+  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: 0.1vh;
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+  text-shadow: 0px 0px 10px white;
+  font-size: 1.6vh;
+}
+
+.hover-description {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1vh;
+  margin: 4vh;
+  background: rgba(34, 34, 34, 0.75);
+  border-radius: 1px;
+}
+
+.hover-description > p {
+  color: white;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.3vh;
+}
+
+.identity-selected {
+  transition: all 0.5s;
+  background: #ffd15244 !important;
+  border-left: solid 1px #ffe263;
+  /* border: solid 1px #ffd563d0; */
+  transform: scale(0.9);
+  transition: 250ms;
+}
+
+.request-identity-button {
+  display: none;
+  position: absolute;
+  top: 6vh;
+  right: 0;
+  margin: 1vh;
+  width: 20vh;
+  height: 5vh;
+  border-radius: 1px;
+  cursor: pointer;
+  background: rgba(105, 105, 105, 0.5);
+  transition: all 0.1s linear;
+}
+
+.request-identity-button:hover {
+  background: #ffd15244 !important;
+  transform: scale(0.9);
+}
+
+.request-identity-button > p {
+  color: #ededed;
+  text-shadow: 0px 0px 10px white;
+  text-align: center;
+  font-family: sans-serif;
+  text-transform: uppercase;
+  font-size: 1.6vh;
+  font-weight: 400;
+  line-height: 2vh;
+  letter-spacing: 0.05vh;
+}
+
+.job-page-blocks {
+  position: relative;
+  padding: 1vh;
+  padding-right: 2vh;
+  display: grid;
+  grid-template-columns: 23vh 23vh;
+  column-gap: 2vh;
+  row-gap: 2vh;
+}
+
+.job-page-block {
+  width: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.089) 0%,
+    rgba(77, 79, 87, 0.177) 100%
+  );
+  border-left: solid 1px #ffe263;
+  border-radius: 1px;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  border-bottom: 2px solid rgba(255, 255, 255, 0);
+}
+
+.job-page-block:hover {
+  transform: scale(0.9);
+  background: #ffd15244 !important;
+  transition: 0.2s;
+}
+
+/* .job-page-block>p:hover {
+    color: #2873a7;
+} */
+
+.job-page-block > p {
+  position: relative;
+  text-align: center;
+  line-height: 2.5vh;
+  font-family: "Poppins", sans-serif;
+  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: 0.1vh;
+  color: rgb(255, 255, 255);
+  text-shadow: 0px 0px 10px white;
+  font-size: 1.6vh;
+}
+
+.apply-job-button {
+  display: none;
+  position: absolute;
+  top: 6vh;
+  right: 0;
+  margin: 1vh;
+  width: 20vh;
+  height: 5vh;
+  border-radius: 1px;
+  cursor: pointer;
+  background: rgba(105, 105, 105, 0.5);
+  transition: all 0.1s linear;
+}
+
+.apply-job-button:hover {
+  background: #ffd15244 !important;
+  transform: scale(0.9);
+}
+
+.apply-job-button > p {
+  color: #ededed;
+  text-shadow: 0px 0px 10px white;
+  text-align: center;
+  font-family: sans-serif;
+  text-transform: uppercase;
+  font-size: 2vh;
+  font-weight: 400;
+  line-height: 1vh;
+  letter-spacing: 0.05vh;
+}
+
+.job-selected {
+  transition: all 0.5s;
+  background: #ffd15244 !important;
+  border: solid 1px #ffd563d0;
+  transform: scale(0.9);
+  transition: 250ms;
+}
+
+.back-to-main {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 1vh;
+  width: 20vh;
+  height: 5vh;
+  cursor: pointer;
+  border-radius: 1px;
+  background: rgba(105, 105, 105, 0.5);
+  transition: all 0.1s linear;
+}
+
+.back-to-main:hover {
+  background: rgba(255, 94, 94, 0.555);
+  transform: scale(0.9);
+}
+
+.back-to-main > p {
+  color: #ededed;
+  text-shadow: 0px 0px 10px white;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  text-transform: uppercase;
+  font-size: 2vh;
+  font-weight: 400;
+  line-height: 1vh;
+  letter-spacing: 0.05vh;
+}

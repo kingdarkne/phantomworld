@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Gangs</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div class="gang-panel">
+            <div class="gang-header">
+                <h1 id="gangName">GANG NAME</h1>
+                <div class="gang-tag" id="gangTag">TAG</div>
+            </div>
+            <div class="gang-stats">
+                <div class="stat">
+                    <div class="stat-value" id="territoryCount">0</div>
+                    <div class="stat-label">Territories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="memberCount">0</div>
+                    <div class="stat-label">Members</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="warsWon">0</div>
+                    <div class="stat-label">Wars Won</div>
+                </div>
+            </div>
+            <div class="territory-map" id="territoryMap">
+                <!-- Dynamic territory cards -->
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

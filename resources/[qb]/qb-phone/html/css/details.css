@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;400&display=swap');
+
+.details-app {
+    display: none;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    /* background: #000000; */
+    font-family: 'San Francisco', 'Poppins', sans-serif;
+    background: linear-gradient(90deg, rgb(0, 20, 34) 0%, rgba(0, 0, 0, 0.959) 50%, rgb(0, 20, 34) 100%);
+}
+
+.details-header {
+    position: absolute;
+    width: 90%;
+    height: 30%;
+    top: 8%;
+    left: 0;
+    right: 0;
+    color: #e5e5e5; 
+    font-size: 1.2vh;
+    margin: 0 auto;
+}
+
+.details-header > p {
+    line-height: 12vh;
+    text-indent: 2vh;
+    margin: 0 0 0 9vh;
+    font-weight: 400;
+}
+
+.details-header > span {
+    position: absolute;
+    top: 8vh;
+    left: 9vh;
+    font-size: 2vh;
+    height: 2vh;
+    color: #e5e5e5; 
+}
+
+.details-list {
+    position: absolute;
+    width: 90%;
+    height: 37%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    bottom: 5%;
+    border-radius: 0.1vh;
+    /* background: #1b1b1b; */
+    overflow-y: scroll;
+    padding: 10px;
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+}
+
+.details-list::-webkit-scrollbar {
+    display: none;
+}
+
+.details-money-types,
+.details-license-body-main {
+    position: relative;
+    width: 100%;
+    padding: 15px 18px; 
+    border-bottom: 1px solid #2e2e2e;
+    font-size: 1.2vh;
+    color: #e5e5e5; 
+}
+
+.details-icon-class,
+.details-license-icon-class {
+    display: inline-block;
+    text-align: left;
+    width: 10%;
+    color: #8E8E93; 
+    font-size: 1.2vh;
+}
+
+.details-text-class,
+.details-license-text-class,
+.details-text-license {
+    display: inline;
+    width: 80%;
+    color: #e5e5e5; 
+    font-size: 1.2vh;
+}
+
+.details-moneys-body-main {
+    /* background: rgba(29, 29, 29, 0.917); */
+    padding: 6px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    transition: 0.3s ease;
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgba(2, 87, 161, 0.53) 100%), #1C1C1C;
+}
+
+.details-moneys-body-main:hover {
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+}

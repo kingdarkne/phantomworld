@@ -1,0 +1,143 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@500&family=Roboto:ital,wght@0,100;0,400;1,500&display=swap");
+
+body {
+  display: none;
+  margin: 0;
+  padding: 0;
+  /* background-image: url('https://media.discordapp.net/attachments/1108632290751414273/1184636513233928303/image.png?ex=658cb1ba&is=657a3cba&hm=01f03225ec82d60469116cf2b27a5bb29a94abecc7deb77dad46ac0c201d9687&=&width=1208&height=676'); */
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-family: poppins;
+  color: #f7f7f7;
+  text-shadow: 0px 0px 20px #f7f7f767;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+.esc {
+  position: absolute;
+  top: 36px;
+  right: 46px;
+  width: 32px;
+  height: 24px;
+  background-color: #693030d2;
+  border: 1px solid rgb(255, 91, 91);
+  box-shadow: 0px 0px 18px 0px #c2303e;
+  padding: 5px;
+  border-radius: 3px;
+}
+.ucgensey {
+  width: 0px;
+  height: 0px;
+  /* border-color: #ffe263 transparent transparent transparent; */
+  transform: rotate(0deg);
+}
+.vinyet {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0px -20px 600px 125px rgb(31, 31, 31) inset;
+}
+.container {
+  position: absolute;
+  top: 76vh;
+  left: 68vh;
+  align-items: center;
+  justify-content: center;
+}
+.background {
+  width: 537px;
+  height: 233px;
+  border-radius: 9px;
+  outline: 0.1vh solid #1b1c16;
+  padding: 29px;
+  background: radial-gradient(circle at center, #252525, #1f1f1f);
+  position: absolute;
+}
+.npcnedio {
+  display: flex;
+  /* background: radial-gradient(
+    87.66% 87.66% at 50% 50%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0) 100%
+  ); */
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+  padding: 6px;
+  width: 481px;
+  margin-bottom: 6px;
+}
+#npcismiaq {
+  font-size: 27px;
+}
+.icindekicontainer {
+
+  margin-left: 21px;
+  width: 464px;
+  height: 10px;
+}
+.buttonkanka {
+  display: flex;
+  background: radial-gradient(circle, #6151255e 0%, #5044248c 100%);
+  width: 22vh;
+  margin: 5px 9px 10px 0px;
+  padding: 12px 3px 10px 0px;
+  /* justify-content: center; */
+  transition: 0.4s;
+}
+
+.buttonkanka:hover {
+  transform: scale(1.03);
+  cursor: pointer;
+  transition: 0.4s;
+  background: radial-gradient(circle, #dfb4418a 0%, #ac8825c0 100%);
+}
+.buttonsayi {
+  transition: opacity 1s ease; /* Geçiş efekti için */
+  justify-items: center;
+  text-align: center;
+  justify-content: center;
+  background: radial-gradient(circle, #b996375e 0%, #a3853365 100%);
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+  float: left;
+  padding: 2px;
+  font-size: 17px;
+  margin: -3px 9px 8px 8px;
+  width: 25px;
+  height: 25px;
+}
+#npcmeslekamk {
+  font-size: 13px;
+  /* border-left: solid 1px #e9e9e9d0; */
+  background: radial-gradient(
+    87.66% 87.66% at 50% 50%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 5px;
+  color: #f5f5f5;
+  text-shadow: 0px 0px 10px #a1a1a1be;
+  padding: 4px 11px;
+  justify-items: center;
+  justify-content: center;
+  margin-left: 19px;
+  /* margin: 0px 0px 12px 1.5999999999999996vh; */
+}
+.npcbilgileri {
+  display: flex;
+  align-items: center;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+.buttonlar {
+  display: flex;
+}
+.sagtaraf {
+  float: right;
+}
+.soltaraf {
+  float: left;
+}

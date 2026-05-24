@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Caller</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="vehicle-menu" class="hidden">
+        <div class="menu-container">
+            <div class="menu-header">
+                <h2>🚗 Vehicle Menu</h2>
+                <button class="close-btn" id="close-btn">×</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="personal">Personal</button>
+                <button class="tab" data-tab="rented">Rented</button>
+                <button class="tab" data-tab="job">Job</button>
+            </div>
+            
+            <div class="tab-content" id="personal-tab">
+                <div class="vehicle-list" id="personal-vehicles"></div>
+            </div>
+            
+            <div class="tab-content hidden" id="rented-tab">
+                <div class="vehicle-list" id="rented-vehicles"></div>
+            </div>
+            
+            <div class="tab-content hidden" id="job-tab">
+                <div class="vehicle-list" id="job-vehicles"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

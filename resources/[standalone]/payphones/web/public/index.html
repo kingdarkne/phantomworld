@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payphone</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: system-ui, sans-serif; background: transparent; }
+      #root { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; background: rgba(0,0,0,.65); }
+      #root.visible { display: flex; }
+      .panel {
+        background: #111; color: #eee; padding: 1.25rem 1.5rem; border-radius: 10px;
+        min-width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      }
+      .panel h1 { margin: 0 0 .75rem; font-size: 1.1rem; }
+      input {
+        width: 100%; padding: .5rem .65rem; border-radius: 6px; border: 1px solid #444;
+        background: #1a1a1a; color: #fff; margin-bottom: .75rem;
+      }
+      button {
+        width: 100%; padding: .55rem; border: none; border-radius: 6px;
+        background: #3b82f6; color: #fff; font-weight: 600; cursor: pointer;
+      }
+      button.secondary { background: #444; margin-top: .5rem; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="panel">
+        <h1>Payphone</h1>
+        <input type="text" id="num" placeholder="Phone number" maxlength="10" autocomplete="off" />
+        <button id="call">Call</button>
+        <button class="secondary" id="close" type="button">Hang up</button>
+      </div>
+    </div>
+    <script>
+      const root = document.getElementById('root');
+      const num = document.getElementById('num');
+      window.addEventListener('message', (e) => {
+        const d = e.data;
+        if (!d || d.action !== 'setVisible') return;
+        if (d.data) {
+          root.classList.add('visible');
+          num.focus();
+        } else {
+          root.classList.remove('visible');
+        }
+      });
+      function resName() {
+        return typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'payphones';
+      }
+      document.getElementById('close').addEventListener('click', () => {
+        fetch('https://' + resName() + '/hideFrame', { method: 'POST', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body: '{}' });
+      });
+      document.getElementById('call').addEventListener('click', () => {
+        fetch('https://' + resName() + '/payphoneInput', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+          body: JSON.stringify({ phoneNumber: num.value }),
+        });
+      });
+    </script>
+  </body>
+</html>

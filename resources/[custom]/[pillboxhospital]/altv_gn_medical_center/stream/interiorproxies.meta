@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SInteriorOrderData>
+  <startFrom value="8300" />
+  <proxies>
+	<Item>gn_medic_pillbox_milo</Item>
+  <Item>gn_medic_f1_pillbox_milo</Item>
+  <Item>gn_medic_lift_pillbox_milo</Item>
+  <Item>gn_medic_cls_medic_milo</Item>
+  <Item>gn_medic_f1_cls_medic_milo</Item>
+  <Item>gn_medic_lift_cls_medic_milo</Item>
+  <Item>gn_ambulance_lsmc_carpack_milo</Item>
+  <Item>gn_ambulance_pillbox_carpack_milo</Item>
+  </proxies>
+</SInteriorOrderData>

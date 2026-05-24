@@ -1,0 +1,976 @@
+/* up slide button work start */
+.up-slide-button{
+    background: #c5c5c58a;
+    position: absolute;
+    top: 35px;
+    right: 40px;
+    border-radius: 5px;
+    width: 50px;
+    height: 3px;
+    cursor: pointer;
+    z-index: 142;
+}
+.up-slide-button:hover{
+ 
+    background: #fff;
+}
+
+/* menu in all */
+.ontest{
+    height: 100%;
+    width: 100%;
+    background-color: rgb(255, 255, 255)0%, 0%;
+}
+.up-side-menu{
+    display: none;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    background-image: url("../img/bg-solid.png");
+    background-size: cover;
+    overflow: hidden;
+    z-index: 141;
+}
+
+.one-menu-item{
+    padding: 15px;
+    border-radius: 15px;
+    background-color: #00000083;
+    width: 41%;
+    position: absolute;
+    top: 8%;
+    left: 10%;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#disabledupside{
+    cursor: not-allowed;
+}
+.item svg{
+    font-size: 20px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.slider {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	grid-row: span 2;
+	height: 100%;
+	justify-content: center;
+	position: relative;
+	width: 100%;
+    margin-left: 5px;
+}
+.slider svg {
+	bottom: 1.5rem;
+	color: hsla(0, 0%, 8%, 0.5);
+	cursor: pointer;
+	font-size: 35px;
+	pointer-events: none;
+	position: absolute;
+}
+
+.controlSlider {
+    -webkit-appearance: none;
+    background-color: #000000 !important;
+    border-radius: 20px;
+    height: 50%;
+    position: absolute;
+    -webkit-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    width: 200%;
+}
+.controlSlider:focus {
+    outline: none;
+}
+.controlSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: transparent;
+    border-radius: 50%;
+    height: 1.75rem;
+    margin: 0 1rem;
+    width: 1.75rem;
+}
+.controlSlider::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.control-centre .control-centre-body .slider svg {
+	bottom: 1.5rem;
+	color: hsla(0, 0%, 8%, 0.5);
+	cursor: pointer;
+	font-size: 35px;
+	pointer-events: none;
+	position: absolute;
+}
+
+.control-centre-body {
+	grid-gap: 10px;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	margin-top: 3rem;
+	/* width: 10%;
+    height: 50%; */
+    padding: 10px;
+}
+.control-centre-body .col .group {
+	align-items: center;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+	height: 100%;
+	width: 100%;
+}
+
+.control-centre-body .col.col-4 {
+	align-items: center;
+	display: flex;
+	grid-column: span 2;
+	grid-row: span 2;
+	height: 7.5rem;
+	justify-content: space-around;
+	width: 100%;
+}
+.control-centre-body .col.icon {
+	cursor: pointer;
+	transition: all 0.2s ease-in-out;
+}
+.control-centre-body .col {
+	align-items: center;
+	background-color: rgba(0, 0, 0, 0.451);
+	border-radius: 20px;
+	display: flex;
+	height: 3.5rem;
+	justify-content: center;
+	width: 90%;
+}
+.control-centre-body .col.icon svg {
+	color: hsla(0, 0%, 100%, 0.9);
+	font-size: 30px;
+}
+.control-centre-body .col .music-player {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	height: 90%;
+	justify-content: center;
+	width: 90%;
+}
+.control-centre-body .col .music-player .title {
+	align-items: center;
+	display: flex;
+}
+.control-centre-body .col .music-player .title .song {
+	color: #fff;
+	font-size: 14px;
+	font-weight: 500;
+}
+.control-centre-body .col .music-player .title .artist {
+	color: #ccc;
+	font-size: 16px;
+}
+.control-centre-body .col .music-player .controls {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	width: 80%;
+}
+.control-centre-body .col .music-player .controls svg {
+	color: #fff;
+	cursor: pointer;
+	font-size: 28px;
+	transition: all 0.2s ease-in-out;
+}
+.control-centre-body .col .music-player .controls div svg {
+	stroke-width: 20;
+	-webkit-transform: scale(1.1);
+	transform: scale(1.1);
+}
+.control-centre-body .col .group .item {
+	align-items: center;
+	background-color: hsla(0, 0%, 8%, 0.5);
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	height: 3rem;
+	justify-content: center;
+	justify-self: center;
+	transition: all 0.2s ease-in-out;
+	width: 3rem;
+}
+
+
+/* battery work start  */
+.battery-con{
+    display: inline;
+}
+.battery-container {
+    width: 2.5rem;
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	/* gap: 0.1rem; */
+}
+
+.battery-container .battery {
+    align-items: center;
+    -webkit-backdrop-filter: blur(5px);
+    /* backdrop-filter: blur(5px); */
+    border: 1px solid hsla(0, 0%, 100%, 0.5);
+    border-radius: 4px;
+    display: flex;
+    height: 11px;
+    justify-content: center;
+    position: relative;
+    width: 20px;
+    padding-bottom: 0.5px;
+}
+
+.battery-container .battery .battery-bar-wrapper {
+    align-items: center;
+    display: flex;
+    height: 79%;
+    margin: 0.075rem;
+    width: 100%;
+}
+
+.battery-container .battery .battery-bar {
+	background-color: #fff;
+	border-radius: 3px;
+	height: 100%;
+}
+
+.battery-container .battery-plup {
+	background-color: hsla(0, 0%, 100%, 0.5);
+	border-bottom-right-radius: 2.5px;
+	border-top-right-radius: 2.5px;
+	height: 0.3rem;
+	margin-bottom: 0.025rem;
+	width: 0.15rem;
+}
+/* battery work end  */
+
+#battery-col.ac{
+    background-color: #cb6429 !important; 
+}
+#battery-col-one.ac{
+    background-color: #cb6429 !important; 
+}
+#battery-col-two.ac{
+    background-color: #cb6429 !important; 
+}
+
+.up-side-menu.ac{
+    background-color: rgb(0, 0, 0);
+}
+.col.ac{
+    background-color: rgb(59, 59, 59);
+}
+
+#display-light-up-side-menu.active{
+    background-color: #60bba9;
+}
+#notepad-up-side-menu.active{
+    background-color: #60bba9;
+}
+#calculator-open-up-slide.active{
+    background-color: #60bba9;
+}
+#rotate-display.active{
+    background-color: #60bba9;
+}
+#flight-mode.active{
+    background-color: #60bba9;
+}
+
+/* wifi active work start */
+#wifi-upside.active{
+    background-color: #60bba9;
+}
+#phone-wifi.active{
+    display: block;
+}
+#phone-wifi-one.active{
+    display: block;
+}
+#phone-wifi-two.active{
+    display: block;
+}
+/* wifi active work end */
+
+#battery-saving.active{
+    background-color: #60bba9;
+}
+/* #light-up-side.active{
+    background-color: #60bba9;
+} */
+#alarm-open-up-slide.active{
+    background-color: #60bba9;
+}
+#alarm-open-up-slide-two.active{
+    background-color: #60bba9;
+}
+#alarm-open-up-slide-two.disactive{
+    background-color: "";
+}
+#alarm-open-up-slide-three.active{
+    background-color: #60bba9;
+}
+
+.fa-signal.ac{
+    display: none;
+}
+#flight-mode-signal.bc{
+    display: block;
+    font-size: 10px;
+    top: 1.8vh;
+    right: 7.4vh;
+    position: absolute;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.843), 
+                 -1px -1px 2px rgba(255,255,255,0.7);
+
+}
+#flight-mode-signal-one.bcc{
+    display: block;
+    font-size: 10px;
+    top: 9.4vh;
+    right: 7.4vh;
+    position: absolute;
+    z-index: 140;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.843), 
+                 -1px -1px 2px rgba(255,255,255,0.7);
+
+}
+#flight-mode-signal-two.bccc{
+    display: block;
+    font-size: 10px;
+    top: 1.8vh;
+    right: 7.4vh;
+    position: absolute;
+    z-index: 139;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.843), 
+                 -1px -1px 2px rgba(255,255,255,0.7);
+
+}
+#flight-mode-signal {
+    display: none;
+}
+#flight-mode-signal-one {
+    display: none;
+}
+#flight-mode-signal-two {
+    display: none;
+} 
+/* flash light work start */
+#flash-Light{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    z-index: 143;
+    overflow: hidden;
+
+}
+.flash-text{
+    height: 150px;
+    width: 150px;
+    background: #000;
+    text-align: center;
+    border-radius: 50%;
+    position: absolute;
+    padding-top: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5vh;
+    color: white;
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #ff00de, 0 0 70px #ff00de, 0 0 80px #ff00de, 0 0 100px #ff00de, 0 0 150px #ff00de;
+}
+/* flash light work end */
+
+/* notepad work start */
+#notepad{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding-top: 4vh;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 138;
+    overflow: hidden;
+    color: #fff;
+}
+.notepad-title{
+    text-align: center;
+    color: #fff;
+}
+.notepad-text-in-two{
+    display: flex;
+    justify-content: space-between;
+    padding:0 20px;
+    margin-bottom: 15px;
+}
+.notepad-text-one{
+    background-color: rgb(246, 147, 147);
+    border-radius: 8px;
+    padding:4px 8px;
+}
+.notepad-text-two{
+    background-color: rgb(131, 240, 175);
+    border-radius: 8px;
+    padding:4px 8px;
+}
+.main-notepade{
+    padding:0 20px;  
+}
+.main-notepade textarea{
+    width: 100%;
+    background: #252424;
+    color: #fff;
+}
+.notepad-button-in{
+    margin-top: 20px;
+    display:flex;
+    justify-content: space-between;
+}
+.notepad-button-in button{
+    border: none;
+    outline: none;
+    background: #21597b;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+}
+.notepad-button-in button:hover{
+    background: #31556b;
+    color: #fff;
+}
+.notepad-text-output{
+    margin-top: 10px;
+    width: 100%;
+    height: 140px;
+    background: #252424;
+    overflow-y: scroll;
+}
+/* notepad work end */
+
+/* alarm clock work start  */
+#alarm-clock{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    z-index: 138;
+    overflow: hidden;
+    color: #fff;
+} 
+.alarm-clock-container{
+    padding: 4vh 20px 20px 20px;
+    
+}
+.alarm-clock-container h1{
+    text-align: center;
+}
+.alarm-clock-three{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.alarm-clock-back{
+    background-color: rgb(246, 147, 147);
+    border-radius: 8px;
+    padding:4px 8px;
+}
+.alarm-clock-back:hover{
+    background-color: rgb(203, 85, 85);
+    color: #fff;
+}
+.alarm-clock-alarm{
+    background-color: rgb(131, 240, 175);
+    border-radius: 8px;
+    padding:4px 8px;
+}
+.alarm-clock-alarm:hover{
+    background-color: rgb(69, 183, 114);
+    color: #fff;
+}
+.alarm-clock-stopwatch{
+    background-color: rgb(131, 240, 175);
+    border-radius: 8px;
+    padding:4px 8px;
+}
+.alarm-clock-stopwatch:hover{
+    background-color: rgb(69, 183, 114);
+    color: #fff;
+}
+
+.alarm-on-off{
+    display: none;
+    width: 100%;
+    height: 300px;
+}
+
+/* alarm clock design work start */
+#alarmTime{
+    text-align: center;
+    font-size: 28px;
+    font-weight: 500;
+    color: #fff;
+}
+#alarmInput{
+    text-align: center;
+    font-size: 28px;
+    font-weight: 500;
+    color: #000000;
+    margin-top: 10px;
+    width: 100%;
+}
+#alarmInput::placeholder{
+    color: #fff;
+    font-size: 28px;
+    font-weight: 500;
+
+}
+.al-btn{
+    outline: none;
+    border: none;
+    background: #21597b;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    text-align: center;
+}
+#stopAlarmButton{
+    background: #7b2121!important;
+}
+#alarmMessage{
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 500;
+}
+/* alarm clock design work end */
+
+/* stopwatch clock design work start */
+.stopwatch-on-off{
+    display: none;
+    height: 300px;
+    text-align: center;
+}
+#stopwatch{
+    text-align: center;
+    margin-top: 20px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: 600;
+}
+.stopwatch-on-off button{
+  outline: none;
+  border: none;
+  
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#startButton{
+    background-color: #009688;
+}
+#stopButton{
+    background-color: #f42929;
+}
+#resetButton{
+    background-color: #0940f8;
+}
+#lapButton{
+    background-color: #28b31e;
+}
+#lapList{
+    overflow-y: scroll;
+    background-color: #3a3838;
+    width: 100%;
+    height: 300px;
+    margin-top: 20px;
+}
+/* stopwatch clock design work end */
+/* alarm clock work end  */
+
+
+/* theme work start */
+#theme-up-side{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 140;
+    overflow: hidden;
+    text-align: center;
+}
+#theme-up-side h1{
+ color: #fff;
+ font-size: 30px;
+ font-weight: 500;
+ margin-top: 40px;
+
+}
+.theme-in-up-side{
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    margin-bottom: 40px;
+}
+.theme-in-up-side .pic-up{
+    width: 45%;
+    color: #fff;
+}
+.theme-in-up-side div img{
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
+.pic-up img:hover{
+    border: 3px solid #fff;
+}
+.pic-up h6{
+    margin-top: 10px;
+}
+
+/* theme work end */
+
+/* brightness work start */
+
+#brightnessControl {
+    width: 200px;
+    height: 200px;
+    background-color: #f0f0f0; 
+    transition: background-color 0.5s;
+}
+
+/* brightness work end */
+
+/* rotated display work start */
+.polaroid-up-side-work {
+    height: 59.4vh;
+    width: 28.6vh;
+    bottom: -12vh;
+    border-radius: 40px;
+    right: 18vh;
+    margin: 5vh;
+    overflow: hidden;
+    position: absolute;
+    background-size: cover;
+    background-position-x: center;
+    background-repeat: no-repeat;
+    background-image: url('../img/backgrounds/default-qbcore.png');
+    transform: rotate(-90deg);
+}
+
+.phone-pic-rotated {
+    position: absolute;
+    width: 30vh;
+    bottom: -133px;
+    right: 17vh;
+    margin: 5vh;
+    z-index: 150;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+/* rotated display work end */
+
+/* up slide button work end */
+
+/* calculator work start */
+.calculator-app-in {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    height: 100%;
+    width: 100%;
+    background: #000000; 
+    overflow: hidden;
+    z-index: 138;
+}
+
+.calculator-header-up {
+    position: absolute;
+    width: 100%;
+    height: 8vh;
+    background-color: #000000; 
+    top: 0;
+    color: white !important;
+    font-family: 'San Francisco', Arial, sans-serif; 
+    font-size: 0vh;
+}
+
+.calculator-header > p {
+    line-height: 12vh;
+    text-indent: 2vh;
+}
+
+.calculator-list {
+    position: absolute;
+    /* background-color: #000000;  */
+    width: 100%;
+    height: 85%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0;
+    overflow-y: scroll;
+}
+
+.calculator-list::-webkit-scrollbar {
+    display: none;
+}
+
+form {
+    width: 92%;
+    position: relative;
+    top: 45%;
+    left: 5%;
+    transform: translate(-1%, -50%);
+}
+
+input[name="display"] {
+    /* background: rgb(0 0 0) !important; */
+    color: #fff !important;
+    font-size: 2.5vh !important;
+    /* height: 15vh; */
+    text-align: right !important;
+    margin: 4vh 0.5vh !important;
+    width: calc(100% - 10px) !important;
+    border: none;
+    padding: 0 1vh !important;
+    border-radius: 5px !important;
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+}
+
+input[type="button"] {
+    font-size: 2vh;
+    float: left;
+    width: calc(100% / 4 - 0.6vh);
+    background: #333333;
+    text-align: center;
+    padding: 1vh;
+    margin: 0.25vh;
+    border: none;
+    transition: 0.25s;
+    border-radius: 75px; 
+}
+
+input[type="button"]:hover {
+    background: #555555;
+}
+
+input[type="button"]:nth-last-of-type(1) {
+    background: #0095ff; 
+    width: calc(50% - 0.7vh);
+    transition: 0.25s;
+}
+
+input[type="button"]:nth-last-of-type(1):hover {
+    background: #0095ff;
+}
+
+#minishalhcalc {
+    background: #0379ce; 
+    color: #fff;
+    transition: 0.25s;
+}
+
+#minishalhcalc:hover {
+    background: #0095ff;
+}
+
+#shakhescalc {
+    background: #D1D1D6; 
+    transition: 0.25s;
+}
+
+#shakhescalc:hover {
+    background: #B0B0B5;
+}
+
+.calc-icon {
+    margin-left: -0.1vh;
+    width: 4.8vh;
+}
+/* calculator work end */
+
+/* close btn work start */
+.upside-close-btn{
+    position: absolute;
+    bottom: .4vh;
+    left: 27.5%;
+    height: 5px;
+    width: 45%;
+    background: #d6d5d5;
+    z-index: 130;
+    border-radius: 20px;
+    cursor: pointer;
+}
+.upside-close-btn:hover{
+    background: #ffffff;
+}
+/* close btn work end */
+
+
+/* screen recoding work start */
+.recording{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 138;
+    overflow: hidden;
+    text-align: center;
+}
+.recording-header{
+    padding: 4vh 20px 20px 20px;
+}
+.recording-title h4{
+    color: #fff;
+}
+.recording-button-in{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px;
+    flex-direction: column;
+    gap: 20px;
+}
+#startRecording{
+    background-color: #28b31e;
+    outline: none;
+    border: none;
+    border-radius: 50%;
+    height: 150px;
+    width: 150px;
+    color: #fff;
+    font-weight: 600;
+}
+#startRecording:hover{
+    background-color: #43a83b;
+}
+#stopRecording{
+    background-color: #a43c3c;
+    outline: none;
+    border: none;
+    color: #fff;
+    padding: 4px 6px;
+    border-radius: 8px;
+}
+#stopRecording:hover{
+    background-color: #b31e1e;
+}
+#recordedVideo{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    /* background-color: #009688; */
+}
+/* screen recoding work end */
+
+/* audio music play work start */
+#youtube{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgb(0, 20, 34) 0%, rgba(0, 0, 0, 0.959) 50%, rgb(0, 20, 34) 100%);
+    z-index: 138;
+    overflow: hidden;
+    text-align: center;
+}
+
+#youtube input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border: none;
+    font-size: 16px;
+    color: #fff;
+    outline: none;
+} 
+
+#youtube input[type="text"]:focus {
+    background-color: #444;
+}
+
+#youtube button {
+    padding: 12px 24px;
+    border: none;
+    background-color: #FF0000;  
+    color: #FFF;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#youtube button:hover {
+    background-color: #D90000; 
+}
+
+#youtubePlayer {
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 270px; 
+    height: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    top: 14vh;
+    left: 1.2vh;
+}
+
+/* audio music play work end */
+.all-test{
+    width: 100%;
+    height: 100%;
+    /* background: #000; */
+}

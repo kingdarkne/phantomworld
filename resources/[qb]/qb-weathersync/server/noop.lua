@@ -1,0 +1,1 @@
+-- No-op: qb-weathersync is disabled; dr-weathersync is used instead.

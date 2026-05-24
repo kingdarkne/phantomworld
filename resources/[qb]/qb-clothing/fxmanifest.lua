@@ -1,0 +1,43 @@
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+author 'Kakarot'
+description 'A menu providing players the ability to change their clothing and accessories'
+version '1.2.0'
+
+ui_page 'html/index.html'
+
+shared_scripts {
+    '@ox_lib/init.lua',
+    'shared/locale.lua',
+    'locales/en.lua',
+    'locales/*.lua',
+    'config.lua'
+}
+
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'server/qbx_compat.lua',
+    'server/main.lua'
+}
+
+client_scripts {
+    '@PolyZone/client.lua',
+    '@PolyZone/BoxZone.lua',
+    '@PolyZone/ComboZone.lua',
+    'client/qbx_compat.lua',
+    'client/main.lua'
+}
+
+dependencies {
+    'ox_lib',
+    'oxmysql',
+    'qbx_core',
+}
+
+files {
+    'html/index.html',
+    'html/style.css',
+    'html/reset.css',
+    'html/script.js'
+}

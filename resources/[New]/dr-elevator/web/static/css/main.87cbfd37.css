@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
+body,
+html {
+  height: 99%;
+  width: 99%;
+}
+body {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+}
+#root {
+  display: none;
+}
+.background {
+  background: linear-gradient(
+    90deg,
+    #d9d9d9 0%,
+    rgba(29, 29, 29, 0) 0.01%,
+    rgb(26, 26, 26) 80%
+  );
+  display: block;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  z-index: 1;
+}
+.main {
+  z-index: 99;
+}
+.container {
+  border-image: linear-gradient(180deg, #18181800, #eeeeee71, #18181800) 1 1;
+  border-style: solid;
+  border-width: 1px;
+  z-index: 99;
+}
+.form {
+  padding: 1.3vh;
+  border-top: solid 1px #ffd563;
+  background: radial-gradient(
+    87.66% 87.66% at 50% 50%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.Title {
+  color: #ffe263;
+  text-shadow: 0px 0px 50px #f3c955e1;
+  font-family: Outfit, sans-serif;
+  font-size: 3vh;
+  cursor: help;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin: 2vh;
+  text-align: center;
+}
+.inner {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+.display {
+  color: #ffe263;
+  text-shadow: 0px 0px 50px #f3c955e1;
+  font-family: Lexend, sans-serif;
+  font-size: 3vh;
+  height: 2.3vh;
+  margin: 14px 14px 20px;
+  text-align: center;
+  width: 75%;
+}
+.keypad {
+  grid-gap: 10px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, 7.2vh);
+  grid-template-rows: repeat(4, 7.2vh);
+}
+.keypad button {
+  background: radial-gradient(
+    87.66% 87.66% at 50% 50%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border: 1px solid #c2c2c2;
+  border-radius: 5px;
+  color: #c2c2c2;
+  cursor: pointer;
+  font-family: Lexend, sans-serif;
+  font-size: 2.4vh;
+  outline: none;
+  transition: 0.3s;
+}
+.keypad button:hover {
+  background-image: radial-gradient(circle, #b996375e 0%, #a3853365 100%);
+  border: 1px solid #f3c955be;
+  color: #ffe263;
+  text-shadow: 0px 0px 10px #f3c955be;
+  transform: scale(0.9);
+}
+.line {
+  align-content: center;
+  /* background: #ff1212; */
+  background: linear-gradient(
+    90deg,
+    hsla(0, 0%, 100%, 0.014),
+    #8c8c8c 33%,
+    #b5b5b5 66%,
+    #fff0
+  );
+  border-radius: 50%;
+  box-shadow: 0 5px 30px #02d1ff, 0 -5px 30px #02d1ff;
+  content: "";
+  display: block;
+  height: 1px;
+  width: 24vh;
+}
+/*# sourceMappingURL=main.87cbfd37.css.map*/

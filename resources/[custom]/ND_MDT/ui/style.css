@@ -1,0 +1,1251 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
+
+body {
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        scale: 0;
+    }
+    to {
+        opacity: 1;
+        scale: 1;
+    }
+}
+  
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        scale: 1;
+    }
+    to {
+        opacity: 0;
+        scale: 0;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #2a2c2e;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(46, 46, 46);
+}
+
+button {
+    outline: none;
+}
+
+.background {
+    display: none;
+    position: absolute;
+    margin: auto;
+    left: 20%;
+    top: 15%;
+    width: 60%;
+    height: 70%;
+    border-radius: 15px;
+    background-color: #2F3133;
+    overflow: hidden;
+}
+
+.overlay {
+    position: absolute;
+    margin: auto;
+    bottom: 0;
+    width: 100%;
+    height: 95%;
+    background-color: #18191a;
+}
+.minimizeOverlay {
+    position: absolute;
+    top: 0;
+    right: 4.3%;
+    color: #ccc;
+    border: none;
+    text-align: center;
+    height: 5%;
+    width: 50px;
+    background-color: transparent;
+    font-size: 120%;
+    transition: .1s ease-in-out;
+}
+.minimizeOverlay:hover {
+    transition: .1s ease-in-out;
+    color: white;
+    cursor: pointer;
+    background-color: #3a3b3c;
+    font-size: 140%;
+}
+.closeOverlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #ccc;
+    border: none;
+    text-align: center;
+    height: 5%;
+    width: 50px;
+    background-color: transparent;
+    font-size: 120%;
+    transition: .1s ease-in-out;
+    outline: none;
+}
+.closeOverlay:hover {
+    transition: .1s ease-in-out;
+    color: white;
+    cursor: pointer;
+    background-color: red;
+    font-size: 140%;
+}
+.topBarText {
+    position: absolute;
+    margin: 0;
+    padding: 1% 65% 1% 1%;
+    padding-right: 67%;
+    padding-top: 1%;
+    padding-bottom: 1%;
+    font-weight: bolder;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+    user-select: none;
+    width: 70%;
+}
+.topBarText:hover {
+    cursor: move;
+}
+.leftPanel {
+    position: absolute;
+    margin: 0;
+    padding-top: 2%;
+    width: 20%;
+    height: 100%;
+    background-color: #242526;
+}
+.leftPanelPlayerInfo {
+    margin-top: 0;
+    margin-left: 5%;
+    margin-bottom: 5%;
+    width: 90%;
+    height: 8%;
+    background-color: #2656c9;
+    border-radius: 6px;
+}
+.leftPanelPlayerInfoImageContainer {
+    position: absolute;
+    top: 3vh;
+    left: 10%;
+    height: 40px;
+    width: 40px;
+}
+.leftPanelPlayerInfoImage {
+    background-color: #ccc;
+    width: auto;
+    height: 100%;
+    border-radius: 6px;
+}
+.leftPanelPlayerInfoContainer {
+    position: absolute;
+    top: 3vh;
+    left: 30%;
+    width: auto;
+    user-select: none;
+}
+.leftPanelPlayerInfoUnitNumber {
+    margin: 0;
+    width: auto;
+    font-size: 1.05rem;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: #ccc;
+}
+.leftPanelPlayerInfoName {
+    margin: 0;
+    white-space: nowrap;
+    font-weight: lighter;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+    text-transform: capitalize;
+}
+.leftPanelButtons {
+    display: grid;
+    grid-template-columns: 0.25fr 1fr;
+    grid-template-rows: 1fr;
+
+    outline: none;
+    margin: 0 0 3% 5%;
+    text-align: left;
+    font-size: large;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    padding: 5%;
+    width: 90%;
+    border: none;
+    background-color: transparent;
+    border-radius: 6px;
+    color: #ccc;
+    transition: .1s ease-in-out;
+}
+.leftPanelButtons:hover {
+    cursor: pointer;
+    transition: .1s ease-in-out;
+    background-color: #3a3b3c5e !important;
+}
+
+#leftPanelPanicButton {
+    position: absolute;
+    padding: 2% 0;
+    margin-left: 5%;
+    bottom: 6.5%;
+    width: 90%;
+    height: 5%;
+    background-color: rgba(255, 0, 0, 0.09);
+    color: rgb(224, 49, 49);
+    font-size: 2ch;
+    font-weight: bold;
+    letter-spacing: 2px;
+    border-radius: 8px;
+    border: rgba(255, 0, 0, 0) 2px solid;
+    text-align: center;
+    outline: none;
+    transition: 0.2s;
+}
+#leftPanelPanicButton:hover {
+    transition: 0.3s;
+    cursor: pointer;
+    border: rgb(224, 49, 49) 2px solid;
+}
+
+.leftPanelTenCodes {
+    padding: 2% 0;
+    margin-left: 5%;
+    width: 90%;
+    height: 46%;
+    border-radius: 10px;
+    background-color: #18191a;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.leftPanelTenCodesText {
+    color: #ccc;
+    margin: 2% 5%;
+    padding: 2% 0.5% 2% 2%;
+    width: 90%;
+    min-height: 5%;
+    height: auto;
+    border-radius: 5px;
+    font-size: small;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #2F3133;
+}
+
+
+.rightPanel {
+    position: absolute;
+    right: 0;
+    padding: 2.2% 2%;
+    width: 75.75%;
+    height: 93%;
+}
+.rightPanelDashboard {
+    height: 100%;
+    width: 100%;
+}
+.rightPanelDashboardButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-column-gap: 2.5%;
+    grid-row-gap: 20%;
+    outline: none;
+    height: auto;
+    width: 100%;
+}
+.rightPanelDashboardButtonsStatus {
+    outline: none;
+    width: 100%;
+    height: 3vh;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    opacity: 0.5;
+    color: #ccc;
+    box-shadow: #000000 3px 3px 25px;
+    transition: .1s ease-in-out;
+}
+.rightPanelDashboardButtonsStatus:hover, .rightPanelBoloButtons > button:hover, .rightPanelReportsButtons > button:hover {
+    transition: .1s ease-in-out;
+    color: white !important;
+    cursor: pointer;
+    opacity: 0.8 !important;
+}
+
+.rightPanelDashboardDisplays {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-column-gap: 3%;
+    height: 85%;
+    margin-top: 4%;
+}
+.rightPanelDashboardDisplayTitle {
+    margin: 2%;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: #ccc;
+}
+.rightPanelDashboardDisplayItems {
+    position: relative;
+    scrollbar-gutter: stable both-edges;
+    border-radius: 8px;
+    background-color: #242526;
+    overflow-y: scroll;
+}
+.rightPanelDashboard911CallsItem, .rightPanelDashboardActiveUnitsItem {
+    color: #ccc;
+    margin: 2% 1%;
+    padding: 5% 5%;
+    width: 88%;
+    height: auto;
+    border-radius: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #2F3133;
+    position: relative;
+}
+.rightPanelDashboard911CallsItemText, .rightPanelDashboardActiveUnitsItemText {
+    display: inline;
+    font-weight: bolder;
+    margin: 0;
+}
+.rightPanelDashboardActiveUnitsItemTextUnits, .rightPanelDashboardActiveUnitsItemTextCallsign, .rightPanelDashboard911CallsItemTextDescription, .rightPanelDashboard911CallsItemText, .rightPanelDashboard911CallsItemTextLocation, .rightPanelDashboard911CallsItemTextCaller {
+    display: inline;
+    overflow-wrap: break-word;
+}
+.rightPanelDashboard911CallsItemRespond {
+    width: auto;
+    height: 2.4vh;
+    padding: 8px;
+    text-align: center;
+    line-height: 0;
+    font-weight: bolder;
+    color: #ccc;
+    background-color: #2656c9;
+    border-radius: 5px;
+    border: none;
+    transition: .1s ease-in-out;
+}
+.rightPanelDashboard911CallsItemRespond:hover {
+    transition: .1s ease-in-out;
+    cursor: pointer;
+    color: rgb(255, 255, 255);
+    opacity: 0.7;
+}
+.CallTimeAgo911 {
+    margin: 0;
+    position: absolute;
+    right: 6%;
+    font-size: 13px;
+}
+
+.searchBar {
+    outline: none;
+    margin-right: 0.5%;
+    width: 42%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+}
+.plateNumberSearchBar, .weaponNumberSearchBar {
+    outline: none;
+    margin-right: 0.5%;
+    width: 88.5%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+}
+.employeeSearchBar {
+    outline: none;
+    margin-right: 0.5%;
+    width: 81.5%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+}
+
+.searchBarButton {
+    outline: none;
+    cursor: pointer;
+    width: 6.5%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+    transition: .1s ease-in-out;
+}
+.employeeSearchBarButton {
+    display: inline;
+    outline: none;
+    cursor: pointer;
+    width: 6.5%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+    transition: .1s ease-in-out;
+    margin-right: 0.5%;
+}
+.newEmployeeButton {
+    display: inline;
+    outline: none;
+    cursor: pointer;
+    width: 6.5%;
+    height: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+    transition: .1s ease-in-out;
+}
+
+.searchBarButton:hover, .employeeSearchBarButton:hover, .newEmployeeButton:hover {
+    transition: .1s ease-in-out;
+    color: white;
+}
+
+
+.rightPanelNameSearchResponses, .rightPanelPlateSearchResponses, .rightPanelWeaponSearchResponses, .rightPanelBoloResponses, .rightPanelReportsResponses, .rightPanelEmployeeSearchResponses {
+    position: absolute;
+    margin: auto;
+    bottom: 4%;
+    height: 80%;
+    padding: 2%;
+    width: 90.6%;
+    border: none;
+    border-radius: 8px;
+    background-color: #2F3133;
+    overflow-y: scroll;
+}
+.nameSearchResult {
+    padding: 3% 2.5% 1% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.nameSearchEmployeeResult {
+    padding: 3% 2.5% 1% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+
+.nameSearchResultImageContainer {
+    display: inline-block;
+    margin-right: 1%;
+    width: 85px;
+    height: 85px;
+}
+.nameSearchResultImage {
+    background-color: #ccc;
+    width: auto;
+    height: 100%;
+    border-radius: 5px;
+}
+.nameSearchResultInfo {
+    display: inline-block;
+    width: auto;
+    height: 100%;
+    margin-right: 2%;
+}
+.nameSearchResultButtons {
+    float: right;
+    height: 100%;
+}
+.nameSearchResultProperty {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+.nameSearchResultButton {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #2656c9;
+    color: white;
+    height: 3vh;
+    width: 100%;
+    border: none;
+    margin: 5%;
+    border-radius: 5px;
+    transition: .1s ease-in-out;
+}
+.employeeSearchResultButton {
+    height: 2.2vh;
+    margin-top: 1%;
+    margin-bottom: 4%;
+}
+.nameSearchResultButton:hover, .plateSearchResultButton:hover, .weaponSearchResultButton:hover, .searchButtons > button:hover, .form-records-content > button:hover {
+    transition: .1s ease-in-out;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.plateSearchResultButton {
+    width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #2656c9;
+    color: white;
+    height: 3vh;
+    border: none;
+    border-radius: 5px;
+    transition: .1s ease-in-out;
+}
+.plateSearchResult {
+    padding: 1% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    min-height: 13%;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+.plateSearchResultContainer {
+    display: inline-block;
+    height: 100%;
+    width: 85%;
+    margin: 2% 0 0% 0%;
+}
+.plateSearchResultGrid {
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.weaponSearchResultGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+.plateSearchResultProperty {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+.recordsCitizenValue, .weaponSearchResultValue, .nameSearchResultValue, .plateSearchResultValue {
+    margin: 1% 0 10% 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+}
+
+.loader {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    border: 16px solid #3a3b3c;
+    border-radius: 50%;
+    border-top: 16px solid #242526;
+    width: 120px;
+    height: 120px;
+    animation: spin 1s linear infinite;
+}
+  
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.rightPanelLiveChatBox {
+    position: absolute;
+    margin: auto;
+    height: 80%;
+    padding: 2%;
+    width: 90.6%;
+    border: none;
+    border-radius: 8px;
+    background-color: #2F3133;
+    overflow-y: scroll;
+}
+#liveChatForm {
+    position: absolute;
+    margin: auto;
+    bottom: 5%;
+    height: 5%;
+    width: 100%;
+}
+#liveChatTextField {
+    outline: none;
+    margin-right: 0.5%;
+    width: 85.1%;
+    height: 40%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+}
+.liveChatSendButton {
+    outline: none;
+    cursor: pointer;
+    width: 5%;
+    border-radius: 8px;
+    border: none;
+    padding: 1.5% 2%;
+    background-color: #2F3133;
+    color: #ccc;
+    transition: .1s ease-in-out;
+}
+.liveChatMessage {
+    display: grid;
+    grid-template-columns: 10% 1fr;
+    padding: 2% 2.5% 2% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+.liveChatImageContainer {
+    user-select: none;
+    width: 45px;
+    height: 45px;
+}
+.liveChatImage {
+    user-select: none;
+    background-color: #ccc;
+    width: auto;
+    height: 100%;
+    border-radius: 50px;
+}
+.liveChatNameAndMessage {
+    width: 90%;
+    height: 100%;
+}
+.liveChatMessageName {
+    margin: 0 0 1% 0;
+    width: auto;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+    font-weight: bolder;
+}
+.hintCallSignAndDept {
+    display: inline;
+    visibility: hidden;
+    position: relative;
+    top: -15%;
+    width: 20%;
+    height: 3vh;
+    padding: 0.8% 1.2%;
+    font-size: 0.8em;
+    background-color: rgb(58, 58, 58);
+    color: white;
+    border-radius: 10px;
+}
+.liveChatMessageName:hover .hintCallSignAndDept {
+    visibility: visible;
+}
+.liveChatMessageText {
+    margin: 0;
+    width: auto;
+    word-wrap: break-word;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+}
+.liveChatRateLimit {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    color: red;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+
+.weaponSearchResultButton {
+    width: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #2656c9;
+    color: white;
+    height: 3vh;
+    border: none;
+    border-radius: 5px;
+    transition: .1s ease-in-out;
+}
+.weaponSearchResult {
+    padding: 3% 2.5% 1% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+.weaponSearchResultGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+.weaponSearchResultInfo {
+    display: inline-block;
+    width: auto;
+    height: 100%;
+    margin-right: 3%;
+}
+.weaponSearchResultProperty {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+
+
+
+
+.recordsPage {
+    display: none;
+    position: absolute;
+    margin: auto;
+    height: 87.25%;
+    padding: 2%;
+    width: 90.5%;
+    border: none;
+    border-radius: 8px;
+    background-color: #2F3133;
+    overflow-y: scroll;
+}
+.recordsReturn {
+    position: relative;
+    top: 0;
+    left: 0;
+    color: #ccc;
+    transition: color 0.3s;
+}
+.recordsPageTopButton {
+    position: absolute;
+    border: 2px solid gray;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0);
+    color: #ccc;
+    transition: color 0.3s;
+}
+.recordsPageTopButton:hover, .recordsReturn:hover {
+    transition: color 0.1s;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+}
+.recordsCitizenSave {
+    top: 2%;
+    right: 2%;
+}
+.recordsMainCreateButton {
+    top: 2%;
+    right: 18.2%;
+}
+.boloCitizenCreateButton {
+    top: 2%;
+    right: 31.8%;
+}
+.viewWeaponsButton {
+    top: 2%;
+    right: 45.8%;
+}
+.viewVehiclesButton {
+    top: 2%;
+    right: 60.5%;
+}
+.recordsCitizen {
+    white-space: nowrap;
+    width: 100%;
+    height: 35%;
+}
+.recordsCitizenImageContainer {
+    display: inline-block;
+    vertical-align: top;
+    margin: 2.5% 0;
+    height: 80%;
+}
+.recordsCitizenImage {
+    background-color: #ccc;
+    width: auto;
+    height: 100%;
+    border-radius: 5px;
+}
+.recordsCitizenInfo {
+    display: inline-block;
+    vertical-align: top;
+    margin: 2.5% 2%;
+    height: 80%;
+}
+.recordsCitizenProperty {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+.recordsCitizenNotes {
+    display: block;
+    float: right;
+    margin: 2.5% 0;
+    height: 80%;
+    width: 35%;
+    border-radius: 5px;
+    background-color: #242526;
+}
+
+#recordsCitizenNotesText {
+    margin: 0 2.5%;
+    width: 95%;
+    height: 80%;
+    resize: none;
+    outline: none;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: rgba(0, 0, 0, 0);
+    border: none;
+    color: #ccc;
+}
+.recordsInfo {
+    display: inline-block;
+    vertical-align: top;
+    width: 100%;
+    height: 60%;
+}
+
+.recordsLicenses {
+    display: inline-block;
+    vertical-align: top;
+    width: 42.5%;
+    height: 50%;
+    border-radius: 5px;
+    background-color: #242526;
+}
+.recordsLicensesItem {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    padding: 0.1% 1%;
+    margin: 3% 1.5%;
+    width: 95%;
+    border-radius: 5px;
+    background-color: #2a2c2e;
+}
+.recordsLicenseContainer {
+    margin: 4% 0;
+}
+.recordsLicenseBig {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+.recordsLicenseSmall {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+}
+.recordsLicenseSmallDropDown {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+    background-color: #2a2c2e;
+    outline: none;
+    border-radius: 5px;
+}
+
+.recordsPropertiesAddress {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+}
+.recordsProperties {
+    display: block;
+    float: right;
+    width: 55%;
+    height: 50%;
+    border-radius: 5px;
+    background-color: #242526;
+}
+.recordsPropertiesItem {
+    padding: 0.1% 1%;
+    margin: 1.5%;
+    width: 95%;
+    border-radius: 5px;
+    background-color: #2a2c2e;
+}
+
+.recordsMain {
+    margin-top: 2.5%;
+    padding-top: 0.2%;
+    width: 100%;
+    height: 50%;
+    border-radius: 5px;
+    background-color: #242526;
+}
+.recordsMainItem {
+    display: grid;
+    grid-template-columns: 85% 15%;
+    padding: 0.5vh 1%;
+    margin: 1.5%;
+    width: 95%;
+    border-radius: 5px;
+    background-color: #2a2c2e;
+    animation: 0.3s linear;
+}
+
+.recordsMainInfraction {
+    width: 100%;
+}
+.recordsMainInfractionTitle {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #ccc;
+}
+.recordsMainInfractionValue {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ccc;
+}
+.recordsMainType {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: rgb(255, 173, 22);
+}
+
+.recordsLicensesInfo, .recordsPropertiesInfo, .recordsMainInfo {
+    height: 85%;
+    overflow-y: auto;
+}
+.recordsCitizenNotesTitle, .recordsPropertiesTitle, .recordsLicensesTitle {
+    position: relative;
+    top: 0;
+    margin: 1% 0;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+.recordsMainTitle {
+    position: relative;
+    top: 0;
+    margin: 0.5% 0;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    color: rgb(255, 255, 255);
+}
+
+.searchButtons {
+    float: right;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 2.8vh 2.8vh;
+    grid-row-gap: 15%;
+    margin: 0.3% 0% 0% 0%;
+}
+.searchButtons > button {
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    transition: .1s ease-in-out;
+    background-color: #2656c9;
+}
+
+.form-records, .form-bolo, .form-reports {
+    display: none;
+    margin: auto;
+    position: absolute;
+    top: 30vh;
+    left: 40vw;
+    height: 40vh;
+    width: 20vw;
+    color: white;
+    background-color: #2F3133;
+    border: solid #5c5c5c 2px;
+    border-radius: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    outline: none;
+    z-index: 5;
+}
+.form-records-bar > p, .form-bolo-bar > p, .form-reports > p {
+    position: relative;
+    width: 50%;
+    margin: 0;
+}
+.form-records-bar, .form-bolo-bar, .form-reports-bar {
+    position: relative;
+    margin: 3% 0 1% 5%;
+    top: auto;
+    width: 100%;
+    height: 5%;
+    cursor: move;
+}
+.form-records-content {
+    position: relative;
+    margin: 0;
+    bottom: 0;
+    width: 100%;
+    height: 93%;
+    background-color: #18191a;
+}
+.form-records-content > select {
+    position: relative;
+    margin: auto 5%;
+    top: 5%;
+    right: 0;
+    left: 0;
+    width: 90%;
+    max-width: 90%;
+    color: #ccc;
+    background-color: #2a2c2e;
+    outline: none;
+    border-radius: 5px;
+}
+.form-records-description {
+    position: relative;
+    margin: 1% auto auto auto;
+    top: 8%;
+    width: 90%;
+    height: 50%;
+    overflow-y: auto;
+}
+.form-records-description > p {
+    margin: 0;
+    color: #ccc;
+}
+.form-records-info {
+    position: absolute;
+    margin: auto 5%;
+    top: 66%;
+    width: 90%;
+}
+.form-records-content > button {
+    position: absolute;
+    margin: auto 35%;
+    top: 88%;
+    width: 30%;
+    height: 7%;
+    background-color: #2656c9;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: .1s ease-in-out;
+}
+.form-records-close, .form-bolo-close, .form-reports-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #ccc;
+    border: none;
+    text-align: center;
+    height: 9%;
+    width: 50px;
+    background-color: transparent;
+    font-size: 120%;
+    transition: .1s ease-in-out;
+    outline: none;
+}
+.form-records-close:hover, .form-bolo-close:hover, .form-reports-close:hover {
+    transition: .1s ease-in-out;
+    color: white;
+    cursor: pointer;
+    background-color: red;
+    font-size: 140%;
+}
+.form-records-fine-select {
+    color: white;
+    background-color: #18191a;
+    border: none;
+    outline: none;
+}
+.form-records-fine-select option {
+    color: #ccc;
+}
+
+
+
+.rightPanelBoloButtons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    column-gap: 2%;
+
+    margin-top: 0.75%;
+    width: 99.5%;
+    height: 2.7vh;
+    border-radius: 8px;
+}
+.rightPanelReportsButtons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    column-gap: 2%;
+
+    margin-top: 0.75%;
+    width: 99.5%;
+    height: 2.7vh;
+    border-radius: 8px;
+}
+.rightPanelBoloButtons > button, .rightPanelReportsButtons > button {
+    outline: none;
+    height: 100%;
+    border-radius: 5px;
+    border: none;
+    background-color: #2656c9;
+    color: #ccc;
+    box-shadow: #000000 3px 3px 25px;
+    transition: .1s ease-in-out;
+}
+.rightPanelBoloButtons > button:active, .rightPanelReportsButtons > button:active {
+    opacity: 1;
+}
+
+.boloBox {
+    display: grid;
+    grid-template-columns: 12% 16% 13% 45% 13%;
+
+    padding: 2.5% 2.5% 1.5% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+.reportBox {
+    display: grid;
+    grid-template-columns: 38% 48% 13%;
+
+    padding: 2.5% 2.5% 1.5% 2.5%;
+    width: 95%;
+    margin: 1.5% 0;
+    height: auto;
+    background-color: #242526;
+    border-radius: 8px;
+}
+
+.form-bolo-content, .form-reports-content {
+    position: relative;
+    margin: 0 5%;
+    top: 7.6%;
+    width: 90%;
+    height: 75%;
+}
+.form-bolo-content > div {
+    display: grid;
+    height: 90%;
+    grid-template-rows: repeat(4, 7.2%) 1fr;
+    grid-row-gap: 4%;
+}
+.form-bolo-content > div > input, .form-bolo-content > div > select, .form-reports-content > input {
+    color: #ccc;
+    background-color: #2a2c2e;
+    outline: none;
+    border-radius: 5px;
+    border: solid #757575 0.5px;
+}
+.form-reports-content > input {
+    width: 98.25%;
+    margin-bottom: 3%;
+}
+.form-bolo-content > div > select:required:invalid, .form-records-content > select:required:invalid {
+    color: #757575;
+}
+.form-bolo-content > div > select > option, .form-records-content > select > option {
+    color: #ccc;
+}
+.form-bolo-content > div > textarea, .form-reports-content > textarea {
+    width: 98.2%;
+    color: #ccc;
+    background-color: #2a2c2e;
+
+    border-radius: 5px;
+    border: solid #757575 0.5px;
+    font-family: Arial, Helvetica, sans-serif;
+
+    resize: none;
+    outline: none;
+}
+#form-bolo-create, #form-reports-create {
+    top: 86%;
+}
+
+.confirm-screen {
+    display: none;
+    position: absolute;
+    margin: auto;
+    inset: 0;
+    height: 25vh;
+    width: 30vw;
+    background-color: #18191a;
+    border: solid #5c5c5c 2px;
+    border-radius: 10px;
+    animation-name: fadeIn;
+    animation-duration: 0.25s;
+}
+.confirm-screen.hidden {
+    animation-name: fadeOut;
+}
+.confirm-screen > p {
+    position: relative;
+    margin: auto;
+    top: 20%;
+    left: 0;
+    right: 0;
+    color: white;
+    text-align: center;
+    font-size: 1.5rem;
+    font-family: Arial, Helvetica, sans-serif;
+    user-select: none;
+}
+.confirm-screen > div {
+    position: relative;
+    margin: auto;
+    top: 40%;
+    left: 0;
+    right: 0;
+    height: 12%;
+    width: 40%;
+}
+.confirm-screen > div > button {
+    border-radius: 5px;
+    border: none;
+    height: 100%;
+    width: 48%;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.confirm-screen > div > button:hover {
+    transition: 0.2s;
+    opacity: 0.8;
+}
+.confirm-screen > div > button:nth-child(1) {
+    background-color: #2656c9;
+}
+.confirm-screen > div > button:nth-child(2) {
+    background-color: rgb(241, 44, 44);
+}

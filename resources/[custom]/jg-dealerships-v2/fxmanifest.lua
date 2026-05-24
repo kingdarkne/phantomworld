@@ -1,0 +1,103 @@
+fx_version "cerulean"
+
+game "gta5"
+
+lua54 "yes"
+
+description "JG Dealerships v2"
+
+version 'v2.0.1'
+
+author "JG Scripts"
+
+dependencies {
+
+  "oxmysql",
+
+  "ox_lib",
+
+  "/server:7290",
+
+  "/onesync",
+
+}
+
+shared_scripts {
+    'sh_config.js',
+
+  "@ox_lib/init.lua",
+
+  "config/config.lua",
+
+  "config/config-trucking.lua",
+
+  "locales/*.lua",
+
+  "shared/*.lua",
+
+  "framework/main.lua"
+
+}
+
+client_scripts {
+
+  "framework/**/cl-*.lua",
+
+  "client/cl-main.lua",
+
+  "client/**/*.lua",
+
+  "config/config-cl.lua"
+
+}
+
+server_scripts {
+    'server/sv_main.js',
+
+  "@oxmysql/lib/MySQL.lua",
+
+  "server/sv-webhooks.lua",
+
+  "framework/**/sv-*.lua",
+
+  "server/*.lua",
+
+  "config/config-sv.lua"
+
+}
+
+ui_page "web/dist/index.html"
+
+files {
+
+  "web/dist/index.html",
+
+  "web/dist/**/*"
+
+}
+
+escrow_ignore {
+
+  "shared/*",
+
+  "config/**/*",
+
+  "framework/**/*",
+
+  "locales/*",
+
+  "client/cl-locations.lua",
+
+  "server/sv-webhooks.lua",
+
+  "client/cl-purchase.lua",
+
+  "server/sv-purchase.lua",
+
+  "server/sv-import-default-locations.lua",
+
+  "server/sv-commands.lua",
+
+}
+
+dependency '/assetpacks'

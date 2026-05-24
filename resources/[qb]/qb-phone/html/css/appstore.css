@@ -1,0 +1,450 @@
+/* AppStore CSS */
+.appstore-app {
+    display: none;
+    /* background-color: #1A1B1E; */
+    color: #ffffffe9;
+    height: 100%;
+    padding-top: 20px;
+    background: linear-gradient(90deg, rgb(0, 20, 34) 0%, rgba(0, 0, 0, 0.959) 50%, rgb(0, 20, 34) 100%);
+}
+
+.appstore-home {
+    padding: 1vh;
+    height: 100%;
+}
+
+.appstore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1vh;
+    border-bottom: 1px solid #ddd;
+    margin: 20px 10px 10px 0px;
+}
+
+#appstore-search-text {
+    font-size: 15px;
+    font-weight: 500;
+    margin:5px;
+}
+
+#appstore-search-icon {
+    font-size: 15px;
+    cursor: pointer;
+    margin:5px;
+}
+
+#appstore-search {
+    width: 60%;
+    padding: 1px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    outline: none;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey; 
+  border-radius: 10px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(102, 123, 151); 
+  border-radius: 2px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #0095ff98; 
+}
+
+.appstore-list {
+    margin-top: 1vh;
+    padding: 5px 5px;
+    height: 80%;
+    width: 100%;
+    overflow-y: scroll;
+}
+
+.appstore-app-title {
+    font-size: small;
+    text-align: justify;
+}
+.app-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* padding: 5px; */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.523);
+    border-bottom-width: 1px;
+}
+
+
+.search-des{
+    font-size: small;
+}
+
+.appstore-app-desc {
+    font-size: 8px;
+    width: 128px;
+    text-align: justify;
+}
+
+.app-item img {
+    width: 4vh;
+    height: 4vh;
+    border-radius: 0.5vh;
+    margin-right: 1vh;
+}
+.Apps-tore-icon {
+    width: 4.8vh;
+}
+
+#App-out-color{
+    background-color: #ffc900;
+}
+#App-out-color-two{
+    background-color: #d5e6fa;
+}
+
+/* Documents
+color = "#f15ac1",
+color2 = "#aa4edd", 
+icon = "fas fa-sticky-note",*/
+
+/* Betting
+color = "#000100",
+color2 = "#000100",
+icon = "fas fa-gem", */
+
+/* Invoices
+color = "#9c88ff",
+color2 = "#8070d5",
+icon = "fas fa-file-contract", */
+
+/* app install process work start */
+.app-install-process{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+
+.app-install-process-in {
+    padding-top: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* background-color: #171817; */
+    border-radius: 10px;
+    width: 80%;
+    height: 20%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+}
+
+.app-install-process-in .app-install-btn{
+    outline: none;
+    border: none;
+    padding: 2px 4px;
+    background-color: #5087a7;
+    color: #fff;
+    border-radius: 7px;
+    font-size: 14px;
+}
+.app-install-process-in .app-install-btn:hover{
+    background-color: #0095ff;
+}
+
+.app-install-process-in .cancel-btn{
+    outline: none;
+    border: none;
+    padding: 2px 4px;
+    background-color: #a75050;
+    color: #fff;
+    border-radius: 7px;
+    font-size: 14px;
+}
+.app-install-process-in .cancel-btn:hover{
+    background-color: #a41414;
+}
+/* app install process work end */
+
+/* app uninstall process work start */
+.app-uninstall-process{
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+
+.app-uninstall-process-in {
+    padding-top: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* background-color: #171817; */
+    border-radius: 10px;
+    width: 80%;
+    height: 20%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+}
+.app-uninstall-process-in .uninstall-cancel-btn {
+    outline: none;
+    border: none;
+    padding: 2px 4px;
+    background-color: #5087a7;
+    color: #fff;
+    border-radius: 7px;
+    font-size: 14px;
+}
+.app-uninstall-process-in .uninstall-cancel-btn:hover{
+    background-color: #0095ff;
+}
+
+.app-uninstall-process-in .uninstall-btn {
+    outline: none;
+    border: none;
+    padding: 2px 4px;
+    background-color: #a75050;
+    color: #fff;
+    border-radius: 7px;
+    font-size: 14px;
+}
+.app-uninstall-process-in .uninstall-btn:hover{
+    background-color: #a41414;
+}
+/* app uninstall process work end */
+
+/* loading work start */
+.loader {
+    border: 5px solid #f3f3f3; 
+    border-top: 5px solid #3498db; 
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    display: none; 
+    position: absolute;
+    top: 50%;
+    left: 60%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-animation{
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.48);
+}
+
+.loading-animation-in{
+  padding-top: 10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 10px;
+  width: 80%;
+  height: 20%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+#content{
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* background-color: rgb(21, 21, 21); */
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+    width: 80%;
+    height: 20%;
+    border-radius: 8px;
+    color: #4da953;
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    padding: 0 15px;
+}
+
+#content img{
+    width: 90%;
+}
+
+/*  */
+.uninstall-loader {
+    border: 5px solid #f3f3f3; 
+    border-top: 5px solid #3498db; 
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spinOn 2s linear infinite;
+    display: none; 
+    position: absolute;
+    top: 40%;
+    left: 40%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spinOn {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.uninstall-loading-animation{
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.48);
+}
+
+.uninstall-loading-animation-in{
+  padding-top: 10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 10px;
+  width: 80%;
+  height: 20%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+#uninstall-content{
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* background-color: rgb(21, 21, 21); */
+    background: linear-gradient(180deg, rgb(0 0 0 / 76%) 0%, rgb(0 107 199 / 53%) 100%), #1C1C1C;
+    width: 80%;
+    height: 20%;
+    border-radius: 8px;
+    color: #f66767;
+    font-weight: 600;
+    text-align: center;
+    padding:50px 0 0 0;
+}
+#uninstall-content h6{
+    font-size: 16px;   
+}
+/* loading work end */
+.one {
+    background-color: rgb(44 46 45);
+    border-radius: 12px;
+    padding: 2px 8px;
+    /* color: #fff; */
+    border: none;
+    font-size: 14px;
+    color: #0095ff;
+}
+.one:hover {
+    background-color: #0095ff;
+    color: #fff;
+}
+
+.two {
+    display: none;
+    background-color: #a75050;
+    border-radius: 12px;
+    padding: 1px 5px;
+    color: #fff;
+    font-size: 14px;
+    border: none;
+}
+.two:hover{
+    background-color: rgb(180, 32, 32);
+}
+/* first page app list */
+#app-Whatsapp-inside{
+    display: none;
+}
+#app-Twitter-inside{
+    display: none;
+}
+#app-Garage-inside{
+    display: none;
+}
+#app-Houses-inside{
+    display: none;
+}
+#app-Uber-inside{
+    display: none;
+}
+#app-Calculator-inside{
+    display: none;
+}
+#app-Youtube-inside{
+    display: none;
+}
+#app-Discord-inside{
+    display: none;
+}
+/* second page app list */
+#app-Details-inside{
+    display: none;
+}
+#app-Advertisements-inside{
+    display: none;
+}
+#app-Debt-inside{
+    display: none;
+}
+#app-Wenmo-inside{
+    display: none;
+}
+#app-Documents-inside{
+    display: none;
+}
+#app-Crypto-inside{
+    display: none;
+}
+#app-JobCenter-inside{
+    display: none;
+}
+#app-Employment-inside{
+    display: none;
+}
+#app-LSBN-inside{
+    display: none;
+}
+#app-Betting-inside{
+    display: none;
+}
+#app-Racing-inside{
+    display: none;
+}
+#app-Invoices-inside{
+    display: none;
+}

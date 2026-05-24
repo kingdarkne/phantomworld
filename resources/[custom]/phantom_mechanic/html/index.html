@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Mechanic Tablet</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="tablet" class="tablet-container hidden">
+        <div class="tablet-frame">
+            <!-- Header -->
+            <div class="tablet-header">
+                <div class="header-left">
+                    <div class="logo">🔧</div>
+                    <h1>Phantom Mechanic</h1>
+                </div>
+                <div class="header-right">
+                    <div class="time" id="clock">12:00</div>
+                    <button class="close-btn" id="closeBtn">✕</button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="tablet-nav">
+                <button class="nav-btn active" data-tab="pending">
+                    <span class="nav-icon">📋</span>
+                    <span>Pending Orders</span>
+                    <span class="badge" id="pendingCount">0</span>
+                </button>
+                <button class="nav-btn" data-tab="active">
+                    <span class="nav-icon">🔧</span>
+                    <span>My Jobs</span>
+                </button>
+                <button class="nav-btn" data-tab="completed">
+                    <span class="nav-icon">✅</span>
+                    <span>Completed</span>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="tablet-content">
+                <!-- Pending Orders Tab -->
+                <div class="tab-content active" id="pendingTab">
+                    <div class="section-header">
+                        <h2>Pending Custom Orders</h2>
+                        <button class="refresh-btn" id="refreshBtn">🔄 Refresh</button>
+                    </div>
+                    <div class="orders-list" id="pendingOrdersList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>No pending orders</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Jobs Tab -->
+                <div class="tab-content" id="activeTab">
+                    <div class="section-header">
+                        <h2>My Active Jobs</h2>
+                    </div>
+                    <div class="orders-list" id="activeOrdersList">
+                        <div class="empty-state">
+                            <div class="empty-icon">🔧</div>
+                            <p>No active jobs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Tab -->
+                <div class="tab-content" id="completedTab">
+                    <div class="section-header">
+                        <h2>Completed Orders</h2>
+                    </div>
+                    <div class="orders-list" id="completedOrdersList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <p>No completed orders yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal hidden" id="orderModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Order Details</h3>
+                <button class="modal-close">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Dynamic buttons -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

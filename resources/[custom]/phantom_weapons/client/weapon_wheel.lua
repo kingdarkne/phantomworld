@@ -1,0 +1,2 @@
+-- Weapon wheel specific logic (core in main.lua)
+-- Placeholder for extended weapon wheel features

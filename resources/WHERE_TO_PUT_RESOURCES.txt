@@ -1,0 +1,57 @@
+================================================================================
+  WHY THE MAP HAS "LESS" AND WHERE TO PUT RESOURCES SO THE SERVER RUNS THEM
+================================================================================
+
+HOW FIVEM FINDS RESOURCES
+-------------------------
+- The server only starts resources that have their own folder with fxmanifest.lua.
+- When you "ensure [standalone]", FiveM starts resources under [standalone] (not
+  the old nested [New] path — see below).
+- When you "ensure [scripts]", FiveM starts every resource inside [scripts].
+  If [scripts] is EMPTY (no subfolders with fxmanifest.lua), nothing starts.
+
+CURRENT STRUCTURE (what actually runs)
+--------------------------------------
+- [standalone]  = loadingscreen, jim-recycle, ps-housing, dr-trade, etc.
+                  -> ensure [standalone] runs these.
+- [qb]          = qb-core, qb-inventory, qb-cityhall, etc. -> ensure [qb] runs them.
+- [New]         = TOP-LEVEL folder `resources/[New]/` (Dracula scripts: dr-admin, ox_doorlock,
+                  qb-ambulancejob, etc.). -> `ensure [New]` in server.cfg starts all of them.
+- [qbx]         = extra Qbox scripts under `resources/[qbx]/`. server.cfg uses explicit `ensure qbx_*` lines
+                  (same as `ensure [qbx]` but reliable on Docker/Nodecraft if bracket folders mis-sync).
+- [scripts]     = EMPTY (no subfolders with fxmanifest) -> ensure [scripts] starts nothing.
+- [heists]      = EMPTY -> ensure [heists] starts nothing.
+- [jobs]        = EMPTY -> ensure [jobs] starts nothing.
+- [multiplayer] = EMPTY -> ensure [multiplayer] starts nothing.
+- [Newmaps]     = EMPTY -> ensure [Newmaps] starts nothing.
+
+TO GET MORE THINGS ON THE MAP / RUNNING
+---------------------------------------
+1. Put each new script/job/heist in its OWN subfolder with a fxmanifest.lua:
+   
+   resources/[scripts]/my-new-job/
+       fxmanifest.lua
+       client.lua
+       ...
+   
+   Then "ensure [scripts]" will start my-new-job.
+
+2. Same for heists and jobs:
+   
+   resources/[heists]/my-heist/
+       fxmanifest.lua
+       ...
+   
+   resources/[jobs]/my-job/
+       fxmanifest.lua
+       ...
+
+3. OR put new resources inside [standalone] (e.g. [standalone]/my-script/) and
+   they will start automatically when you ensure [standalone].
+
+SUMMARY
+-------
+- Files are not "in the wrong place" for [standalone] and [qb] – those run.
+- [scripts], [heists], [jobs] are empty, so the server runs nothing from them.
+- To run more: add resource folders (each with fxmanifest.lua) inside
+  [scripts], [heists], or [jobs], or put them under [standalone].
