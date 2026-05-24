@@ -2,24 +2,35 @@
 # FiveM server — do NOT commit runtime / secrets / huge assets
 # =========================
 
+# FiveM runtime (large binaries — download FXServer separately on each machine)
+/alpine/
+/citizen/
+/FXServer.exe
+/run.cmd
+/components/
+
 # Runtime cache (often 10–20+ GB)
 cache/
 tmp/
+/crashes/
+logs/
 
 # txAdmin local data
 txData/
+/txData/default/data/
+/txData/default/logs/
 
 # Local embedded DB (RocksDB)
 db/
 
 # Logs
 *.log
-logs/
 
 # OS / editor
 .DS_Store
 Thumbs.db
 desktop.ini
+Desktop.ini
 .vscode/
 .idea/
 
@@ -34,8 +45,10 @@ mysql.cfg
 secrets.cfg
 .env
 .env.*
+*.pem
+*.key
+server.cfg.local
 
-# =========================
 # Accidental Linux crash dumps (NOT game scripts)
 resources/core
 resources/y_burgershot-main/core
@@ -56,9 +69,6 @@ resources/AzuraPlatV2-Branded/
 resources/FiveM Vehicle Pack/
 resources/cars2/
 resources/Audio_Pack/
-
-# FXServer runtime (re-download on host)
-alpine/
 
 # Local shell history
 .replxx_history
