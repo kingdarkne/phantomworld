@@ -70,8 +70,8 @@ jobs:
             --exclude='resources/[[]vehicles[]]/'
             --exclude='resources/[[]clothing[]]/'
             --exclude='resources/[[]Graphics[]]/'
-            --exclude='resources/AzuraPlatV2-Branded/'
-            --exclude='resources/FiveM Vehicle Pack/'
+            --exclude=resources/AzuraPlatV2-Branded/
+            --exclude=resources/FiveM*Vehicle*Pack/
             --exclude=resources/cars2
             --exclude=resources/Audio_Pack
             --exclude=.replxx_history
