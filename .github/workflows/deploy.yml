@@ -23,8 +23,9 @@ jobs:
       - name: Prepare deploy bundle
         run: |
           set -euo pipefail
-          mkdir -p deploy_bundle
-          rsync -av --exclude-from=.deploy-exclude ./ deploy_bundle/
+          BUNDLE_DIR="$(mktemp -d)"
+          echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+          rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
 
       - name: Sync to server via SFTP
         env:
@@ -36,10 +37,12 @@ jobs:
         timeout-minutes: 120
         run: |
           set -euo pipefail
+          trap 'rm -rf "${BUNDLE_DIR:-}" "${BATCH:-}"' EXIT
 
           : "${SFTP_HOST:?SFTP_HOST secret is required}"
           : "${SFTP_USER:?SFTP_USER secret is required}"
           : "${SFTP_PASSWORD:?SFTP_PASSWORD secret is required}"
+          : "${BUNDLE_DIR:?BUNDLE_DIR is required}"
 
           PORT="${SFTP_PORT:-2022}"
           REMOTE_PATH="${SFTP_PATH:-/home/container}"
@@ -50,10 +53,10 @@ jobs:
 
           BATCH="$(mktemp)"
           {
-            echo "lcd deploy_bundle"
+            printf 'lcd "%s"\n' "$BUNDLE_DIR"
             echo "cd ${REMOTE_PATH}"
             (
-              cd deploy_bundle
+              cd "$BUNDLE_DIR"
               shopt -s nullglob
               for item in *; do
                 if [ -d "$item" ]; then
@@ -69,5 +72,4 @@ jobs:
           sshpass -e sftp -oBatchMode=no -oStrictHostKeyChecking=no \
             -P "$PORT" -b "$BATCH" "${SFTP_USER}@${SFTP_HOST}"
 
-          rm -f "$BATCH"
           echo "SFTP upload complete"
