@@ -12,7 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -26,9 +26,6 @@ jobs:
           mkdir -p deploy_bundle
           rsync -av --exclude-from=.deploy-exclude ./ deploy_bundle/
 
-      - name: Install SFTP tools
-        run: sudo apt-get update && sudo apt-get install -y lftp sshpass
-
       - name: Sync to server via SFTP
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
@@ -36,7 +33,7 @@ jobs:
           SFTP_USER: ${{ secrets.SFTP_USER }}
           SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
           SFTP_PATH: ${{ secrets.SFTP_PATH }}
-        timeout-minutes: 55
+        timeout-minutes: 120
         run: |
           set -euo pipefail
 
@@ -48,16 +45,29 @@ jobs:
           REMOTE_PATH="${SFTP_PATH:-/home/container}"
           REMOTE_PATH="${REMOTE_PATH%/}"
 
-          export SSHPASS="$SFTP_PASSWORD"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
 
-          lftp -c "
-          set cmd:fail-exit yes;
-          set net:timeout 30;
-          set net:max-retries 2;
-          set net:reconnect-interval-base 5;
-          set sftp:connect-program 'sshpass -e ssh -a -x -o BatchMode=no -o StrictHostKeyChecking=no -p ${PORT}';
-          open -u ${SFTP_USER} sftp://${SFTP_HOST};
-          ls ${REMOTE_PATH};
-          mirror -R --verbose --parallel=4 deploy_bundle/ ${REMOTE_PATH}/;
-          bye
-          "
+          BATCH="$(mktemp)"
+          {
+            echo "lcd deploy_bundle"
+            echo "cd ${REMOTE_PATH}"
+            (
+              cd deploy_bundle
+              shopt -s nullglob
+              for item in *; do
+                if [ -d "$item" ]; then
+                  printf 'put -r "%s"\n' "$item"
+                else
+                  printf 'put "%s"\n' "$item"
+                fi
+              done
+            )
+          } > "$BATCH"
+
+          export SSHPASS="$SFTP_PASSWORD"
+          sshpass -e sftp -oBatchMode=no -oStrictHostKeyChecking=no \
+            -P "$PORT" -b "$BATCH" "${SFTP_USER}@${SFTP_HOST}"
+
+          rm -f "$BATCH"
+          echo "SFTP upload complete"

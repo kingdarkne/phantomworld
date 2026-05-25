@@ -77,7 +77,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
 2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
-3. **SFTP upload** — syncs `deploy_bundle/` to `SFTP_PATH` with `lftp` over SFTP (password via `sshpass`, no SSH shell required). Job timeout is 60 minutes; connect timeout is 30 seconds per transfer attempt.
+3. **SFTP upload** — syncs `deploy_bundle/` to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. No SSH shell required. Job timeout is 120 minutes.
 
 ---
 
@@ -97,8 +97,8 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Symptom | Fix |
 |---------|-----|
 | Connection timed out | Check `SFTP_HOST`, `SFTP_PORT` (try `2022` for Gravelhost), firewall |
-| Authentication failed / Permission denied / `GetPass() failed -- assume anonymous login` | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Password is passed via the `SSHPASS` env var to `sshpass` (not embedded in URLs or shell args), so special characters are supported |
-| `protocol: invalid parameter - you provided "sftp"` | Old workflow used FTP-Deploy-Action which only supports FTP/FTPS — current workflow uses `lftp` for true SFTP |
+| Authentication failed / Permission denied / `GetPass() failed -- assume anonymous login` | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Password is passed only via the `SSHPASS` env var to `sshpass` (never inline in scripts or URLs), so special characters are supported |
+| `protocol: invalid parameter - you provided "sftp"` | Old workflow used FTP-Deploy-Action which only supports FTP/FTPS — current workflow uses OpenSSH `sftp` for true SFTP |
 | Files not updating | Confirm workflow succeeded; check `SFTP_PATH` points at server root |
 | `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
