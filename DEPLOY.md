@@ -77,7 +77,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
 2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
-3. **SFTP upload** — syncs filtered files to `SFTP_PATH` with `lftp mirror -R` over SFTP (password via `sshpass` + `SSHPASS` env var; no SSH shell required).
+3. **SFTP upload** — syncs filtered files to `SFTP_PATH` with [SamKirkland/FTP-Deploy-Action](https://github.com/SamKirkland/FTP-Deploy-Action) over SFTP (`protocol: sftp`, password from `SFTP_PASSWORD` secret; no SSH shell required). Job timeout is 20 minutes; SFTP connect timeout is 2 minutes.
 
 ---
 
@@ -97,7 +97,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Symptom | Fix |
 |---------|-----|
 | Connection timed out | Check `SFTP_HOST`, `SFTP_PORT` (try `2022` for Gravelhost), firewall |
-| Authentication failed / Permission denied | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Passwords with `@` or `$` must be stored exactly in GitHub Secrets — the workflow passes them via `SSHPASS`, not unquoted shell args |
+| Authentication failed / Permission denied / `GetPass() failed -- assume anonymous login` | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Passwords with `@`, `$`, or other special characters must be stored exactly in GitHub Secrets — the workflow passes them directly to the SFTP action, not via shell args |
 | Files not updating | Confirm workflow succeeded; check `SFTP_PATH` points at server root |
 | `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
