@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
       - name: Sync to server via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
