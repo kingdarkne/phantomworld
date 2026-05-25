@@ -67,7 +67,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 |--------|----------|---------|-------|
 | `SFTP_HOST` | Yes | `135.148.136.32` | From panel SFTP details |
 | `SFTP_USER` | Yes | `container.abc123` | SFTP username |
-| `SFTP_PASSWORD` | Yes | *(panel password)* | Full password; special characters are fine |
+| `SFTP_PASSWORD` | Yes | *(panel password)* | Paste the **full** panel password exactly; `@`, `.`, and other special characters are supported |
 | `SFTP_PATH` | No | `/home/container` | Remote server root; defaults to `/home/container` if unset |
 | `SFTP_PORT` | No | `2022` | Defaults to `22` if unset; Gravelhost often uses `2022` |
 
@@ -77,7 +77,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
 2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
-3. **SFTP upload** — syncs filtered files to `SFTP_PATH` using [wlixcc/SFTP-Deploy-Action](https://github.com/wlixcc/SFTP-Deploy-Action) with `sftp_only: true` (no SSH shell required).
+3. **SFTP upload** — syncs filtered files to `SFTP_PATH` with `lftp mirror -R` over SFTP (password via `sshpass` + `SSHPASS` env var; no SSH shell required).
 
 ---
 
@@ -97,7 +97,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Symptom | Fix |
 |---------|-----|
 | Connection timed out | Check `SFTP_HOST`, `SFTP_PORT` (try `2022` for Gravelhost), firewall |
-| Authentication failed | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel; reset password if needed |
+| Authentication failed / Permission denied | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Passwords with `@` or `$` must be stored exactly in GitHub Secrets — the workflow passes them via `SSHPASS`, not unquoted shell args |
 | Files not updating | Confirm workflow succeeded; check `SFTP_PATH` points at server root |
 | `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |

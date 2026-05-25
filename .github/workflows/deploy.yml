@@ -24,15 +24,22 @@ jobs:
           mkdir -p deploy_bundle
           rsync -av --exclude-from=.deploy-exclude ./ deploy_bundle/
 
+      - name: Install lftp and sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp sshpass
+
       - name: Sync to server via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.5
-        with:
-          username: ${{ secrets.SFTP_USER }}
-          server: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT || '22' }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          ssh_private_key: ''
-          local_path: './deploy_bundle/'
-          remote_path: ${{ secrets.SFTP_PATH || '/home/container' }}
-          sftp_only: true
-          sftpArgs: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no'
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT || '22' }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PATH: ${{ secrets.SFTP_PATH || '/home/container' }}
+          # sshpass reads password from SSHPASS; avoids shell word-splitting on @, $, etc.
+          SSHPASS: ${{ secrets.SFTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          lftp -e "
+            set sftp:connect-program \"sshpass -e ssh -a -x -o StrictHostKeyChecking=no -o ConnectTimeout=30\";
+            open sftp://${SFTP_USER}@${SFTP_HOST}:${SFTP_PORT};
+            mirror -R --verbose --parallel=4 deploy_bundle/ ${SFTP_PATH}/;
+            quit
+          "
