@@ -1,119 +1,94 @@
-# Automatic deploy: GitHub → FiveM host
+# Automatic deploy: GitHub → FiveM host (SFTP)
 
-Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which SSHes into your game host and runs `git fetch` + `git reset --hard origin/main` in `DEPLOY_PATH`.
+Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which uploads tracked repo files to your game host over **SFTP** (password auth). Gravelhost and similar Pterodactyl panels often provide SFTP only — no SSH shell — so this workflow syncs files directly instead of running `git pull` on the server.
 
-**What syncs:** configs, Lua/JS resources, and other tracked files in git.  
-**What does not sync:** large assets excluded in [`.gitignore`](.gitignore) (vehicles, clothing, maps, etc.) — upload those once via SFTP/FTP and keep them on the host.
+**What syncs:** configs, Lua/JS resources, and other files tracked in git (same as a fresh checkout of `main`).
 
----
+**What does not sync:** items listed in [`.gitignore`](.gitignore) — runtime cache, secrets, large asset packs (vehicles, clothing, maps, etc.). Upload those once via SFTP and keep them on the host; the workflow will not delete them.
 
-## 1. Generate a deploy SSH key (on your PC)
-
-Use a dedicated key — not your personal GitHub key.
-
-```bash
-ssh-keygen -t ed25519 -C "github-deploy-phantomworld" -f ~/.ssh/phantomworld_deploy -N ""
-```
-
-You will use:
-
-- **Private key** (`~/.ssh/phantomworld_deploy`) → GitHub secret `DEPLOY_SSH_KEY`
-- **Public key** (`~/.ssh/phantomworld_deploy.pub`) → host `authorized_keys`
+**Restart:** the workflow does not restart FXServer. After deploy, restart from the Gravelhost panel or txAdmin when needed.
 
 ---
 
-## 2. Add the public key on the host
+## 1. SFTP credentials (Gravelhost panel)
 
-SSH into the VPS (Gravelhost / txAdmin panel terminal, or your own client):
+1. Log in to the [Gravelhost](https://gravelhost.com) game panel.
+2. Open your **FiveM / txAdmin** server.
+3. Go to **Settings → SFTP Details** (or **File Manager → SFTP**).
+4. Note:
+   - **Host** (server IP or SFTP hostname)
+   - **Port** (often `2022` on Gravelhost; default SSH is `22`)
+   - **Username** (usually something like `container.xxxxx`)
+   - **Password** (panel-generated; reset there if lost)
+   - **Remote path** — server root is typically `/home/container`
 
-```bash
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-echo "PASTE_PUBLIC_KEY_ONE_LINE" >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-```
-
-Replace `PASTE_PUBLIC_KEY_ONE_LINE` with the contents of `phantomworld_deploy.pub`.
-
-Test from your PC:
-
-```bash
-ssh -i ~/.ssh/phantomworld_deploy DEPLOY_USER@135.148.136.32
-```
+Test with FileZilla, WinSCP, or Cyberduck: protocol **SFTP**, same host/port/user/password.
 
 ---
 
-## 3. One-time setup on the host
+## 2. One-time manual setup on the host (via SFTP)
 
-Find your server root. Common paths:
+Connect with your SFTP client and upload files the workflow will **never** push from git:
 
-| Host type | Typical path |
-|-----------|--------------|
-| Pterodactyl / Gravelhost | `/home/container` |
-| Bare VPS / txAdmin | `/opt/fivem` or `/home/fivem/server` |
+### Secrets (required once)
 
-**Clone the repo** into that path (adjust `DEPLOY_PATH`):
+Copy the example templates from the repo, edit with real values, upload to the server root:
 
-```bash
-cd /home/container   # or your actual path
-git clone https://github.com/kingdarkne/phantomworld.git .
-# If the folder already has files, clone to a temp dir and merge, or init:
-# git init && git remote add origin https://github.com/kingdarkne/phantomworld.git && git fetch && git checkout -t origin/main
-```
+| Local (from repo) | Upload to server as | Contents |
+|-------------------|---------------------|----------|
+| `mysql.cfg.example` | `mysql.cfg` | Database credentials |
+| `secrets.cfg.example` | `secrets.cfg` | `sv_licenseKey` and other server secrets |
 
-**Private repo:** the host must be able to `git fetch`. Either:
+**Never commit** `mysql.cfg` or `secrets.cfg` to GitHub.
 
-- Add a [read-only deploy key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys) on GitHub and put the private key on the host, or  
-- Use HTTPS with a fine-scoped PAT:  
-  `git remote set-url origin https://<TOKEN>@github.com/kingdarkne/phantomworld.git`
+### Large asset folders (manual once)
 
-**Restore secrets (never in git):**
+Re-upload via SFTP after first clone — see [`.gitignore`](.gitignore). Examples:
 
-```bash
-cp mysql.cfg.example mysql.cfg      # edit with real DB credentials
-cp secrets.cfg.example secrets.cfg  # edit with sv_licenseKey
-```
+- `resources/[vehicles]/`
+- `resources/[clothing]/`
+- `resources/[defaultmaps]/`
+- `resources/[Graphics]/`
+- Other paths excluded in `.gitignore`
 
-**Re-add excluded asset folders** (vehicles, clothing, `[defaultmaps]`, etc.) via SFTP — same as manual upload. See [`.gitignore`](.gitignore).
+The deploy workflow **overwrites matching paths** but does **not** delete extra files on the server, so manually uploaded assets stay in place.
 
-Start the server once manually to confirm everything works before enabling auto-deploy.
+Start the server once from the panel to confirm everything works before relying on auto-deploy.
 
 ---
 
-## 4. GitHub repository secrets
+## 3. GitHub repository secrets
 
 In GitHub: **Settings → Secrets and variables → Actions → New repository secret**
 
-| Secret | Required | Example |
-|--------|----------|---------|
-| `DEPLOY_HOST` | Yes | `135.148.136.32` |
-| `DEPLOY_USER` | Yes | `container` or `root` (from your host panel) |
-| `DEPLOY_SSH_KEY` | Yes | Full private key file contents (including `-----BEGIN...` / `-----END...` lines) |
-| `DEPLOY_PATH` | Yes | `/home/container` or `/opt/fivem` |
-| `DEPLOY_RESTART_CMD` | No | Shell command run after sync (host-specific) |
+Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`, `DEPLOY_RESTART_CMD`.
 
-### Optional restart command
+| Secret | Required | Example | Notes |
+|--------|----------|---------|-------|
+| `SFTP_HOST` | Yes | `135.148.136.32` | From panel SFTP details |
+| `SFTP_USER` | Yes | `container.abc123` | SFTP username |
+| `SFTP_PASSWORD` | Yes | *(panel password)* | Full password; special characters are fine |
+| `SFTP_PATH` | No | `/home/container` | Remote server root; defaults to `/home/container` if unset |
+| `SFTP_PORT` | No | `2022` | Defaults to `22` if unset; Gravelhost often uses `2022` |
 
-Only set `DEPLOY_RESTART_CMD` if you know the exact command on your host. Examples (verify on your panel — do not copy blindly):
+---
 
-```bash
-# txAdmin / systemd (example)
-systemctl restart fxserver
+## 4. How the workflow works
 
-# Pterodactyl — often restart via panel API or a wrapper script
-# touch restart.txt
-```
-
-If unset, deploy only updates files; restart the server from txAdmin or your host panel when needed.
+1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
+2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
+3. **SFTP upload** — syncs filtered files to `SFTP_PATH` using [wlixcc/SFTP-Deploy-Action](https://github.com/wlixcc/SFTP-Deploy-Action) with `sftp_only: true` (no SSH shell required).
 
 ---
 
 ## 5. Test the pipeline
 
-1. Make a small tracked change (e.g. a comment in a resource).
-2. Commit and push to `main`.
-3. Open **Actions** on GitHub → **Deploy to FiveM host** → confirm green check.
-4. On the host: `cd $DEPLOY_PATH && git log -1 --oneline` should match GitHub.
+1. Add the GitHub secrets above.
+2. Make a small tracked change (e.g. a comment in a resource).
+3. Commit and push to `main`.
+4. Open **Actions** on GitHub → **Deploy to FiveM host** → confirm a green check.
+5. Connect via SFTP and verify the changed file updated on the host.
+6. Restart the server from the panel if the change requires it.
 
 ---
 
@@ -121,16 +96,17 @@ If unset, deploy only updates files; restart the server from txAdmin or your hos
 
 | Symptom | Fix |
 |---------|-----|
-| SSH connection refused | Check IP, firewall, SSH port (default 22), `DEPLOY_USER` |
-| Permission denied (publickey) | Public key not in host `authorized_keys`, or wrong private key in `DEPLOY_SSH_KEY` |
-| `No git repo at ...` | Clone repo to `DEPLOY_PATH` (step 3) |
-| `git fetch` fails on host | Private repo auth — deploy key or PAT on server |
-| Changes not visible in-game | Restart FXServer or set `DEPLOY_RESTART_CMD`; some resources need `ensure` / full restart |
+| Connection timed out | Check `SFTP_HOST`, `SFTP_PORT` (try `2022` for Gravelhost), firewall |
+| Authentication failed | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel; reset password if needed |
+| Files not updating | Confirm workflow succeeded; check `SFTP_PATH` points at server root |
+| `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
+| Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
+| Changes not visible in-game | Restart FXServer from Gravelhost / txAdmin |
 
 ---
 
 ## Security notes
 
-- Deploy key on GitHub Actions is **only** for SSH into your VPS — keep it in secrets, never commit it.
-- `git reset --hard` on the server discards local edits in tracked files; keep `mysql.cfg`, `secrets.cfg`, and asset folders gitignored.
-- Do not store license keys or DB passwords in the repository.
+- Store SFTP password only in GitHub Actions secrets — never commit it.
+- `mysql.cfg`, `secrets.cfg`, license keys, and DB passwords stay off GitHub; maintain them on the server via SFTP.
+- The workflow uploads tracked code only; it does not wipe manually uploaded assets on the host.

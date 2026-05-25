@@ -13,33 +13,65 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync server with origin/main
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          DEPLOY_RESTART_CMD: ${{ secrets.DEPLOY_RESTART_CMD }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync to server via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: DEPLOY_PATH,DEPLOY_RESTART_CMD
-          script_stop: true
-          script: |
-            set -euo pipefail
-            if [ -z "${DEPLOY_PATH:-}" ]; then
-              echo "DEPLOY_PATH secret is not set."
-              exit 1
-            fi
-            if [ ! -d "$DEPLOY_PATH/.git" ]; then
-              echo "No git repo at $DEPLOY_PATH — clone the repo there first (see DEPLOY.md)."
-              exit 1
-            fi
-            cd "$DEPLOY_PATH"
-            git fetch origin
-            git reset --hard origin/main
-            if [ -n "${DEPLOY_RESTART_CMD:-}" ]; then
-              echo "Running DEPLOY_RESTART_CMD..."
-              eval "$DEPLOY_RESTART_CMD"
-            else
-              echo "DEPLOY_RESTART_CMD not set — skipping server restart."
-            fi
+          username: ${{ secrets.SFTP_USER }}
+          server: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT || '22' }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          ssh_private_key: ''
+          local_path: './'
+          remote_path: ${{ secrets.SFTP_PATH || '/home/container' }}
+          sftp_only: true
+          sftpArgs: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no'
+          rsyncArgs: >-
+            --exclude=.git
+            --exclude=.github
+            --exclude=alpine
+            --exclude=citizen
+            --exclude=components
+            --exclude=FXServer.exe
+            --exclude=run.cmd
+            --exclude=cache
+            --exclude=tmp
+            --exclude=crashes
+            --exclude=logs
+            --exclude=txData
+            --exclude=db
+            --exclude=*.log
+            --exclude=.DS_Store
+            --exclude=Thumbs.db
+            --exclude=desktop.ini
+            --exclude=Desktop.ini
+            --exclude=.vscode
+            --exclude=.idea
+            --exclude=node_modules
+            --exclude=.yarn
+            --exclude=dist
+            --exclude=.cache
+            --exclude=mysql.cfg
+            --exclude=secrets.cfg
+            --exclude=.env
+            --exclude=.env.*
+            --exclude=*.pem
+            --exclude=*.key
+            --exclude=server.cfg.local
+            --exclude=resources/core
+            --exclude=resources/y_burgershot-main/core
+            --exclude=qb-core-legacy/core
+            --exclude='resources/[[]Newmaps[]]/[[]qb[]]/'
+            --exclude='resources/[[]defaultmaps[]]/'
+            --exclude='resources/[[]vehicles[]]/'
+            --exclude='resources/[[]clothing[]]/'
+            --exclude='resources/[[]Graphics[]]/'
+            --exclude='resources/AzuraPlatV2-Branded/'
+            --exclude='resources/FiveM Vehicle Pack/'
+            --exclude=resources/cars2
+            --exclude=resources/Audio_Pack
+            --exclude=.replxx_history
+            --exclude=*__duplicate_backup
+            --exclude=*_backup
