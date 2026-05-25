@@ -18,6 +18,12 @@ jobs:
         with:
           submodules: false
 
+      - name: Prepare deploy bundle
+        run: |
+          set -euo pipefail
+          mkdir -p deploy_bundle
+          rsync -av --exclude-from=.deploy-exclude ./ deploy_bundle/
+
       - name: Sync to server via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.5
         with:
@@ -26,54 +32,7 @@ jobs:
           port: ${{ secrets.SFTP_PORT || '22' }}
           password: ${{ secrets.SFTP_PASSWORD }}
           ssh_private_key: ''
-          local_path: './'
+          local_path: './deploy_bundle/'
           remote_path: ${{ secrets.SFTP_PATH || '/home/container' }}
           sftp_only: true
           sftpArgs: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no'
-          rsyncArgs: >-
-            --exclude=.git
-            --exclude=.github
-            --exclude=alpine
-            --exclude=citizen
-            --exclude=components
-            --exclude=FXServer.exe
-            --exclude=run.cmd
-            --exclude=cache
-            --exclude=tmp
-            --exclude=crashes
-            --exclude=logs
-            --exclude=txData
-            --exclude=db
-            --exclude=*.log
-            --exclude=.DS_Store
-            --exclude=Thumbs.db
-            --exclude=desktop.ini
-            --exclude=Desktop.ini
-            --exclude=.vscode
-            --exclude=.idea
-            --exclude=node_modules
-            --exclude=.yarn
-            --exclude=dist
-            --exclude=.cache
-            --exclude=mysql.cfg
-            --exclude=secrets.cfg
-            --exclude=.env
-            --exclude=.env.*
-            --exclude=*.pem
-            --exclude=*.key
-            --exclude=server.cfg.local
-            --exclude=resources/core
-            --exclude=resources/y_burgershot-main/core
-            --exclude=qb-core-legacy/core
-            --exclude='resources/[[]Newmaps[]]/[[]qb[]]/'
-            --exclude='resources/[[]defaultmaps[]]/'
-            --exclude='resources/[[]vehicles[]]/'
-            --exclude='resources/[[]clothing[]]/'
-            --exclude='resources/[[]Graphics[]]/'
-            --exclude=resources/AzuraPlatV2-Branded/
-            --exclude=resources/FiveM*Vehicle*Pack/
-            --exclude=resources/cars2
-            --exclude=resources/Audio_Pack
-            --exclude=.replxx_history
-            --exclude=*__duplicate_backup
-            --exclude=*_backup
