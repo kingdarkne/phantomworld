@@ -76,8 +76,8 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 ## 4. How the workflow works
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
-2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
-3. **SFTP upload** — syncs `deploy_bundle/` to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. No SSH shell required. Job timeout is 120 minutes.
+2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, secrets, cache paths, large asset patterns, and deploy staging artifacts.
+3. **SFTP upload** — syncs the temp bundle to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. No SSH shell required. Job timeout is 120 minutes.
 
 ---
 

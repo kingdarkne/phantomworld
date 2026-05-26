@@ -3,6 +3,7 @@
 
 .git/
 .github/
+deploy_bundle/
 alpine/
 citizen/
 components/
