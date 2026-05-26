@@ -43,8 +43,17 @@ jobs:
           : "${SFTP_PASSWORD:?SFTP_PASSWORD secret is required}"
 
           PORT="${SFTP_PORT:-2022}"
-          REMOTE_PATH="${SFTP_PATH:-/home/container}"
-          REMOTE_PATH="${REMOTE_PATH%/}"
+          REMOTE_PATH="${SFTP_PATH:-.}"
+          if [ "$REMOTE_PATH" != "/" ]; then
+            REMOTE_PATH="${REMOTE_PATH%/}"
+          fi
+          if [ -z "$REMOTE_PATH" ]; then
+            REMOTE_PATH="."
+          fi
+          if [ "$REMOTE_PATH" = "/home/container" ]; then
+            echo "Using SFTP login root for Pterodactyl-style /home/container path"
+            REMOTE_PATH="."
+          fi
 
           : "${BUNDLE_DIR:?BUNDLE_DIR was not created}"
           if [ ! -d "$BUNDLE_DIR" ]; then
@@ -60,7 +69,7 @@ jobs:
           BATCH="$(mktemp)"
           {
             printf 'lcd "%s"\n' "$BUNDLE_DIR"
-            echo "cd ${REMOTE_PATH}"
+            printf 'cd "%s"\n' "$REMOTE_PATH"
             (
               cd "$BUNDLE_DIR"
               shopt -s nullglob
