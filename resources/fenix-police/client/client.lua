@@ -542,7 +542,7 @@ AddEventHandler('spawnPoliceHeliNetResponse', function(vehNetID, officers)
                 -- Process pilot and co-pilot. 
                 SetPedCombatAttributes(officer, 52, true) -- Can vehicle attack? only works on driver
                 SetPedCombatAttributes(officer, 53, true) -- Can use mounted vehicle weapons? only works on driver
-                SetPedCombatAttributes(officer, 85, true) -- Prefer air targets to targets on ground       
+                SetPedCombatAttributes(officer, 85, true) -- Prefer air targets to targets on ground
                 SetPedAccuracy(officer, math.random(20, 30))     
             else
                 -- Process officers
@@ -649,7 +649,7 @@ AddEventHandler('spawnPoliceAirNetResponse', function(vehNetID, officers)
             SetPedCombatAttributes(officer, 52, true) -- Can vehicle attack? only works on driver
             SetPedCombatAttributes(officer, 53, true) -- Can use mounted vehicle weapons? only works on driver
             SetPedCombatAttributes(officer, 85, true) -- Prefer air targets to targets on ground
-            SetPedCombatAttributes(officer, 86, true) -- Allow dogfighting         
+            SetPedCombatAttributes(officer, 86, true) -- Allow dogfighting
             SetPedAccuracy(officer, math.random(20, 30))
 
              -- Give the plane weapons
