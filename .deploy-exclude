@@ -1,2 +1,25 @@
-# Only git metadata — everything else deploys via SFTP
+# Skip git metadata and GitHub workflow files (not needed on FXServer)
 .git/
+.github/
+deploy_bundle/
+
+# FXServer runtime — provided by Gravelhost/Pterodactyl, do not overwrite
+alpine/
+citizen/
+components/
+FXServer.exe
+run.cmd
+
+# Live server data — rebuilt on host; uploading breaks or bloats deploy
+cache/
+tmp/
+crashes/
+logs/
+txData/
+db/
+*.log
+
+# Dev-only (not needed at runtime)
+**/node_modules/
+**/.vscode/
+**/.idea/
