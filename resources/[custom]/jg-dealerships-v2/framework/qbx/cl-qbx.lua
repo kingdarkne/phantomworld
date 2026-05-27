@@ -10,6 +10,8 @@ if (Config.Framework == "auto" and GetResourceState("qbx_core") == "started") or
 
     Globals.PlayerData = exports.qbx_core:GetPlayerData()
 
+    LocalPlayer.state:set("isLoggedIn", true)
+
     Locations.Client.CreateAllInteractions()
 
     CreateThread(function()

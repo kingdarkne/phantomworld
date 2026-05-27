@@ -122,4 +122,42 @@ AddEventHandler("onResourceStart", function(resourceName)
 
   InitSQL()
 
+  CreateThread(function()
+
+    Wait(5000)
+
+    local ok, count = pcall(function()
+
+      return MySQL.scalar.await("SELECT COUNT(*) FROM dealership_locations")
+
+    end)
+
+    if not ok or not count or count > 0 then
+
+      return
+
+    end
+
+    if not DEFAULT_LOCATIONS or not Import or not Import.Server or not Import.Server.ImportV1Locations then
+
+      return
+
+    end
+
+    print("^3[jg-dealerships-v2]^0 No dealership locations in database — importing default locations...")
+
+    local result = Import.Server.ImportV1Locations(DEFAULT_LOCATIONS)
+
+    if result and result.success and result.imported and #result.imported > 0 then
+
+      print("^2[jg-dealerships-v2]^0 Imported " .. #result.imported .. " default dealership location(s).")
+
+    else
+
+      print("^1[jg-dealerships-v2]^0 Failed to import default dealership locations. Use /dealeradmin in-game or check server console.^0")
+
+    end
+
+  end)
+
 end)

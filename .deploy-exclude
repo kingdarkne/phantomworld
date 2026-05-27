@@ -25,6 +25,7 @@ Desktop.ini
 node_modules/
 .yarn/
 dist/
+!resources/[[]custom[]]/jg-dealerships-v2/web/dist/
 .cache/
 .env
 .env.*
