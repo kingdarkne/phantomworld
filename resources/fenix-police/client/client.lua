@@ -663,7 +663,7 @@ AddEventHandler('spawnPoliceAirNetResponse', function(vehNetID, officers)
 
             -- Set the pilot to pursue the player
             if i == 1 then
-                --TaskVehicleDriveToCoord(officer, unit, playerCoords.x, playerCoords.y, playerCoords.z, 100.0, 1, GetEntityModel(unit), 16777248, 70.0, true)
+                --TaskVehicleDriveToCoord(officer, vehicle, playerCoords.x, playerCoords.y, playerCoords.z, 100.0, 1, GetEntityModel(vehicle), 16777248, 70.0, true)
                 TaskPlaneChase(officer, playerPed, 20, 20, 150)
                 SetDriverAbility(officer, 1.0) -- Set driver ability to max.
                 spawnedAirUnits[vehNetID].officerTasks[pedNetID] = 'DriveToCoord'
