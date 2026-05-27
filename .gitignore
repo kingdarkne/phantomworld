@@ -40,9 +40,7 @@ Desktop.ini
 **/dist/
 **/.cache/
 
-# Secrets — keep local only; use *.example templates in repo
-mysql.cfg
-secrets.cfg
+# Env files with unrelated secrets (mysql.cfg + secrets.cfg are tracked — private repo)
 .env
 .env.*
 *.pem

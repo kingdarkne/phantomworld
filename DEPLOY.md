@@ -4,7 +4,9 @@ Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/w
 
 **What syncs:** configs, Lua/JS resources, and other files tracked in git (same as a fresh checkout of `main`).
 
-**What does not sync:** items listed in [`.gitignore`](.gitignore) — runtime cache, secrets, large asset packs (vehicles, clothing, maps, etc.). Upload those once via SFTP and keep them on the host; the workflow will not delete them.
+**What does not sync:** items listed in [`.gitignore`](.gitignore) — runtime cache, large asset packs (vehicles, clothing, maps, etc.). Upload those once via SFTP and keep them on the host; the workflow will not delete them.
+
+**Secrets:** `secrets.cfg` and `mysql.cfg` are tracked in this private repo and deploy with every push (license key + DB password).
 
 **Restart:** the workflow does not restart FXServer. After deploy, restart from the Gravelhost panel or txAdmin when needed.
 
@@ -29,17 +31,6 @@ Test with FileZilla, WinSCP, or Cyberduck: protocol **SFTP**, same host/port/use
 ## 2. One-time manual setup on the host (via SFTP)
 
 Connect with your SFTP client and upload files the workflow will **never** push from git:
-
-### Secrets (required once)
-
-Copy the example templates from the repo, edit with real values, upload to the server root:
-
-| Local (from repo) | Upload to server as | Contents |
-|-------------------|---------------------|----------|
-| `mysql.cfg.example` | `mysql.cfg` | Database credentials |
-| `secrets.cfg.example` | `secrets.cfg` | `sv_licenseKey` and other server secrets |
-
-**Never commit** `mysql.cfg` or `secrets.cfg` to GitHub.
 
 ### Large asset folders (manual once)
 
@@ -76,7 +67,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 ## 4. How the workflow works
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
-2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, secrets, cache paths, large asset patterns, and deploy staging artifacts.
+2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, cache paths, large asset patterns, and deploy staging artifacts. Includes `secrets.cfg` and `mysql.cfg`.
 3. **SFTP upload** — syncs the temp bundle to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. Pterodactyl-style `/home/container` paths are treated as the SFTP login root (`.`). No SSH shell required. Job timeout is 120 minutes.
 
 ---
@@ -100,7 +91,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Authentication failed / Permission denied / `GetPass() failed -- assume anonymous login` | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Password is passed only via the `SSHPASS` env var to `sshpass` (never inline in scripts or URLs), so special characters are supported |
 | `protocol: invalid parameter - you provided "sftp"` | Old workflow used FTP-Deploy-Action which only supports FTP/FTPS — current workflow uses OpenSSH `sftp` for true SFTP |
 | Files not updating | Confirm workflow succeeded; for Pterodactyl/Gravelhost SFTP, leave `SFTP_PATH` unset or set it to `.` because the login usually starts at the server root |
-| `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
+| `mysql.cfg` / `secrets.cfg` missing on server | Commit them to the private repo and push, or upload manually via SFTP |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
 | Changes not visible in-game | Restart FXServer from Gravelhost / txAdmin |
 
@@ -109,5 +100,5 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 ## Security notes
 
 - Store SFTP password only in GitHub Actions secrets — never commit it.
-- `mysql.cfg`, `secrets.cfg`, license keys, and DB passwords stay off GitHub; maintain them on the server via SFTP.
+- `mysql.cfg` and `secrets.cfg` are in this private GitHub repo and deploy automatically; restrict repo access and disable public forks.
 - The workflow uploads tracked code only; it does not wipe manually uploaded assets on the host.

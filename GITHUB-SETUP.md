@@ -7,25 +7,21 @@ Your full server folder is **~53 GB**. GitHub cannot store that whole tree (100 
 This repo is set up to commit:
 
 - Configs and custom scripts (`resources/[custom]`, `resources/[qb]`, etc.)
-- Server configs (with secrets excluded)
+- Server configs, including `secrets.cfg` and `mysql.cfg` (private repo only)
 
 And **exclude**:
 
 - `cache/` (~20 GB)
 - `db/` (local embedded database)
 - Large vehicle/clothing/map packs (see `.gitignore`)
-- `mysql.cfg` (database password)
 
 ## Before first push
 
 1. **Install Git** (already at `C:\Program Files\Git\bin\git.exe` — add to PATH if `git` fails in terminal).
-2. **Copy secrets locally** (not in git):
-   - `mysql.cfg` — copy from `mysql.cfg.example` and fill in credentials.
-   - `secrets.cfg` — copy from `secrets.cfg.example` and add `sv_licenseKey`.
+2. Ensure `mysql.cfg` and `secrets.cfg` exist at the server root with real credentials and license key.
 
 ## After clone on another machine / host
 
-1. Copy `mysql.cfg.example` → `mysql.cfg` and set DB string.
-2. Copy `secrets.cfg.example` → `secrets.cfg` and set license key.
-3. Re-upload excluded asset folders (vehicles, clothing, etc.) via FTP/SFTP or your host file manager.
-4. Start FXServer; run `ensure` resources as in `server.cfg`.
+1. Pull or deploy from GitHub — `secrets.cfg` and `mysql.cfg` come with the repo.
+2. Re-upload excluded asset folders (vehicles, clothing, etc.) via FTP/SFTP or your host file manager.
+3. Start FXServer; run `ensure` resources as in `server.cfg`.
