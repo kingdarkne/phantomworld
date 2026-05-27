@@ -4,9 +4,9 @@ QBCore = exports['qbx_core']:GetCoreObject()
 CreateThread(function()
     while true do
         local polCount = 0
-        local playerSources = exports['qbx_core']:GetPlayers()
+        local playerSources = GetPlayers()
         for _, src in ipairs(playerSources) do
-            local Player = QBCore.Functions.GetPlayer(src)
+            local Player = QBCore.Functions.GetPlayer(tonumber(src))
             if Player then
                 for _, job in ipairs(Config.PoliceJobsToCheck) do
                     if Player.PlayerData.job.name == job.jobName then

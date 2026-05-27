@@ -44,18 +44,33 @@ end)
 AddEventHandler('onServerResourceStart', function(resName)
     if resName ~= currentResourceName then return end
 
-    debugPrint('Launched with debug mode on')
-    local players = exports.qbx_core:GetQBPlayers()
+    CreateThread(function()
+        while GetResourceState('qbx_core') ~= 'started' or GetResourceState('npwd') ~= 'started' do
+            Wait(100)
+        end
 
-    for _, v in pairs(players) do
-        exports.npwd:newPlayer({
-            source = v.PlayerData.source,
-            identifier = v.PlayerData.citizenid,
-            phoneNumber = tostring(v.PlayerData.charinfo.phone),
-            firstname = v.PlayerData.charinfo.firstname,
-            lastname = v.PlayerData.charinfo.lastname,
-        })
-    end
+        Wait(500)
+
+        debugPrint('Launched with debug mode on')
+
+        local ok, players = pcall(function()
+            return exports.qbx_core:GetQBPlayers()
+        end)
+        if not ok or type(players) ~= 'table' then
+            debugPrint('GetQBPlayers unavailable — skipping reconnect sync')
+            return
+        end
+
+        for _, v in pairs(players) do
+            exports.npwd:newPlayer({
+                source = v.PlayerData.source,
+                identifier = v.PlayerData.citizenid,
+                phoneNumber = tostring(v.PlayerData.charinfo.phone),
+                firstname = v.PlayerData.charinfo.firstname,
+                lastname = v.PlayerData.charinfo.lastname,
+            })
+        end
+    end)
 end)
 
 for i = 1, #PhoneList do
