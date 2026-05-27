@@ -20,6 +20,16 @@ local function GetCitizenIdFromSource(src)
     return Player.PlayerData.citizenid
 end
 
+local function IsProtectedPolice(src)
+    local Player = getPlayer(src)
+    if not Player then return false end
+
+    local job = Player.PlayerData.job
+    if not job then return false end
+
+    return (job.type == 'leo' or job.name == 'police' or job.name == 'lspd' or job.name == 'bcso' or job.name == 'sahp') and job.onduty
+end
+
 local function SyncToClient(src)
     local cid = GetCitizenIdFromSource(src)
     if not cid then return end
@@ -47,6 +57,14 @@ local function AddWantedPoints(targetSrc, points, reason)
     TriggerClientEvent('ox_lib:notify', targetSrc, { title = 'Wanted', description = msg, type = 'error' })
 end
 
+local function AddCrimePoints(targetSrc, points, reason)
+    targetSrc = tonumber(targetSrc)
+    points = tonumber(points) or 0
+    if not targetSrc or points <= 0 or not GetPlayerName(targetSrc) or IsProtectedPolice(targetSrc) then return end
+
+    AddWantedPoints(targetSrc, points, reason)
+end
+
 local function ClearWanted(targetSrc)
     local cid = GetCitizenIdFromSource(targetSrc)
     if not cid then return end
@@ -67,6 +85,9 @@ exports('GetWantedData', function(src)
         points = data.points or 0
     }
 end)
+
+exports('AddWantedPoints', AddWantedPoints)
+exports('AddCrimePoints', AddCrimePoints)
 
 lib.callback.register('dr-wanted:getSelf', function(source)
     return exports['dr-wanted']:GetWantedData(source)
@@ -181,12 +202,7 @@ RegisterNetEvent('dr-wanted:server:shotsFired', function()
     local Player = getPlayer(src)
     if not Player then return end
 
-    -- Don’t flag on-duty police for basic shots
-    if Player.PlayerData.job and Player.PlayerData.job.name == 'police' and Player.PlayerData.job.onduty then
-        return
-    end
-
-    AddWantedPoints(src, 2, 'Discharging a firearm')
+    AddCrimePoints(src, 10, 'Discharging a firearm')
 end)
 
 RegisterNetEvent('dr-wanted:server:playerHit', function(victimId, isFatal)
@@ -196,14 +212,19 @@ RegisterNetEvent('dr-wanted:server:playerHit', function(victimId, isFatal)
     local Player = getPlayer(src)
     if not Player then return end
 
-    if Player.PlayerData.job and Player.PlayerData.job.name == 'police' and Player.PlayerData.job.onduty then
-        return
-    end
-
     if isFatal then
-        AddWantedPoints(src, 25, 'Homicide')
+        AddCrimePoints(src, 25, 'Homicide')
     else
-        AddWantedPoints(src, 10, 'Assault with a deadly weapon')
+        AddCrimePoints(src, 10, 'Assault with a deadly weapon')
+    end
+end)
+
+RegisterNetEvent('dr-wanted:server:npcAttack', function(isFatal)
+    local src = source
+    if isFatal then
+        AddCrimePoints(src, 20, 'Assault on a civilian')
+    else
+        AddCrimePoints(src, 10, 'Assault on a civilian')
     end
 end)
 

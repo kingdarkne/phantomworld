@@ -1,9 +1,60 @@
 local wantedLevel = 0
 local wantedPoints = 0
+local lastPedCrime = {}
+
+local dispatchServices = {
+    [1] = true,  -- Police Vehicles
+    [2] = true,  -- Police Helicopters
+    [3] = true,  -- Fire Department Vehicles
+    [4] = true,  -- Swat Vehicles
+    [5] = true,  -- Ambulance Vehicles
+    [6] = true,  -- Police Motorcycles
+    [7] = true,  -- Police Backup
+    [8] = true,  -- Police Roadblocks
+    [9] = true,  -- PoliceAutomobileWaitPulledOver
+    [10] = true, -- PoliceAutomobileWaitCruising
+    [12] = true, -- Swat Helicopters
+    [13] = true, -- Police Boats
+}
+
+local function enableNativePoliceResponse()
+    SetAudioFlag('PoliceScannerDisabled', false)
+    SetCreateRandomCops(true)
+    SetCreateRandomCopsNotOnScenarios(true)
+    SetCreateRandomCopsOnScenarios(true)
+    DistantCopCarSirens(true)
+    SetMaxWantedLevel(5)
+    SetPoliceIgnorePlayer(PlayerId(), false)
+    SetDispatchCopsForPlayer(PlayerId(), true)
+
+    for service, enabled in pairs(dispatchServices) do
+        EnableDispatchService(service, enabled)
+    end
+end
+
+local function applyNativeWanted(level)
+    level = math.max(0, math.min(tonumber(level) or 0, 5))
+    enableNativePoliceResponse()
+
+    if level <= 0 then
+        ClearPlayerWantedLevel(PlayerId())
+        SetPlayerWantedLevelNow(PlayerId(), false)
+        return
+    end
+
+    SetPlayerWantedLevel(PlayerId(), level, false)
+    SetPlayerWantedLevelNow(PlayerId(), false)
+
+    local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+    if vehicle ~= 0 then
+        SetVehicleIsWanted(vehicle, true)
+    end
+end
 
 RegisterNetEvent('dr-wanted:client:update', function(level, points)
     wantedLevel = level or 0
     wantedPoints = points or 0
+    applyNativeWanted(wantedLevel)
 end)
 
 local function DrawTextSimple(x, y, scale, text, r, g, b, a)
@@ -29,6 +80,15 @@ CreateThread(function()
     end
 end)
 
+CreateThread(function()
+    while true do
+        Wait(5000)
+        if wantedLevel > 0 then
+            applyNativeWanted(wantedLevel)
+        end
+    end
+end)
+
 -- Automatic wanted: detect shots fired
 
 CreateThread(function()
@@ -43,46 +103,35 @@ CreateThread(function()
     end
 end)
 
--- Automatic wanted: when we damage or kill another player
+AddEventHandler('gameEventTriggered', function(name, args)
+    if name ~= 'CEventNetworkEntityDamage' then return end
 
-local function GetClosestPlayer(maxDistance)
-    local players = GetActivePlayers()
+    local victim = args[1]
+    local attacker = args[2]
     local ped = PlayerPedId()
-    local myCoords = GetEntityCoords(ped)
-    local closestPlayer, closestDist
-    maxDistance = maxDistance or 25.0
 
-    for _, ply in ipairs(players) do
-        local tgtPed = GetPlayerPed(ply)
-        if tgtPed ~= ped then
-            local dist = #(GetEntityCoords(tgtPed) - myCoords)
-            if dist <= maxDistance and (not closestDist or dist < closestDist) then
-                closestDist = dist
-                closestPlayer = GetPlayerServerId(ply)
-            end
-        end
+    if attacker ~= ped or victim == ped or not victim or victim == 0 or not DoesEntityExist(victim) or not IsEntityAPed(victim) then
+        return
     end
 
-    return closestPlayer, closestDist or maxDistance + 1.0
-end
-
-CreateThread(function()
-    local lastHealth = GetEntityHealth(PlayerPedId())
-
-    while true do
-        Wait(500)
-        local ped = PlayerPedId()
-        local health = GetEntityHealth(ped)
-
-        if health <= 0 and lastHealth > 0 then
-            -- we died: try to attribute to nearest player (very rough)
-            local killerId, dist = GetClosestPlayer(25.0)
-            if killerId and dist <= 10.0 then
-                TriggerServerEvent('dr-wanted:server:playerHit', killerId, true)
-            end
-        end
-
-        lastHealth = health
+    local now = GetGameTimer()
+    if lastPedCrime[victim] and now - lastPedCrime[victim] < 5000 then
+        return
     end
+    lastPedCrime[victim] = now
+
+    local isFatal = IsEntityDead(victim)
+    if IsPedAPlayer(victim) then
+        local targetPlayer = NetworkGetPlayerIndexFromPed(victim)
+        if targetPlayer ~= -1 then
+            TriggerServerEvent('dr-wanted:server:playerHit', GetPlayerServerId(targetPlayer), isFatal)
+        end
+        return
+    end
+
+    TriggerServerEvent('dr-wanted:server:npcAttack', isFatal)
 end)
+
+-- Damage events above attribute crimes from the attacker's client. Avoid
+-- assigning homicide to the victim based on proximity after death.
 

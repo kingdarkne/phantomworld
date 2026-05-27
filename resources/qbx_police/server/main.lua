@@ -174,6 +174,9 @@ RegisterNetEvent('police:server:policeAlert', function(text, camId, playerSource
     local ped = GetPlayerPed(playerSource)
     local coords = GetEntityCoords(ped)
     local players = exports.qbx_core:GetQBPlayers()
+    if GetResourceState('dr-wanted') == 'started' then
+        exports['dr-wanted']:AddCrimePoints(playerSource, camId and 15 or 10, text or locale('info.new_call'))
+    end
     for k, v in pairs(players) do
         if IsLeoAndOnDuty(v) then
             if camId then

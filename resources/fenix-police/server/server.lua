@@ -834,7 +834,7 @@ AddEventHandler('fenix:server:trigger', function(pdata,alertData)
             print("Wanted Level for this location is " .. wantedlevel)
         else
             print("No wanted level for this locaiton found.. setting to 1")
-            wantedlevel = 0
+            wantedlevel = 1
         end 
 
         print("getting nearbyplayers")

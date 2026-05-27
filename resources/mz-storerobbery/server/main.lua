@@ -419,7 +419,7 @@ RegisterNetEvent('mz-storerobbery:server:callCops', function(type, safe, streetL
         description = "Someone Is Trying To Rob A Store At "..streetLabel.." (CAMERA ID: "..cameraId..")"
     }
     TriggerClientEvent("mz-storerobbery:client:robberyCall", -1, type, safe, streetLabel, coords)
-    TriggerClientEvent("qb-phone:client:addPoliceAlert", -1, alertData)
+    TriggerEvent('police:server:policeAlert', alertData.description, cameraId, source)
 end)
 
 CreateThread(function()
