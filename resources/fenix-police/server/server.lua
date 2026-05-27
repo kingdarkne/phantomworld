@@ -526,7 +526,7 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
                     if Config.isDebug then print('NET ped ' ..pedModel .. ' spawned with pedNetID = ' ..pedNetID .. ' for vehNetID = ' .. vehNetID) end
 
                     -- Give pilot loadout
-                    GiveWeaponToPed(pilot, GetHashKey('weapon_combatpistol'), 999, false, false)
+                    GiveWeaponToPed(officer, GetHashKey('weapon_combatpistol'), 999, false, false)
 
                     -- Add pilot to table to return
                     table.insert(officers, pedNetID)
@@ -731,7 +731,7 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
                     if Config.isDebug then print('NET ped ' ..pedModel .. ' spawned with pedNetID = ' ..pedNetID .. ' for vehNetID = ' .. vehNetID) end
 
                     -- Give pilot loadout
-                    GiveWeaponToPed(pilot, GetHashKey('weapon_combatpistol'), 999, false, false)
+                    GiveWeaponToPed(officer, GetHashKey('weapon_combatpistol'), 999, false, false)
 
                     -- Add pilot to table to return
                     table.insert(officers, pedNetID)
