@@ -8,7 +8,7 @@ Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/w
 
 **Secrets:** `secrets.cfg` and `mysql.cfg` are tracked in this private repo and deploy with every push (license key + DB password).
 
-**Restart:** the workflow does not restart FXServer. After deploy, restart from the Gravelhost panel or txAdmin when needed.
+**Restart:** after a successful SFTP upload, the workflow sends a **restart** signal through the Gravelhost/Pterodactyl panel API when the three `PTERODACTYL_*` GitHub secrets are set (see below). SFTP alone cannot restart FXServer.
 
 ---
 
@@ -62,6 +62,18 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | `SFTP_PATH` | No | `.` | Remote server root from the SFTP login; defaults to `.` if unset. If you already set `/home/container` for a Pterodactyl-style host, the workflow maps it to `.` |
 | `SFTP_PORT` | No | `2022` | Defaults to `2022` if unset; Gravelhost uses port `2022` |
 
+### Auto-restart after deploy (Gravelhost / Pterodactyl)
+
+SFTP uploads files only; restarting FXServer requires the **panel API**. Add these GitHub secrets:
+
+| Secret | Required for restart | Example | How to get it |
+|--------|----------------------|---------|---------------|
+| `PTERODACTYL_PANEL_URL` | Yes | `https://panel.gravelhost.com` | Your Gravelhost panel URL (no trailing slash) |
+| `PTERODACTYL_CLIENT_API_KEY` | Yes | `ptlc_...` | Gravelhost panel → your account → **API Credentials** → create a **Client API** key with permission to control your server |
+| `PTERODACTYL_SERVER_ID` | Yes | `a1b2c3d4-...` | Open your server in the panel; copy the **Server UUID** from the URL or server settings |
+
+After deploy succeeds, the workflow calls `POST /api/client/servers/{id}/power` with `{"signal":"restart"}`. If these secrets are missing, deploy still completes but restart is skipped (warning in the Actions log).
+
 ---
 
 ## 4. How the workflow works
@@ -69,6 +81,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
 2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, cache paths, large asset patterns, and deploy staging artifacts. Includes `secrets.cfg` and `mysql.cfg`.
 3. **SFTP upload** — syncs the temp bundle to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. Pterodactyl-style `/home/container` paths are treated as the SFTP login root (`.`). No SSH shell required. Job timeout is 120 minutes.
+4. **Restart** — if `PTERODACTYL_*` secrets are set, sends a panel API restart signal so FXServer reloads with the new files.
 
 ---
 
@@ -93,7 +106,9 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Files not updating | Confirm workflow succeeded; for Pterodactyl/Gravelhost SFTP, leave `SFTP_PATH` unset or set it to `.` because the login usually starts at the server root |
 | `mysql.cfg` / `secrets.cfg` missing on server | Commit them to the private repo and push, or upload manually via SFTP |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
-| Changes not visible in-game | Restart FXServer from Gravelhost / txAdmin |
+| Changes not visible in-game | Confirm the **Restart game server** step ran; add `PTERODACTYL_*` secrets if restart was skipped |
+| Restart failed (HTTP 401/403) | Regenerate Client API key; ensure it can control **your** server |
+| Restart failed (HTTP 404) | Wrong `PTERODACTYL_SERVER_ID` — use the full server UUID from the panel URL |
 
 ---
 

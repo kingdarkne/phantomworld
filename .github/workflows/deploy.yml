@@ -88,3 +88,35 @@ jobs:
             -P "$PORT" -b "$BATCH" "${SFTP_USER}@${SFTP_HOST}"
 
           echo "SFTP upload complete"
+
+      - name: Restart game server
+        env:
+          PTERODACTYL_PANEL_URL: ${{ secrets.PTERODACTYL_PANEL_URL }}
+          PTERODACTYL_CLIENT_API_KEY: ${{ secrets.PTERODACTYL_CLIENT_API_KEY }}
+          PTERODACTYL_SERVER_ID: ${{ secrets.PTERODACTYL_SERVER_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PTERODACTYL_CLIENT_API_KEY:-}" ] || [ -z "${PTERODACTYL_SERVER_ID:-}" ] || [ -z "${PTERODACTYL_PANEL_URL:-}" ]; then
+            echo "::warning::Restart skipped. Add PTERODACTYL_PANEL_URL, PTERODACTYL_CLIENT_API_KEY, and PTERODACTYL_SERVER_ID to GitHub Actions secrets to restart after each deploy."
+            exit 0
+          fi
+
+          PANEL="${PTERODACTYL_PANEL_URL%/}"
+          RESPONSE="$(mktemp)"
+          trap 'rm -f "$RESPONSE"' EXIT
+
+          HTTP_CODE="$(curl -sS -o "$RESPONSE" -w '%{http_code}' -X POST \
+            "${PANEL}/api/client/servers/${PTERODACTYL_SERVER_ID}/power" \
+            -H "Authorization: Bearer ${PTERODACTYL_CLIENT_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: Application/vnd.pterodactyl.v1+json" \
+            -d '{"signal":"restart"}')"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Server restart signal sent (HTTP ${HTTP_CODE})."
+          else
+            echo "Restart request failed (HTTP ${HTTP_CODE}):"
+            cat "$RESPONSE"
+            exit 1
+          fi
