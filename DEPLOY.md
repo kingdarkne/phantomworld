@@ -2,7 +2,11 @@
 
 Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which uploads tracked repo files to your game host over **SFTP** (password auth). Gravelhost and similar Pterodactyl panels often provide SFTP only — no SSH shell — so this workflow syncs files directly instead of running `git pull` on the server.
 
-**What syncs:** configs, Lua/JS resources, and other files tracked in git (same as a fresh checkout of `main`).
+**Default on push:** only **changed** files upload (usually a few minutes). If you edit one script inside `resources/[custom]/my-resource/`, that whole resource folder syncs — not the entire server.
+
+**Full server sync** (~40 min) runs only on the first deploy, when GitHub cannot compare commits, or when you manually trigger **Run workflow** with **full sync** checked.
+
+**Deploy specific files only:** GitHub → **Actions** → **Deploy to FiveM host** → **Run workflow** → paste paths, e.g. `resources/[custom]/jg-dealerships-v2,server.cfg`
 
 **What does not sync:** items listed in [`.gitignore`](.gitignore) — runtime cache, large asset packs (vehicles, clothing, maps, etc.). Upload those once via SFTP and keep them on the host; the workflow will not delete them.
 
@@ -79,9 +83,13 @@ After deploy succeeds, the workflow calls `POST /api/client/servers/{id}/power` 
 ## 4. How the workflow works
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
-2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, cache paths, large asset patterns, and deploy staging artifacts. Includes `secrets.cfg` and `mysql.cfg`.
-3. **SFTP upload** — syncs the temp bundle to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. Pterodactyl-style `/home/container` paths are treated as the SFTP login root (`.`). No SSH shell required. Job timeout is 120 minutes.
-4. **Restart** — if `PTERODACTYL_*` secrets are set, sends a panel API restart signal so FXServer reloads with the new files.
+2. **Decide what to upload**
+   - **Push to `main`:** compares this commit to the previous one; uploads only changed files (whole resource folder if any file inside it changed).
+   - **Manual run with paths:** uploads only the comma-separated paths you enter.
+   - **Manual run with full sync:** uploads everything (slow).
+   - **Docs-only push** (`.github/`, `DEPLOY.md`, etc.): skips SFTP entirely.
+3. **SFTP upload** — uploads the small bundle to `SFTP_PATH` with OpenSSH `sftp` and `sshpass`. Pterodactyl-style `/home/container` paths are treated as the SFTP login root (`.`).
+4. **Restart** — if `PTERODACTYL_*` secrets are set, sends a panel API restart signal. Cloudflare on Gravelhost often blocks this from GitHub — deploy still succeeds; restart manually from the panel if needed.
 
 ---
 

@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      full_sync:
+        description: Upload entire server (slow, ~40 min)
+        type: boolean
+        default: false
+      paths:
+        description: Comma-separated files or folders (e.g. resources/[custom]/my-script,server.cfg)
+        required: false
+        type: string
 
 concurrency:
   group: deploy-main
@@ -18,17 +28,122 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           submodules: false
 
       - name: Prepare deploy bundle
+        env:
+          DISPATCH_FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full_sync }}
+          DISPATCH_PATHS: ${{ github.event_name == 'workflow_dispatch' && inputs.paths || '' }}
         run: |
           set -euo pipefail
           BUNDLE_DIR="$(mktemp -d)"
           echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
-          echo "Deploy mode: full sync (all tracked files)"
-          rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
+
+          copy_path() {
+            local target="$1"
+            if [ -f "$target" ]; then
+              mkdir -p "$BUNDLE_DIR/$(dirname "$target")"
+              cp "$target" "$BUNDLE_DIR/$target"
+              echo "  + $target"
+            elif [ -d "$target" ]; then
+              mkdir -p "$BUNDLE_DIR/$(dirname "$target")"
+              rsync -av --exclude-from=.deploy-exclude "$target/" "$BUNDLE_DIR/$target/"
+              echo "  + $target/"
+            else
+              echo "  ! skipped (missing): $target"
+            fi
+          }
+
+          add_changed_file() {
+            local file="$1"
+            case "$file" in
+              .github/*|.deploy-exclude|.gitignore|DEPLOY.md|GITHUB-SETUP.md)
+                return 0
+                ;;
+            esac
+            case "$file" in
+              resources/*/*/*)
+                DEPLOY_ROOTS["$(echo "$file" | cut -d/ -f1-3)"]=1
+                ;;
+              resources/*/*)
+                DEPLOY_ROOTS["$(echo "$file" | cut -d/ -f1-2)"]=1
+                ;;
+              *)
+                DEPLOY_ROOTS["__file__:$file"]=1
+                ;;
+            esac
+          }
+
+          if [ "${DISPATCH_FULL:-false}" = "true" ]; then
+            echo "Deploy mode: full server sync (manual)"
+            echo "DEPLOY_MODE=full" >> "$GITHUB_ENV"
+            rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
+            exit 0
+          fi
+
+          if [ -n "${DISPATCH_PATHS:-}" ]; then
+            echo "Deploy mode: manual paths"
+            echo "DEPLOY_MODE=scoped" >> "$GITHUB_ENV"
+            IFS=',' read -ra MANUAL <<< "${DISPATCH_PATHS}"
+            for raw in "${MANUAL[@]}"; do
+              path="$(echo "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+              [ -z "$path" ] && continue
+              copy_path "$path"
+            done
+            exit 0
+          fi
+
+          BEFORE="${{ github.event.before }}"
+          SHA="${{ github.sha }}"
+          CHANGED=""
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            CHANGED="$(git diff --name-only "$BEFORE" "$SHA" || true)"
+          fi
+
+          declare -A DEPLOY_ROOTS=()
+          ONLY_META=1
+          if [ -n "$CHANGED" ]; then
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              case "$file" in
+                .github/*|.deploy-exclude|.gitignore|DEPLOY.md|GITHUB-SETUP.md)
+                  continue
+                  ;;
+              esac
+              ONLY_META=0
+              add_changed_file "$file"
+            done <<< "$CHANGED"
+          fi
+
+          if [ "$ONLY_META" -eq 1 ] || [ "${#DEPLOY_ROOTS[@]}" -eq 0 ]; then
+            if [ -z "$CHANGED" ]; then
+              echo "Deploy mode: full server sync (first push or unknown base)"
+            else
+              echo "Deploy mode: skipped — only workflow/docs changed, nothing to upload"
+              echo "DEPLOY_MODE=skip" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "DEPLOY_MODE=full" >> "$GITHUB_ENV"
+            rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
+            exit 0
+          fi
+
+          echo "Deploy mode: changed files only (${#DEPLOY_ROOTS[@]} target(s))"
+          echo "DEPLOY_MODE=scoped" >> "$GITHUB_ENV"
+          for root in "${!DEPLOY_ROOTS[@]}"; do
+            case "$root" in
+              __file__:*)
+                copy_path "${root#__file__:}"
+                ;;
+              *)
+                copy_path "$root"
+                ;;
+            esac
+          done
 
       - name: Sync to server via SFTP
+        if: env.DEPLOY_MODE != 'skip'
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_PORT: ${{ secrets.SFTP_PORT }}
@@ -61,6 +176,10 @@ jobs:
             echo "Deploy bundle directory does not exist: $BUNDLE_DIR"
             exit 1
           fi
+
+          FILE_COUNT="$(find "$BUNDLE_DIR" -type f | wc -l | tr -d ' ')"
+          echo "Uploading $FILE_COUNT file(s) via SFTP (${DEPLOY_MODE:-unknown} mode)"
+
           BATCH=""
           trap 'rm -rf "$BUNDLE_DIR"; if [ -n "$BATCH" ]; then rm -f "$BATCH"; fi' EXIT
 
@@ -91,6 +210,7 @@ jobs:
           echo "SFTP upload complete"
 
       - name: Restart game server
+        if: env.DEPLOY_MODE != 'skip'
         continue-on-error: true
         env:
           PTERODACTYL_PANEL_URL: ${{ secrets.PTERODACTYL_PANEL_URL }}
