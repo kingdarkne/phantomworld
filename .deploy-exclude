@@ -1,9 +1,11 @@
-# Rsync exclude list for GitHub Actions SFTP deploy.
-# One pattern per line — avoids shell word-splitting in the SFTP action.
+# Minimal deploy excludes — only Git metadata and live runtime data (never commit these).
+# Everything tracked in git is uploaded, including web/dist, configs, and dotfiles.
 
 .git/
 .github/
 deploy_bundle/
+
+# FXServer runtime (rebuilt on the host; not stored in git)
 alpine/
 citizen/
 components/
@@ -16,34 +18,3 @@ logs/
 txData/
 db/
 *.log
-.DS_Store
-Thumbs.db
-desktop.ini
-Desktop.ini
-.vscode/
-.idea/
-node_modules/
-.yarn/
-dist/
-!resources/[[]custom[]]/jg-dealerships-v2/web/dist/
-.cache/
-.env
-.env.*
-*.pem
-*.key
-server.cfg.local
-resources/core
-resources/y_burgershot-main/core
-**/qb-core-legacy/core
-resources/[[]Newmaps[]]/[[]qb[]]/
-resources/[[]defaultmaps[]]/
-resources/[[]vehicles[]]/
-resources/[[]clothing[]]/
-resources/[[]Graphics[]]/
-resources/AzuraPlatV2-Branded/
-resources/FiveM Vehicle Pack/
-resources/cars2/
-resources/Audio_Pack/
-.replxx_history
-**/*__duplicate_backup/
-**/*_backup/

@@ -18,7 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
           submodules: false
 
       - name: Prepare deploy bundle
@@ -26,63 +25,8 @@ jobs:
           set -euo pipefail
           BUNDLE_DIR="$(mktemp -d)"
           echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
-
-          BEFORE="${{ github.event.before }}"
-          SHA="${{ github.sha }}"
-          CHANGED=""
-          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
-            CHANGED="$(git diff --name-only "$BEFORE" "$SHA" || true)"
-          fi
-
-          declare -A DEPLOY_ROOTS=()
-          if [ -n "$CHANGED" ]; then
-            while IFS= read -r file; do
-              [ -z "$file" ] && continue
-              case "$file" in
-                .github/*|.deploy-exclude|.gitignore)
-                  continue
-                  ;;
-                resources/*/*/*)
-                  DEPLOY_ROOTS["$(echo "$file" | cut -d/ -f1-3)"]=1
-                  ;;
-                resources/*/*)
-                  DEPLOY_ROOTS["$(echo "$file" | cut -d/ -f1-2)"]=1
-                  ;;
-                *)
-                  DEPLOY_ROOTS["__file__:$file"]=1
-                  ;;
-              esac
-            done <<< "$CHANGED"
-          fi
-
-          if [ "${#DEPLOY_ROOTS[@]}" -eq 0 ] || [ -n "${DEPLOY_ROOTS[__full__]:-}" ]; then
-            echo "Deploy mode: full server sync"
-            echo "DEPLOY_MODE=full" >> "$GITHUB_ENV"
-            rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
-            exit 0
-          fi
-
-          echo "Deploy mode: scoped sync (${#DEPLOY_ROOTS[@]} target(s))"
-          echo "DEPLOY_MODE=scoped" >> "$GITHUB_ENV"
-          for root in "${!DEPLOY_ROOTS[@]}"; do
-            case "$root" in
-              __file__:*)
-                file="${root#__file__:}"
-                if [ -f "$file" ]; then
-                  mkdir -p "$BUNDLE_DIR/$(dirname "$file")"
-                  cp "$file" "$BUNDLE_DIR/$file"
-                  echo "  + $file"
-                fi
-                ;;
-              *)
-                if [ -d "$root" ]; then
-                  mkdir -p "$BUNDLE_DIR/$(dirname "$root")"
-                  rsync -av --exclude-from=.deploy-exclude "$root/" "$BUNDLE_DIR/$root/"
-                  echo "  + $root/"
-                fi
-                ;;
-            esac
-          done
+          echo "Deploy mode: full sync (all tracked files)"
+          rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
 
       - name: Sync to server via SFTP
         env:

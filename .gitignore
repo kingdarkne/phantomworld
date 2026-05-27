@@ -34,12 +34,9 @@ Desktop.ini
 .vscode/
 .idea/
 
-# Node (resource build folders)
+# Node build deps (keep ignoring node_modules; resource web/dist UI bundles ARE tracked)
 **/node_modules/
 **/.yarn/
-**/dist/
-!resources/[custom]/jg-dealerships-v2/web/dist/
-!resources/[custom]/jg-dealerships-v2/web/dist/**
 **/.cache/
 
 # Env files with unrelated secrets (mysql.cfg + secrets.cfg are tracked — private repo)

@@ -1,0 +1,75 @@
+/* iPhone-ish visual pass for NPWD without rebuilding React bundle */
+
+:root {
+  --npwd-accent: #0a84ff; /* iOS blue */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif !important;
+}
+
+/* Phone frame/screen polish */
+.Phone {
+  filter: drop-shadow(0 24px 50px rgba(0, 0, 0, 0.55)) !important;
+}
+
+.PhoneFrame {
+  opacity: 0.98 !important;
+}
+
+.PhoneScreen {
+  border-radius: 34px !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10) inset !important;
+  background-color: rgba(0, 0, 0, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(1.15) !important;
+}
+
+/* Make scrollbars less “PC” */
+*::-webkit-scrollbar {
+  width: 2px !important;
+}
+
+/* Global primary color overrides (where NPWD uses Tailwind blue/sky) */
+.bg-blue-500,
+.bg-sky-500 {
+  background-color: var(--npwd-accent) !important;
+}
+
+.text-blue-400,
+.text-sky-400 {
+  color: rgba(10, 132, 255, 0.95) !important;
+}
+
+.border-blue-500 {
+  border-color: rgba(10, 132, 255, 0.65) !important;
+}
+
+/* A bit more rounding everywhere */
+.rounded-md { border-radius: 12px !important; }
+.rounded-lg { border-radius: 14px !important; }
+.rounded-xl { border-radius: 18px !important; }
+.rounded-\[10px\] { border-radius: 14px !important; }
+.rounded-\[6px\] { border-radius: 12px !important; }
+
+/* Buttons: slightly more iOS */
+button,
+[role="button"] {
+  letter-spacing: 0.01em;
+}
+
+/* Added icon names under app icons (best-effort injected by custom-overrides.js) */
+.npwd-icon-label {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.82);
+  text-align: center;
+  text-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
