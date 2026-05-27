@@ -12,7 +12,7 @@ local function sendPhoneMail(mailData)
     local title = mailData.subject or mailData.sender or 'Message'
     local content = mailData.message or title
     local button = mailData.button
-    local hasAction = button and button.enabled and button.buttonEvent
+    local hasAction = button and button.enabled and button.buttonEvent ~= nil
 
     if GetResourceState('npwd') == 'started' then
         exports.npwd:createSystemNotification({

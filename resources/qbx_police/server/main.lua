@@ -132,8 +132,8 @@ end)
 
 local function isPoliceForcePresent()
     local players = exports.qbx_core:GetQBPlayers()
-    for i = 1, #players do
-        local job = players[i].PlayerData.job
+    for _, player in pairs(players) do
+        local job = player.PlayerData.job
         if job.type == 'leo' and job.grade.level >= 2 then
             return true
         end
@@ -347,16 +347,16 @@ RegisterNetEvent('police:server:FlaggedPlateTriggered', function(radar, plate, s
     if not src then return end
     local coords = GetEntityCoords(GetPlayerPed(src))
     local players = exports.qbx_core:GetQBPlayers()
-    for i = 1, #players do
-        if IsLeoAndOnDuty(players[i]) then
+    for _, player in pairs(players) do
+        if IsLeoAndOnDuty(player) then
             local alertData = {
                 title = locale('info.new_call'),
                 coords = coords,
                 description = locale(
                     'info.plate_triggered', plate, street, radar)
             }
-            TriggerClientEvent('qbx_police:client:phoneAlert', players[i].PlayerData.source, alertData)
-            TriggerClientEvent('police:client:policeAlert', players[i].PlayerData.source, coords, locale('info.plate_triggered_blip', radar))
+            TriggerClientEvent('qbx_police:client:phoneAlert', player.PlayerData.source, alertData)
+            TriggerClientEvent('police:client:policeAlert', player.PlayerData.source, coords, locale('info.plate_triggered_blip', radar))
         end
     end
 end)
@@ -502,8 +502,8 @@ RegisterNetEvent('police:server:UpdateCurrentCops', function()
     local players = exports.qbx_core:GetQBPlayers()
     if updatingCops then return end
     updatingCops = true
-    for i = 1, #players do
-        if IsLeoAndOnDuty(players[i]) then
+    for _, player in pairs(players) do
+        if IsLeoAndOnDuty(player) then
             amount += 1
         end
     end
