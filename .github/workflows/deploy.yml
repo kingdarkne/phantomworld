@@ -23,8 +23,9 @@ jobs:
       - name: Prepare deploy bundle
         run: |
           set -euo pipefail
-          mkdir -p deploy_bundle
-          rsync -av --exclude-from=.deploy-exclude ./ deploy_bundle/
+          BUNDLE_DIR="$(mktemp -d)"
+          echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+          rsync -av --exclude-from=.deploy-exclude ./ "$BUNDLE_DIR"/
 
       - name: Sync to server via SFTP
         env:
@@ -42,18 +43,35 @@ jobs:
           : "${SFTP_PASSWORD:?SFTP_PASSWORD secret is required}"
 
           PORT="${SFTP_PORT:-2022}"
-          REMOTE_PATH="${SFTP_PATH:-/home/container}"
-          REMOTE_PATH="${REMOTE_PATH%/}"
+          REMOTE_PATH="${SFTP_PATH:-.}"
+          if [ "$REMOTE_PATH" != "/" ]; then
+            REMOTE_PATH="${REMOTE_PATH%/}"
+          fi
+          if [ -z "$REMOTE_PATH" ]; then
+            REMOTE_PATH="."
+          fi
+          if [ "$REMOTE_PATH" = "/home/container" ]; then
+            echo "Using SFTP login root for Pterodactyl-style /home/container path"
+            REMOTE_PATH="."
+          fi
+
+          : "${BUNDLE_DIR:?BUNDLE_DIR was not created}"
+          if [ ! -d "$BUNDLE_DIR" ]; then
+            echo "Deploy bundle directory does not exist: $BUNDLE_DIR"
+            exit 1
+          fi
+          BATCH=""
+          trap 'rm -rf "$BUNDLE_DIR"; if [ -n "$BATCH" ]; then rm -f "$BATCH"; fi' EXIT
 
           sudo apt-get update -qq
           sudo apt-get install -y -qq sshpass
 
           BATCH="$(mktemp)"
           {
-            echo "lcd deploy_bundle"
-            echo "cd ${REMOTE_PATH}"
+            printf 'lcd "%s"\n' "$BUNDLE_DIR"
+            printf 'cd "%s"\n' "$REMOTE_PATH"
             (
-              cd deploy_bundle
+              cd "$BUNDLE_DIR"
               shopt -s nullglob
               for item in *; do
                 if [ -d "$item" ]; then
@@ -69,5 +87,4 @@ jobs:
           sshpass -e sftp -oBatchMode=no -oStrictHostKeyChecking=no \
             -P "$PORT" -b "$BATCH" "${SFTP_USER}@${SFTP_HOST}"
 
-          rm -f "$BATCH"
           echo "SFTP upload complete"

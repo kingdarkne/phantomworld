@@ -20,7 +20,7 @@ Pushing to the `main` branch triggers [`.github/workflows/deploy.yml`](.github/w
    - **Port** (often `2022` on Gravelhost; default SSH is `22`)
    - **Username** (usually something like `container.xxxxx`)
    - **Password** (panel-generated; reset there if lost)
-   - **Remote path** — server root is typically `/home/container`
+   - **Remote path** — in the panel this is often shown as `/home/container`, but SFTP logins commonly start already inside that directory
 
 Test with FileZilla, WinSCP, or Cyberduck: protocol **SFTP**, same host/port/user/password.
 
@@ -68,7 +68,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | `SFTP_HOST` | Yes | `135.148.136.32` | From panel SFTP details |
 | `SFTP_USER` | Yes | `container.abc123` | SFTP username |
 | `SFTP_PASSWORD` | Yes | *(panel password)* | Paste the **full** panel password exactly; `@`, `.`, and other special characters are supported |
-| `SFTP_PATH` | No | `/home/container` | Remote server root; defaults to `/home/container` if unset |
+| `SFTP_PATH` | No | `.` | Remote server root from the SFTP login; defaults to `.` if unset. If you already set `/home/container` for a Pterodactyl-style host, the workflow maps it to `.` |
 | `SFTP_PORT` | No | `2022` | Defaults to `2022` if unset; Gravelhost uses port `2022` |
 
 ---
@@ -76,8 +76,8 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 ## 4. How the workflow works
 
 1. **Checkout** — GitHub Actions checks out `main` (gitignored files are not in the workspace).
-2. **Rsync filter** — excludes `.git`, secrets, cache paths, and large asset patterns (mirrors [`.gitignore`](.gitignore)).
-3. **SFTP upload** — syncs `deploy_bundle/` to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. No SSH shell required. Job timeout is 120 minutes.
+2. **Temporary bundle** — stages the checkout in a temp directory outside the repository, using [`.deploy-exclude`](.deploy-exclude) to skip `.git`, secrets, cache paths, large asset patterns, and deploy staging artifacts.
+3. **SFTP upload** — syncs the temp bundle to `SFTP_PATH` with OpenSSH `sftp` (batch mode) and `sshpass` for password auth. Pterodactyl-style `/home/container` paths are treated as the SFTP login root (`.`). No SSH shell required. Job timeout is 120 minutes.
 
 ---
 
@@ -99,7 +99,7 @@ Remove old SSH deploy secrets if you used them: `DEPLOY_HOST`, `DEPLOY_USER`, `D
 | Connection timed out | Check `SFTP_HOST`, `SFTP_PORT` (try `2022` for Gravelhost), firewall |
 | Authentication failed / Permission denied / `GetPass() failed -- assume anonymous login` | Re-copy `SFTP_USER` / `SFTP_PASSWORD` from panel (full password, no truncation); reset password if needed. Password is passed only via the `SSHPASS` env var to `sshpass` (never inline in scripts or URLs), so special characters are supported |
 | `protocol: invalid parameter - you provided "sftp"` | Old workflow used FTP-Deploy-Action which only supports FTP/FTPS — current workflow uses OpenSSH `sftp` for true SFTP |
-| Files not updating | Confirm workflow succeeded; check `SFTP_PATH` points at server root |
+| Files not updating | Confirm workflow succeeded; for Pterodactyl/Gravelhost SFTP, leave `SFTP_PATH` unset or set it to `.` because the login usually starts at the server root |
 | `mysql.cfg` / `secrets.cfg` missing on server | Upload manually via SFTP (never in git) |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
 | Changes not visible in-game | Restart FXServer from Gravelhost / txAdmin |
