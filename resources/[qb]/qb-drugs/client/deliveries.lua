@@ -8,6 +8,32 @@ local waitingKeyPress = false
 local dealerCombo = nil
 local drugDeliveryZone
 
+local function sendPhoneMail(mailData)
+    local title = mailData.subject or mailData.sender or 'Message'
+    local content = mailData.message or title
+    local button = mailData.button
+    local hasAction = button and button.enabled and button.buttonEvent
+
+    if GetResourceState('npwd') == 'started' then
+        exports.npwd:createSystemNotification({
+            uniqId = ('qb-drugs:%s:%s'):format(GetGameTimer(), math.random(1000, 9999)),
+            content = content,
+            secondary = mailData.sender or title,
+            keepOpen = hasAction or false,
+            duration = hasAction and 15000 or 10000,
+            controls = hasAction or false,
+            onConfirm = function()
+                if hasAction then
+                    TriggerEvent(button.buttonEvent, button.buttonData)
+                end
+            end,
+        })
+        return
+    end
+
+    QBCore.Functions.Notify(content, 'primary')
+end
+
 -- Handlers
 
 AddStateBagChangeHandler('isLoggedIn', nil, function(_, _, value)
@@ -173,7 +199,7 @@ local function RequestDelivery()
         QBCore.Functions.Notify(Lang:t('info.sending_delivery_email'), 'success')
         TriggerServerEvent('qb-drugs:server:giveDeliveryItems', waitingDelivery)
         SetTimeout(2000, function()
-            TriggerServerEvent('qb-phone:server:sendNewMail', {
+            sendPhoneMail({
                 sender = Config.Dealers[currentDealer]['name'],
                 subject = 'Delivery Location',
                 message = Lang:t('info.delivery_info_email', { itemAmount = amount, itemLabel = QBCore.Shared.Items[waitingDelivery['itemData']['item']]['label'] }),
@@ -458,19 +484,19 @@ end)
 
 RegisterNetEvent('qb-drugs:client:sendDeliveryMail', function(type, deliveryData)
     if type == 'perfect' then
-        TriggerServerEvent('qb-phone:server:sendNewMail', {
+        sendPhoneMail({
             sender = Config.Dealers[deliveryData['dealer']]['name'],
             subject = 'Delivery',
             message = Lang:t('info.perfect_delivery', { dealerName = Config.Dealers[deliveryData['dealer']]['name'] })
         })
     elseif type == 'bad' then
-        TriggerServerEvent('qb-phone:server:sendNewMail', {
+        sendPhoneMail({
             sender = Config.Dealers[deliveryData['dealer']]['name'],
             subject = 'Delivery',
             message = Lang:t('info.bad_delivery')
         })
     elseif type == 'late' then
-        TriggerServerEvent('qb-phone:server:sendNewMail', {
+        sendPhoneMail({
             sender = Config.Dealers[deliveryData['dealer']]['name'],
             subject = 'Delivery',
             message = Lang:t('info.late_delivery')

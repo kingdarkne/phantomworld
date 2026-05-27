@@ -7,6 +7,25 @@ local isMelting = false ---@type boolean
 local canTake = false ---@type boolean
 local meltTimeSeconds = 0 ---@type number
 
+local function sendPhoneNotification(data)
+    local title = data.subject or data.sender or locale('info.title')
+    local content = data.message or title
+
+    if GetResourceState('npwd') == 'started' then
+        exports.npwd:createSystemNotification({
+            uniqId = ('pawnshop:%s:%s'):format(GetGameTimer(), math.random(1000, 9999)),
+            content = content,
+            secondary = title,
+            keepOpen = false,
+            duration = 10000,
+            controls = false,
+        })
+        return
+    end
+
+    exports.qbx_core:Notify(content, 'success')
+end
+
 ---@param id number
 ---@param shopConfig {coords: vector3, size: vector3, heading: number, debugPoly: boolean, distance: number}
 local function addPawnShop(id, shopConfig)
@@ -170,11 +189,10 @@ RegisterNetEvent('qb-pawnshop:client:startMelting', function(pMeltTimeSeconds)
             return
         end
 
-        TriggerServerEvent('qb-phone:server:sendNewMail', {
+        sendPhoneNotification({
             sender = locale('info.title'),
             subject = locale('info.subject'),
             message = locale('info.message'),
-            button = {}
         })
     end)
 end)

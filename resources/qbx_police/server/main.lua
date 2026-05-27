@@ -59,7 +59,7 @@ RegisterNetEvent('police:server:SendTrackerLocation', function(coords, requestId
         description = msg
     }
     TriggerClientEvent('police:client:TrackerMessage', requestId, msg, coords)
-    TriggerClientEvent('qb-phone:client:addPoliceAlert', requestId, alertData)
+    TriggerClientEvent('qbx_police:client:phoneAlert', requestId, alertData)
 end)
 
 -- Items
@@ -183,11 +183,11 @@ RegisterNetEvent('police:server:policeAlert', function(text, camId, playerSource
                     description = text ..
                         locale('info.camera_id') .. camId
                 }
-                TriggerClientEvent('qb-phone:client:addPoliceAlert', k, alertData)
+                TriggerClientEvent('qbx_police:client:phoneAlert', k, alertData)
                 TriggerClientEvent('police:client:policeAlert', k, coords, text, camId)
             else
                 local alertData = { title = locale('info.new_call'), coords = coords, description = text }
-                TriggerClientEvent('qb-phone:client:addPoliceAlert', k, alertData)
+                TriggerClientEvent('qbx_police:client:phoneAlert', k, alertData)
                 TriggerClientEvent('police:client:policeAlert', k, coords, text)
             end
         end
@@ -355,8 +355,8 @@ RegisterNetEvent('police:server:FlaggedPlateTriggered', function(radar, plate, s
                 description = locale(
                     'info.plate_triggered', plate, street, radar)
             }
-            TriggerClientEvent('qb-phone:client:addPoliceAlert', i, alertData)
-            TriggerClientEvent('police:client:policeAlert', i, coords, locale('info.plate_triggered_blip', radar))
+            TriggerClientEvent('qbx_police:client:phoneAlert', players[i].PlayerData.source, alertData)
+            TriggerClientEvent('police:client:policeAlert', players[i].PlayerData.source, coords, locale('info.plate_triggered_blip', radar))
         end
     end
 end)

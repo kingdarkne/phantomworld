@@ -132,11 +132,10 @@ QBCore.Functions.CreateCallback("weapons:server:RepairWeapon", function(source, 
                         Config.RepairPoints[RepairPoint].IsRepairing = false
                         Config.RepairPoints[RepairPoint].RepairingData.Ready = true
                         TriggerClientEvent('weapons:client:SyncRepairShops', -1, Config.RepairPoints[RepairPoint], RepairPoint)
-                        TriggerEvent('qb-phone:server:sendNewMailToOffline', Player.PlayerData.citizenid, {
-                            sender = Lang:t('mail.sender'),
-                            subject = Lang:t('mail.subject'),
-                            message = Lang:t('mail.message', { value = WeaponData.label })
-                        })
+                        local repairedPlayer = QBCore.Functions.GetPlayerByCitizenId(Player.PlayerData.citizenid)
+                        if repairedPlayer then
+                            TriggerClientEvent('QBCore:Notify', repairedPlayer.PlayerData.source, Lang:t('mail.message', { value = WeaponData.label }), 'success')
+                        end
                         if Config.RepairPoints[RepairPoint].tableTimeout ~= false then
                             SetTimeout(Config.RepairPoints[RepairPoint].tableTimeout * minute, function()
                                 if Config.RepairPoints[RepairPoint].RepairingData.Ready then

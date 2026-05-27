@@ -41,6 +41,29 @@ local function removeBlips()
     dutyBlips = {}
 end
 
+local function sendPhoneNotification(data)
+    local title = data.title or locale('info.new_call')
+    local content = data.description or title
+
+    if GetResourceState('npwd') == 'started' then
+        exports.npwd:createSystemNotification({
+            uniqId = ('police:%s:%s'):format(GetGameTimer(), math.random(1000, 9999)),
+            content = content,
+            secondary = title,
+            keepOpen = false,
+            duration = 10000,
+            controls = false,
+        })
+        return
+    end
+
+    exports.qbx_core:Notify(content, 'inform', 5000, title)
+end
+
+RegisterNetEvent('qbx_police:client:phoneAlert', function(alertData)
+    sendPhoneNotification(alertData or {})
+end)
+
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     TriggerServerEvent('police:server:SetHandcuffStatus', false)
     TriggerServerEvent('police:server:UpdateCurrentCops')
@@ -90,11 +113,12 @@ RegisterNetEvent('police:client:sendBillingMail', function(amount)
     SetTimeout(math.random(2500, 4000), function()
         local charinfo = QBX.PlayerData.charinfo
         local gender = locale(charinfo.gender == 1 and 'info.mrs' or 'info.mr')
-        TriggerServerEvent('qb-phone:server:sendNewMail', {
+        sendPhoneNotification({
             sender = locale('email.sender'),
             subject = locale('email.subject'),
+            title = locale('email.subject'),
             message = locale('email.message', gender, charinfo.lastname, amount),
-            button = {}
+            description = locale('email.message', gender, charinfo.lastname, amount),
         })
     end)
 end)

@@ -397,7 +397,7 @@ lib.addCommand('911p', {
     for i = 1, #players do
         if IsLeoAndOnDuty(players[i]) then
             local alertData = {title = locale('commands.emergency_call'), coords = {x = coords.x, y = coords.y, z = coords.z}, description = message}
-            TriggerClientEvent('qb-phone:client:addPoliceAlert', players[i].PlayerData.source, alertData)
+            TriggerClientEvent('qbx_police:client:phoneAlert', players[i].PlayerData.source, alertData)
             TriggerClientEvent('police:client:policeAlert', players[i].PlayerData.source, coords, message)
         end
     end

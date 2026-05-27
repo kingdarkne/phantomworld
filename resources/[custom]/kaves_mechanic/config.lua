@@ -14,8 +14,8 @@ Config.Settings = {
         keyCode = 21, -- drift key
     },
     performanceMode = {
-        torqValue = 16.0, -- torque multiplier of the vehicle in performance mode
-        engineValue = 16.0, -- engine power multiplier of the vehicle in performance mode
+        torqValue = 1.25, -- torque multiplier of the vehicle in performance mode
+        engineValue = 1.25, -- engine power multiplier of the vehicle in performance mode
     },
     nitro = {
         multiplier = 1.10, -- propulsion coefficient when using nitro (don't increase it too much)
