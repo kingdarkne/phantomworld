@@ -1,20 +1,2 @@
-# Minimal deploy excludes — only Git metadata and live runtime data (never commit these).
-# Everything tracked in git is uploaded, including web/dist, configs, and dotfiles.
-
+# Only git metadata — everything else deploys via SFTP
 .git/
-.github/
-deploy_bundle/
-
-# FXServer runtime (rebuilt on the host; not stored in git)
-alpine/
-citizen/
-components/
-FXServer.exe
-run.cmd
-cache/
-tmp/
-crashes/
-logs/
-txData/
-db/
-*.log
