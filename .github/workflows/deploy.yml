@@ -91,6 +91,7 @@ jobs:
           echo "SFTP upload complete"
 
       - name: Restart game server
+        continue-on-error: true
         env:
           PTERODACTYL_PANEL_URL: ${{ secrets.PTERODACTYL_PANEL_URL }}
           PTERODACTYL_CLIENT_API_KEY: ${{ secrets.PTERODACTYL_CLIENT_API_KEY }}
@@ -112,12 +113,21 @@ jobs:
             -H "Authorization: Bearer ${PTERODACTYL_CLIENT_API_KEY}" \
             -H "Content-Type: application/json" \
             -H "Accept: Application/vnd.pterodactyl.v1+json" \
+            -H "User-Agent: phantomworld-github-deploy/1.0" \
             -d '{"signal":"restart"}')"
 
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
             echo "Server restart signal sent (HTTP ${HTTP_CODE})."
-          else
-            echo "Restart request failed (HTTP ${HTTP_CODE}):"
-            cat "$RESPONSE"
-            exit 1
+            exit 0
           fi
+
+          if [ "$HTTP_CODE" = "403" ] && grep -qiE 'just a moment|challenges\.cloudflare\.com|cf-chl' "$RESPONSE"; then
+            echo "::warning::Restart blocked by Cloudflare on ${PANEL} (HTTP 403). SFTP deploy succeeded — restart the server manually from the Gravelhost panel."
+            echo "GitHub Actions cannot pass Cloudflare browser checks. Ask Gravelhost to allowlist CI/API access, or restart by hand after each deploy."
+            exit 0
+          fi
+
+          echo "::warning::Restart request failed (HTTP ${HTTP_CODE}). SFTP deploy succeeded — restart manually from the panel if needed."
+          head -c 500 "$RESPONSE" || true
+          echo ""
+          exit 0

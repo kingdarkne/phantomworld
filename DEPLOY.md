@@ -107,7 +107,8 @@ After deploy succeeds, the workflow calls `POST /api/client/servers/{id}/power` 
 | `mysql.cfg` / `secrets.cfg` missing on server | Commit them to the private repo and push, or upload manually via SFTP |
 | Vehicles/maps missing in-game | Upload excluded asset folders manually via SFTP |
 | Changes not visible in-game | Confirm the **Restart game server** step ran; add `PTERODACTYL_*` secrets if restart was skipped |
-| Restart failed (HTTP 401/403) | Regenerate Client API key; ensure it can control **your** server |
+| Restart failed (HTTP 401/403, not Cloudflare) | Regenerate Client API key; ensure it can control **your** server |
+| Restart failed (HTTP 403, “Just a moment…” / Cloudflare) | **Deploy still succeeded.** Gravelhost’s panel blocks GitHub Actions with Cloudflare — restart manually from the panel after deploy, or ask Gravelhost to allow API access from CI |
 | Restart failed (HTTP 404) | Wrong `PTERODACTYL_SERVER_ID` — use the full server UUID from the panel URL |
 
 ---
