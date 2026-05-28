@@ -169,8 +169,32 @@ RegisterNetEvent('police:server:Radar', function(fine)
     exports.qbx_core:Notify(src, locale('info.fine_received', price), 'inform')
 end)
 
+local function getPoliceAlertSource(playerSource)
+    local caller = tonumber(source)
+
+    -- Client-triggered net events must not be allowed to attribute crimes to
+    -- arbitrary players. Server resources can still forward an explicit source.
+    if not GetInvokingResource() then
+        if caller and caller > 0 and GetPlayerName(caller) then
+            return caller
+        end
+        return
+    end
+
+    local explicitSource = tonumber(playerSource)
+    if explicitSource and GetPlayerName(explicitSource) then
+        return explicitSource
+    end
+
+    if caller and caller > 0 and caller ~= 65535 and GetPlayerName(caller) then
+        return caller
+    end
+end
+
 RegisterNetEvent('police:server:policeAlert', function(text, camId, playerSource)
-    if not playerSource then playerSource = source end
+    playerSource = getPoliceAlertSource(playerSource)
+    if not playerSource then return end
+
     local ped = GetPlayerPed(playerSource)
     local coords = GetEntityCoords(ped)
     local players = exports.qbx_core:GetQBPlayers()
