@@ -833,7 +833,7 @@ AddEventHandler('fenix:server:trigger', function(pdata,alertData)
         if wantedlevel then
             print("Wanted Level for this location is " .. wantedlevel)
         else
-            print("No wanted level for this locaiton found.. setting to 1")
+            print("No wanted level for this location found.. setting to 1")
             wantedlevel = 1
         end 
 

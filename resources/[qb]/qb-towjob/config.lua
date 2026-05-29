@@ -8,6 +8,18 @@ Config.Vehicles = {
     ["flatbed"] = "Flatbed",
 }
 
+Config.Peds = {
+    {
+        model = 's_m_m_autoshop_02',
+        coords = vector4(471.39, -1311.03, 29.21, 114.5),
+        scenario = 'WORLD_HUMAN_CLIPBOARD',
+        zoneOptions = {
+            length = 3.0,
+            width = 3.0,
+        },
+    },
+}
+
 Config.Locations = {
     ["main"] = {
         label = "Towing HQ",

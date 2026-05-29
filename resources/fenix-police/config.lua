@@ -19,9 +19,9 @@ Config.onlyWhenPlayerPoliceOffline = false
 Config.numberOfPoliceRequired = 1
 -- Which Jobs count as "Police" jobs?
 Config.PoliceJobsToCheck = {
-    [1] = { jobName = 'lspd',  onDutyOnly = true },
-    [2] = { jobName = 'sahp',  onDutyOnly = true },
-    [3] = { jobName = 'bcso',  onDutyOnly = true },
+    [1] = { jobName = 'police', onDutyOnly = true },
+    [2] = { jobName = 'bcso',   onDutyOnly = true },
+    [3] = { jobName = 'sasp',   onDutyOnly = true },
 }
 
 -- Are players with police jobs in the list above protected from becoming wanted?
@@ -81,7 +81,7 @@ Config.evasionTimes = {
 -- vehicles and officers to see if they are dead or too far away and starts timers to remove them if they remain that way. 
 -- It checks if the player is on foot or in a vehicle and adjusts ALL of the spawned officers accordingly every cycle making them get out and pursue on foot or get back
 -- into a nearby vehicle if the player gets in a vehicle and flees etc.
-Config.scriptFrequency = 1000 --miliseconds
+Config.scriptFrequency = 450 -- milliseconds — faster spawn cycles (was 1000)
 
 -- This modulus is used when the cleanup/removal timers are checked in the code to ensure that they are not treated as the 
 -- number of cycles to pass before removing an officer, but as the number of seconds. 
@@ -130,8 +130,8 @@ Config.controlWaitCount = 2
 --------------------------
 
 -- WANTED LEVEL UNIT COUNTS --
-Config.maxUnitsPerLevel = {2, 4, 6, 8, 10} -- Maximum ground units for each wanted level
-Config.maxHeliUnitsPerLevel = {0, 0, 0, 1, 2} -- Maximum heli units for each wanted level
+Config.maxUnitsPerLevel = {4, 7, 10, 14, 18} -- Maximum ground units for each wanted level
+Config.maxHeliUnitsPerLevel = {0, 1, 1, 2, 3} -- Maximum heli units for each wanted level
 Config.maxAirUnitsPerLevel = {0, 0, 0, 0, 1} -- Maximum plane units for each wanted level
 
 -- This controls whether ground units will spawn if the player is in a helicopter, already spawned units aren't removed.
@@ -143,8 +143,8 @@ Config.spawnGroundUnitsInPlane = true
 
 -- SPAWN DISTANCES ETC --
 
-Config.maxPoliceSpawnDistance = 300.0 -- This is the max distance around the player the spawn point for a new unit must be.
-Config.minPoliceSpawnDistance = 200.0 -- This is the min distance from the player a spawn point for a new unit must be. 
+Config.maxPoliceSpawnDistance = 220.0 -- Closer spawns = units arrive sooner
+Config.minPoliceSpawnDistance = 120.0
 
 Config.maxHeliSpawnDistance = 500.0 -- This is the max distance around the player the spawn point for a new heli must be.
 Config.minHeliSpawnDistance = 300.0 -- This is the min distance from the player a spawn point for a new heli must be. 

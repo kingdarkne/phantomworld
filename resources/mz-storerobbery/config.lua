@@ -1097,3 +1097,41 @@ Config.MaleNoHandshoes = {
 Config.FemaleNoHandshoes = {
     [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [14] = true, [15] = true, [19] = true, [59] = true, [60] = true, [61] = true, [62] = true, [63] = true, [64] = true, [65] = true, [66] = true, [67] = true, [68] = true, [69] = true, [70] = true, [71] = true, [129] = true, [130] = true, [131] = true, [135] = true, [142] = true, [149] = true, [153] = true, [157] = true, [161] = true, [165] = true,
 }
+
+-----------------------
+-- CLERK GUN-POINT ROB --
+-----------------------
+
+Config.ClerkRobberyEnabled = true
+
+Config.ClerkModels = {
+    `mp_m_shopkeep_01`,
+    `s_f_y_shop_mid`,
+    `s_f_y_shop_low`,
+}
+
+-- One clerk per store; registerKey is resolved to nearest mz register at robbery time.
+Config.ClerkStores = {
+    { id = 1,  label = 'Grove LTD',           clerk = vector4(-43.43, -1748.30, 29.42, 50.0) },
+    { id = 2,  label = 'Morningwood Liquor',  clerk = vector4(-1478.94, -375.50, 40.16, 135.0) },
+    { id = 3,  label = 'Vespucci Liquor',     clerk = vector4(-1220.85, -916.05, 12.32, 32.0) },
+    { id = 4,  label = 'Little Seoul LTD',    clerk = vector4(-709.74, -904.15, 19.21, 90.0) },
+    { id = 5,  label = 'Innocence Blvd 24/7', clerk = vector4(28.21, -1339.14, 29.49, 267.0) },
+    { id = 6,  label = 'El Rancho 24/7',      clerk = vector4(1126.77, -980.10, 45.41, 274.0) },
+    { id = 7,  label = 'Mirror Park 24/7',    clerk = vector4(1159.46, -314.05, 69.20, 100.0) },
+    { id = 8,  label = 'Vinewood 24/7',       clerk = vector4(378.17, 333.44, 103.56, 252.0) },
+    { id = 9,  label = 'Richman Glen LTD',    clerk = vector4(-1829.27, 798.76, 138.19, 133.0) },
+    { id = 10, label = 'Grand Senora 24/7',   clerk = vector4(-2959.64, 387.08, 14.04, 265.0) },
+    { id = 11, label = 'Chumash 24/7',        clerk = vector4(-3047.88, 585.61, 7.90, 17.0) },
+    { id = 12, label = 'Banham 24/7',         clerk = vector4(-3250.02, 1004.43, 12.83, 354.0) },
+    { id = 13, label = 'Harmony 24/7',        clerk = vector4(546.41, 2662.80, 42.15, 93.0) },
+    { id = 14, label = 'Ace Liquor',          clerk = vector4(1169.31, 2717.79, 37.15, 180.0) },
+    { id = 15, label = 'Route 68 24/7',       clerk = vector4(2672.69, 3286.63, 55.24, 327.0) },
+    { id = 16, label = 'Sandy Shores 24/7',   clerk = vector4(1959.26, 3748.92, 32.34, 303.0) },
+    { id = 17, label = 'Paleto 24/7',         clerk = vector4(1734.78, 6420.84, 35.03, 246.0) },
+    { id = 18, label = 'Grapeseed 24/7',      clerk = vector4(-168.40, 6318.80, 30.58, 225.0) },
+    { id = 19, label = 'Mount Chiliad 24/7',  clerk = vector4(168.95, 6644.74, 31.70, 225.0) },
+}
+
+Config.ClerkAimDistance = 6.0
+Config.ClerkRobTime = 15 -- seconds (gun-point register grab)

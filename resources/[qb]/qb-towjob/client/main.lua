@@ -223,6 +223,99 @@ local function CreateElements()
     CreateZone("main")
     CreateZone("vehicle")
 end
+
+local pedsSpawned = false
+local depotControlListen = false
+
+local function listenForDepotControl()
+    depotControlListen = true
+    CreateThread(function()
+        while depotControlListen do
+            if IsControlJustReleased(0, 38) then
+                TriggerEvent('qb-tow:client:MainMenu')
+            end
+            Wait(0)
+        end
+    end)
+end
+
+local function spawnPeds()
+    if not Config.Peds or not next(Config.Peds) or pedsSpawned then return end
+    for i = 1, #Config.Peds do
+        local current = Config.Peds[i]
+        current.model = type(current.model) == 'string' and joaat(current.model) or current.model
+        lib.requestModel(current.model, 5000)
+        local ped = CreatePed(0, current.model, current.coords.x, current.coords.y, current.coords.z, current.coords.w, false, false)
+        SetModelAsNoLongerNeeded(current.model)
+        FreezeEntityPosition(ped, true)
+        SetEntityInvincible(ped, true)
+        SetBlockingOfNonTemporaryEvents(ped, true)
+        if current.scenario then
+            TaskStartScenarioInPlace(ped, current.scenario, 0, true)
+        end
+        current.pedHandle = ped
+
+        if Config.UseTarget then
+            exports['qb-target']:AddTargetEntity(ped, {
+                options = {{
+                    type = 'client',
+                    event = 'qb-tow:client:MainMenu',
+                    label = Lang:t('target.talk'),
+                    icon = 'fa-solid fa-truck-pickup',
+                    job = 'tow',
+                }},
+                distance = 2.0,
+            })
+        else
+            local options = current.zoneOptions
+            if options then
+                local zone = BoxZone:Create(current.coords.xyz, options.length, options.width, {
+                    name = 'tow_depot_' .. i,
+                    heading = current.coords.w,
+                    debugPoly = false,
+                    minZ = current.coords.z - 1.0,
+                    maxZ = current.coords.z + 2.0,
+                })
+                zone:onPlayerInOut(function(inside)
+                    if LocalPlayer.state.isLoggedIn and inside then
+                        QBCore.Functions.DrawText(Lang:t('target.talk'), 'left')
+                        listenForDepotControl()
+                    else
+                        depotControlListen = false
+                        QBCore.Functions.HideText()
+                    end
+                end)
+            end
+        end
+    end
+    pedsSpawned = true
+end
+
+local function deletePeds()
+    if not Config.Peds or not next(Config.Peds) or not pedsSpawned then return end
+    for i = 1, #Config.Peds do
+        local current = Config.Peds[i]
+        if current.pedHandle then
+            DeletePed(current.pedHandle)
+        end
+    end
+    pedsSpawned = false
+end
+
+RegisterNetEvent('qb-tow:client:MainMenu', function()
+    if PlayerJob.name ~= 'tow' then
+        QBCore.Functions.Notify(Lang:t('error.job'), 'error')
+        return
+    end
+    exports['qb-menu']:openMenu({
+        { isMenuHeader = true, header = Lang:t('menu.depot_header') },
+        { header = Lang:t('menu.collect'), params = { event = 'qb-tow:client:PaySlip' } },
+        { header = Lang:t('menu.toggle_npc'), params = { event = 'jobs:client:ToggleNpc' } },
+        { header = Lang:t('menu.vehicles'), params = { event = 'qb-tow:client:Vehicle' } },
+        { header = Lang:t('menu.close_menu'), params = { event = 'qb-menu:client:closeMenu' } },
+    })
+end)
+
 -- Events
 
 RegisterNetEvent('qb-tow:client:SpawnVehicle', function()
@@ -245,6 +338,7 @@ RegisterNetEvent('qb-tow:client:SpawnVehicle', function()
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    spawnPeds()
     PlayerJob = QBCore.Functions.GetPlayerData().job
 
     if PlayerJob.name == "tow" then
@@ -258,6 +352,16 @@ RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     if PlayerJob.name == "tow" then
         CreateElements()
     end
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    spawnPeds()
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    deletePeds()
 end)
 
 RegisterNetEvent('jobs:client:ToggleNpc', function()

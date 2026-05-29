@@ -77,7 +77,7 @@ local disableAIPolice = nil -- Toggle to turn AI police response on and off if p
 -- EXPORTS --
 function ApplyWantedLevel(level)
     Citizen.CreateThread(function()
-        if Config.PoliceWantedProtection and isPlayerPoliceOfficer then
+        if Config.PoliceWantedProtection and isPlayerPoliceOfficer() then
             -- If wanted protection is enabled and the player is a cop we skip doing anything
         else
             -- Apply wanted
@@ -112,7 +112,7 @@ end)
 
 function SetWantedLevel(level)
     Citizen.CreateThread(function()
-        if Config.PoliceWantedProtection and isPlayerPoliceOfficer then
+        if Config.PoliceWantedProtection and isPlayerPoliceOfficer() then
             -- If wanted protection is enabled and the player is a cop we skip doing anything
         else
             -- Apply wanted
@@ -476,6 +476,7 @@ local function spawnHeliUnitNet(wantedLevel, spawnTable)
 
     if not spawnCoords then
         if Config.isDebug then print('No safe spawn point found') end
+        isSpawning = false
         return
     end
 
@@ -584,6 +585,7 @@ local function spawnAirUnitNet(wantedLevel, spawnTable)
 
     if not spawnCoords then
         if Config.isDebug then print('No safe spawn point found') end
+        isSpawning = false
         return
     end
 
@@ -706,6 +708,7 @@ local function spawnPoliceUnitNet(wantedLevel)
     local spawnPoint, spawnHeading = getSafeSpawnPoint(playerCoords, Config.minPoliceSpawnDistance, Config.maxPoliceSpawnDistance) 
     if not spawnPoint then
         if Config.isDebug then print('No safe spawn point found') end
+        isSpawning = false
         return
     end
 
@@ -1871,20 +1874,34 @@ end
 
 RegisterNetEvent('fenix-police:updateCopsOnline', function(polCount)
     if polCount >= Config.numberOfPoliceRequired and Config.onlyWhenPlayerPoliceOffline == true then
-        if disableAIPolice == true then
-            -- Already disabled no need to do the same thing again.
-        else
+        if disableAIPolice ~= true then
             disableAIPolice = true
             UpdateDispatchServices()
         end
-    elseif (Config.onlyWhenPlayerPoliceOffline == false) or (polCount < Config.numberOfPoliceRequired and Config.onlyWhenPlayerPoliceOffline == true)  then
-        if disableAIPolice == false then
-            -- Already enabled no need to do the same thing again.
-        else
+    elseif (Config.onlyWhenPlayerPoliceOffline == false) or (polCount < Config.numberOfPoliceRequired and Config.onlyWhenPlayerPoliceOffline == true) then
+        if disableAIPolice ~= false then
             disableAIPolice = false
             UpdateDispatchServices()
         end
     end
+end)
+
+-- Robbery scripts (hybrid-storerobbery etc.) call these client events
+RegisterNetEvent('fenix-police:client:triggerWantedLevel', function(level)
+    exports['fenix-police']:ApplyWantedLevel(tonumber(level) or 1)
+end)
+
+RegisterNetEvent('fenix-police:client:dispatchPolice', function(_data)
+    -- Wanted level + main loop spawns AI units; no separate dispatch handler needed
+end)
+
+-- Enable AI police as soon as this resource starts (overrides qb-smallresources SetMaxWantedLevel(0))
+CreateThread(function()
+    Wait(1500)
+    if disableAIPolice == nil then
+        disableAIPolice = false
+    end
+    UpdateDispatchServices()
 end)
 
 -- checks if a player is one of the police jobs configured and returns true if they are.
@@ -1928,7 +1945,7 @@ Citizen.CreateThread(function()
         local playerPed = PlayerPedId()
         local wantedLevel = GetPlayerWantedLevel(PlayerId())
         
-        if wantedLevel > 0 then
+        if wantedLevel > 0 and disableAIPolice ~= true then
 
             -- If police are protected we should check if player is a cop and prevent being wanted
             if Config.PoliceWantedProtection then

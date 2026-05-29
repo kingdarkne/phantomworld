@@ -8,7 +8,8 @@ local Translations = {
         backdoors_not_open = "The backdoors of the vehicle aren't open",
         get_out_vehicle = "You need to step out of the vehicle to perform this action",
         too_far_from_trunk = "You need to grab the boxes from the trunk of your vehicle",
-        too_far_from_delivery = "You need to be closer to the delivery point"
+        too_far_from_delivery = "You need to be closer to the delivery point",
+        job = "You must be employed as a trucker",
     },
     success = {
         paid_with_cash = "$%{value} Deposit Paid With Cash",
@@ -19,7 +20,13 @@ local Translations = {
     },
     menu = {
         header = "Available Trucks",
+        depot_header = "Trucker Depot",
+        collect = "Collect Payslip",
+        vehicles = "Work Trucks",
         close_menu = "⬅ Close Menu",
+    },
+    target = {
+        talk = "Talk to Dispatcher",
     },
     mission = {
         store_reached = "Store reached, get a box in the trunk with [E] and deliver to marker",

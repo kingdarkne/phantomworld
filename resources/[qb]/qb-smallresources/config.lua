@@ -35,7 +35,7 @@ Config.Binoculars = {
 }
 
 Config.AIResponse = {
-    wantedLevels = false, -- if true, you will recieve wanted levels
+    wantedLevels = true, -- fenix-police handles AI cops; keep wanted stars enabled here
     dispatchServices = {  -- AI dispatch services
         [1] = false,      -- Police Vehicles
         [2] = false,      -- Police Helicopters
@@ -78,12 +78,14 @@ Config.Discord = {
     }
 }
 
+-- World population multipliers (0.0–1.0). Tuned for RP density without maxing every slot.
+-- Admins can override live via norse_awsome_admins Server → World Density (maps to these via DecorSet export).
 Config.Density = {
-    parked = 0.2,
-    vehicle = 0.2,
-    multiplier = 0.2,
-    peds = 0.2,
-    scenario = 0.2
+    parked = 0.6,      -- parked/street-parked cars
+    vehicle = 0.7,     -- ambient driving traffic
+    multiplier = 0.7,  -- random vehicle spawns (highways / variety)
+    peds = 0.9,        -- pedestrians on sidewalks
+    scenario = 0.9,    -- scenario peds (standing, walking activities)
 }
 
 Config.Disable = {

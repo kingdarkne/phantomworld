@@ -412,8 +412,100 @@ end
 
 -- Events
 
+local pedsSpawned = false
+local depotControlListen = false
+
+local function listenForDepotControl()
+    depotControlListen = true
+    CreateThread(function()
+        while depotControlListen do
+            if IsControlJustReleased(0, 38) then
+                TriggerEvent('qb-truckerjob:client:MainMenu')
+            end
+            Wait(0)
+        end
+    end)
+end
+
+local function spawnPeds()
+    if not Config.Peds or not next(Config.Peds) or pedsSpawned then return end
+    for i = 1, #Config.Peds do
+        local current = Config.Peds[i]
+        current.model = type(current.model) == 'string' and joaat(current.model) or current.model
+        lib.requestModel(current.model, 5000)
+        local ped = CreatePed(0, current.model, current.coords.x, current.coords.y, current.coords.z, current.coords.w, false, false)
+        SetModelAsNoLongerNeeded(current.model)
+        FreezeEntityPosition(ped, true)
+        SetEntityInvincible(ped, true)
+        SetBlockingOfNonTemporaryEvents(ped, true)
+        if current.scenario then
+            TaskStartScenarioInPlace(ped, current.scenario, 0, true)
+        end
+        current.pedHandle = ped
+
+        if Config.UseTarget then
+            exports['qb-target']:AddTargetEntity(ped, {
+                options = {{
+                    type = 'client',
+                    event = 'qb-truckerjob:client:MainMenu',
+                    label = Lang:t('target.talk'),
+                    icon = 'fa-solid fa-truck',
+                    job = 'trucker',
+                }},
+                distance = 2.0,
+            })
+        else
+            local options = current.zoneOptions
+            if options then
+                local zone = BoxZone:Create(current.coords.xyz, options.length, options.width, {
+                    name = 'trucker_depot_' .. i,
+                    heading = current.coords.w,
+                    debugPoly = false,
+                    minZ = current.coords.z - 1.0,
+                    maxZ = current.coords.z + 2.0,
+                })
+                zone:onPlayerInOut(function(inside)
+                    if LocalPlayer.state.isLoggedIn and inside then
+                        QBCore.Functions.DrawText(Lang:t('target.talk'), 'left')
+                        listenForDepotControl()
+                    else
+                        depotControlListen = false
+                        QBCore.Functions.HideText()
+                    end
+                end)
+            end
+        end
+    end
+    pedsSpawned = true
+end
+
+local function deletePeds()
+    if not Config.Peds or not next(Config.Peds) or not pedsSpawned then return end
+    for i = 1, #Config.Peds do
+        local current = Config.Peds[i]
+        if current.pedHandle then
+            DeletePed(current.pedHandle)
+        end
+    end
+    pedsSpawned = false
+end
+
+RegisterNetEvent('qb-truckerjob:client:MainMenu', function()
+    if PlayerJob.name ~= 'trucker' then
+        QBCore.Functions.Notify(Lang:t('error.job'), 'error')
+        return
+    end
+    exports['qb-menu']:openMenu({
+        { isMenuHeader = true, header = Lang:t('menu.depot_header') },
+        { header = Lang:t('menu.collect'), params = { event = 'qb-truckerjob:client:PaySlip' } },
+        { header = Lang:t('menu.vehicles'), params = { event = 'qb-truckerjob:client:Vehicle' } },
+        { header = Lang:t('menu.close_menu'), params = { event = 'qb-menu:client:closeMenu' } },
+    })
+end)
+
 AddEventHandler('onResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
+    spawnPeds()
     PlayerJob = QBCore.Functions.GetPlayerData().job
     CurrentLocation = nil
     CurrentBlip = nil
@@ -425,6 +517,7 @@ AddEventHandler('onResourceStart', function(resource)
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    spawnPeds()
     PlayerJob = QBCore.Functions.GetPlayerData().job
     CurrentLocation = nil
     CurrentBlip = nil
@@ -437,6 +530,7 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
+    deletePeds()
     RemoveTruckerBlips()
     CurrentLocation = nil
     CurrentBlip = nil
@@ -532,6 +626,12 @@ end)
 RegisterNetEvent('qb-truckerjob:client:SetShopList', function(shoplist)
     Config.TruckerJobLocations["stores"] = shoplist
 end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    deletePeds()
+end)
+
 -- Threads
 CreateThread(function()
     TriggerServerEvent('qb-shops:server:SetShopList')

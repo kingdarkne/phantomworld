@@ -28,7 +28,7 @@ CreateThread(function() -- all these should only need to be called once
         SetAudioFlag('DisableFlightMusic', true)
     end
     SetAudioFlag('PoliceScannerDisabled', true)
-    SetGarbageTrucks(false)
+    SetGarbageTrucks(true) -- ambient garbage trucks add street life; does not affect job garbage routes
     SetCreateRandomCops(false)
     SetCreateRandomCopsNotOnScenarios(false)
     SetCreateRandomCopsOnScenarios(false)

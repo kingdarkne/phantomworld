@@ -12,7 +12,10 @@ ui_page 'html/index.html'
 
 shared_script 'config.lua'
 
-client_script 'client/main.lua'
+client_scripts {
+    'client/main.lua',
+    'client/clerk.lua',
+}
 
 server_script 'server/main.lua'
 

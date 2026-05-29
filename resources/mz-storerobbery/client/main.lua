@@ -44,6 +44,13 @@ function GetPedGender()
     return gender
 end
 
+local function triggerFenixStoreRobberyWanted(stars)
+    if GetResourceState('fenix-police') ~= 'started' then return end
+    pcall(function()
+        exports['fenix-police']:ApplyWantedLevel(stars)
+    end)
+end
+
 RegisterNetEvent('mz-storerobbery:client:mzRegisterHit', function()
     if not Config.dispatchver2 then 
         local currentPos = GetEntityCoords(PlayerPedId())
@@ -71,6 +78,7 @@ RegisterNetEvent('mz-storerobbery:client:mzRegisterHit', function()
     elseif Config.dispatchver2 then 
         exports['ps-dispatch']:mzRegisterStoreRobbery(camId)
     end 
+    triggerFenixStoreRobberyWanted(2)
 end)
 
 RegisterNetEvent('mz-storerobbery:client:mzSafeHit', function()
@@ -100,6 +108,7 @@ RegisterNetEvent('mz-storerobbery:client:mzSafeHit', function()
     elseif Config.dispatchver2 then 
         exports['ps-dispatch']:mz711StoreRobbery(camId)
     end 
+    triggerFenixStoreRobberyWanted(3)
 end)
 
 RegisterNetEvent('mz-storerobbery:client:mzLiquorHit', function()
@@ -129,6 +138,7 @@ RegisterNetEvent('mz-storerobbery:client:mzLiquorHit', function()
     elseif Config.dispatchver2 then 
         exports['ps-dispatch']:mzLiquorStoreRobbery(camId)
     end 
+    triggerFenixStoreRobberyWanted(2)
 end)
 
 -------------

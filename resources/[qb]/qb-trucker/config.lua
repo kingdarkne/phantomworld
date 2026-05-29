@@ -20,6 +20,18 @@ Config.TruckerJobLocations = {
     },
 }
 
+Config.Peds = {
+    {
+        model = 's_m_m_trucker_01',
+        coords = vector4(153.68, -3211.88, 5.91, 274.5),
+        scenario = 'WORLD_HUMAN_CLIPBOARD',
+        zoneOptions = {
+            length = 3.0,
+            width = 3.0,
+        },
+    },
+}
+
 Config.TruckerJobVehicles = {
     ["rumpo"] = {
         ["label"] = "Rumpo Delivery Van",

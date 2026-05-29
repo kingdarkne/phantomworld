@@ -7,6 +7,7 @@ local Translations = {
         too_far_away = "You are too far away",
         no_work_done = "You have not done any work yet",
         no_deposit = "$%{value} Deposit required",
+        job = "You must be employed as a tow truck driver",
     },
     success = {
         paid_with_cash = "$%{value} Deposit Paid With Cash",
@@ -16,7 +17,14 @@ local Translations = {
     },
     menu = {
         header = "Available Trucks",
+        depot_header = "Towing HQ",
+        collect = "Collect Payslip",
+        vehicles = "Work Trucks",
+        toggle_npc = "Toggle NPC Tow Jobs",
         close_menu = "⬅ Close Menu",
+    },
+    target = {
+        talk = "Talk to Dispatcher",
     },
     mission = {
         delivered_vehicle = "You Have Delivered A Vehicle",
