@@ -22,12 +22,12 @@ function ToggleRadio()
     
     if radioOn then
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'Radio turned on - Channel ' .. currentChannel
         })
     else
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'Radio turned off'
         })
     end
@@ -39,7 +39,7 @@ end
 function SetRadioChannel(channel)
     if channel < 1 or channel > Config.Player.Radio.MaxChannels then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Invalid channel (1-' .. Config.Player.Radio.MaxChannels .. ')'
         })
         return false
@@ -49,7 +49,7 @@ function SetRadioChannel(channel)
     
     if radioOn then
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'Channel set to ' .. channel
         })
     end
@@ -74,7 +74,7 @@ function SetRadioVolume(volume)
     
     -- This would update voice system
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = 'Volume: ' .. math.floor(radioVolume * 100) .. '%'
     })
 end

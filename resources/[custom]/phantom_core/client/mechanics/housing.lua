@@ -112,7 +112,7 @@ function PurchaseProperty(property)
     
     if bank < property.price then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Insufficient funds'
         })
         return
@@ -172,7 +172,7 @@ function EnterProperty(property)
     SetEntityCoords(PlayerPedId(), property.coords)
     
     SendNotification({
-        type = 'success',
+        notificationType = 'success',
         message = 'Entered ' .. property.name
     })
     
@@ -200,7 +200,7 @@ end)
 -- Server events
 RegisterNetEvent('phantom:client:propertyPurchased', function(propertyId)
     SendNotification({
-        type = 'success',
+        notificationType = 'success',
         message = 'Property purchased!'
     })
     

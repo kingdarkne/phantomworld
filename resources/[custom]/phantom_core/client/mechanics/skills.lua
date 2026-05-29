@@ -45,7 +45,7 @@ function AddSkillXP(skillId, xp)
         TriggerServerEvent('phantom:server:skillLevelUp', skillId, skill.level)
         
         SendNotification({
-            type = 'success',
+            notificationType = 'success',
             message = skill.name .. ' leveled up to ' .. skill.level .. '!'
         })
     end
@@ -135,7 +135,7 @@ RegisterNetEvent('phantom:client:skillLevelUp', function(skillId, newLevel)
     local skill = GetSkill(skillId)
     if skill then
         SendNotification({
-            type = 'success',
+            notificationType = 'success',
             message = skill.name .. ' leveled up to ' .. newLevel .. '!'
         })
     end

@@ -58,12 +58,12 @@ function PlayEmote(category, emoteIndex)
         }
         
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'Playing emote: ' .. emote.name
         })
     else
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Failed to play emote'
         })
     end
@@ -84,7 +84,7 @@ function ToggleFavorite(category, emoteIndex)
     if favoriteEmotes[emoteKey] then
         favoriteEmotes[emoteKey] = nil
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'Removed from favorites'
         })
     else
@@ -93,7 +93,7 @@ function ToggleFavorite(category, emoteIndex)
             index = emoteIndex
         }
         SendNotification({
-            type = 'success',
+            notificationType = 'success',
             message = 'Added to favorites'
         })
     end

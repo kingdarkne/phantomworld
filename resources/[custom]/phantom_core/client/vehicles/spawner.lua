@@ -153,7 +153,7 @@ function SpawnVehicleFromMenu(model, price)
         TaskWarpPedIntoVehicle(ped, vehicle, -1)
         
         SendNotification({
-            type = 'vehicle',
+            notificationType = 'vehicle',
             message = 'Vehicle spawned: ' .. model
         })
         
@@ -163,7 +163,7 @@ function SpawnVehicleFromMenu(model, price)
         return true
     else
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Failed to spawn vehicle: ' .. (error or 'Unknown error')
         })
         return false

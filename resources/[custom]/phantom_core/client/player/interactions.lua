@@ -118,7 +118,7 @@ function OpenInteractionMenu()
     
     if #nearbyEntities == 0 then
         SendNotification({
-            type = 'info',
+            notificationType = 'info',
             message = 'No nearby entities to interact with'
         })
         return
@@ -170,7 +170,7 @@ function HandleInteraction(entity, option)
         if option.label == 'Trade' then
             -- Open trade UI
             SendNotification({
-                type = 'info',
+                notificationType = 'info',
                 message = 'Trade system coming soon'
             })
         elseif option.label == 'Give Money' then
@@ -188,7 +188,7 @@ function HandleInteraction(entity, option)
                     if submitted and values[1] then
                         -- Give money logic
                         SendNotification({
-                            type = 'success',
+                            notificationType = 'success',
                             message = 'Gave $' .. values[1] .. ' to player'
                         })
                     end
@@ -196,7 +196,7 @@ function HandleInteraction(entity, option)
             })
         elseif option.label == 'Invite to Group' then
             SendNotification({
-                type = 'info',
+                notificationType = 'info',
                 message = 'Group invite sent'
             })
         end
@@ -209,14 +209,14 @@ function HandleInteraction(entity, option)
             TaskWarpPedIntoVehicle(ped, entity.id, 0)
         elseif option.label == 'Check Trunk' then
             SendNotification({
-                type = 'info',
+                notificationType = 'info',
                 message = 'Opening trunk...'
             })
         elseif option.label == 'Lock/Unlock' then
             local isLocked = GetVehicleDoorLockStatus(entity.id) == 2
             SetVehicleDoorsLocked(entity.id, isLocked and 1 or 2)
             SendNotification({
-                type = 'info',
+                notificationType = 'info',
                 message = isLocked and 'Vehicle unlocked' or 'Vehicle locked'
             })
         end

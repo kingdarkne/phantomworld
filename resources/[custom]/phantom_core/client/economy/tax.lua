@@ -53,7 +53,7 @@ function ShowTaxInfo(taxType)
     end
     
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = info
     })
 end

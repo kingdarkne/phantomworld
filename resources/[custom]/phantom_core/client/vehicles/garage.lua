@@ -97,7 +97,7 @@ function RetrieveVehicle(vehicleId)
     -- This would fetch vehicle data from server and spawn it
     
     SendNotification({
-        type = 'vehicle',
+        notificationType = 'vehicle',
         message = 'Vehicle retrieved'
     })
     
@@ -119,7 +119,7 @@ function StoreVehicle(vehicle)
     -- Delete vehicle from world
     
     SendNotification({
-        type = 'vehicle',
+        notificationType = 'vehicle',
         message = 'Vehicle stored'
     })
     
@@ -179,7 +179,7 @@ function ClaimVehicle(vehicleId)
     -- Spawn vehicle at impound location
     
     SendNotification({
-        type = 'vehicle',
+        notificationType = 'vehicle',
         message = 'Vehicle claimed for ' .. FormatMoney(Config.Vehicles.Garage.ImpoundFee)
     })
     
@@ -264,7 +264,7 @@ RegisterCommand('garage', function()
         OpenGarage(nearestGarage)
     else
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'No garage nearby'
         })
     end

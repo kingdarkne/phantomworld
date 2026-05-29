@@ -82,7 +82,7 @@ function RefuelVehicle(vehicle, fuelType)
                 SetVehicleFuel(vehicle, 100.0)
                 
                 SendNotification({
-                    type = 'vehicle',
+                    notificationType = 'vehicle',
                     message = 'Vehicle refueled for ' .. FormatMoney(totalPrice)
                 })
                 
@@ -154,7 +154,7 @@ CreateThread(function()
                             RefuelVehicle(vehicle, station.price)
                         else
                             SendNotification({
-                                type = 'error',
+                                notificationType = 'error',
                                 message = 'You must be in a vehicle'
                             })
                         end

@@ -24,7 +24,7 @@ function OpenBankingMenu()
     local playerData = GetPlayerData()
     if not playerData or not playerData.money then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Unable to load account data'
         })
         return
@@ -101,7 +101,7 @@ function DepositMoney()
                 
                 if amount > cash then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Insufficient cash'
                     })
                     return
@@ -109,7 +109,7 @@ function DepositMoney()
                 
                 if amount <= 0 then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Invalid amount'
                     })
                     return
@@ -142,7 +142,7 @@ function WithdrawMoney()
                 
                 if amount > bank then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Insufficient bank balance'
                     })
                     return
@@ -150,7 +150,7 @@ function WithdrawMoney()
                 
                 if amount <= 0 then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Invalid amount'
                     })
                     return
@@ -189,7 +189,7 @@ function TransferMoney()
                 
                 if amount > bank then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Insufficient bank balance'
                     })
                     return
@@ -197,7 +197,7 @@ function TransferMoney()
                 
                 if amount <= 0 then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Invalid amount'
                     })
                     return
@@ -265,7 +265,7 @@ end)
 -- Server events
 RegisterNetEvent('phantom:client:bankingUpdate', function(newCash, newBank)
     SendNotification({
-        type = 'success',
+        notificationType = 'success',
         message = 'Transaction completed'
     })
 end)

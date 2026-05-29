@@ -11,7 +11,7 @@ function StartJob(jobName)
     timeWorked = 0
     
     SendNotification({
-        type = 'success',
+        notificationType = 'success',
         message = 'Started job: ' .. jobName
     })
     
@@ -41,7 +41,7 @@ function StopJob()
     TriggerServerEvent('phantom:server:jobPayout', currentJob, workedMinutes, totalPay)
     
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = 'Job ended. Worked: ' .. workedMinutes .. ' minutes'
     })
     
@@ -69,7 +69,7 @@ end
 RegisterCommand('startjob', function(source, args)
     if #args == 0 then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'Usage: /startjob [jobname]'
         })
         return
@@ -85,7 +85,7 @@ end)
 -- Server event
 RegisterNetEvent('phantom:client:jobPayout', function(amount)
     SendNotification({
-        type = 'money',
+        notificationType = 'money',
         message = 'Received ' .. FormatMoney(amount) .. ' from job'
     })
 end)

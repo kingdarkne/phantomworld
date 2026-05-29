@@ -29,7 +29,7 @@ function OpenTuningMenu(vehicle)
     
     if not DoesEntityExist(vehicle) then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'No vehicle nearby'
         })
         return
@@ -138,7 +138,7 @@ function ApplyUpgrade(modType, level, price)
     end
     
     SendNotification({
-        type = 'vehicle',
+        notificationType = 'vehicle',
         message = 'Upgrade installed successfully'
     })
     
@@ -175,7 +175,7 @@ function ResetUpgrades()
                 end
                 
                 SendNotification({
-                    type = 'vehicle',
+                    notificationType = 'vehicle',
                     message = 'All upgrades removed'
                 })
             end
@@ -206,7 +206,7 @@ RegisterCommand('tuning', function()
         OpenTuningMenu(vehicle)
     else
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'You must be in a vehicle'
         })
     end

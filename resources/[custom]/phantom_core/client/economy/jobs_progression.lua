@@ -72,7 +72,7 @@ function AddJobXP(jobName, xp)
                 TriggerServerEvent('phantom:server:jobLevelUp', jobName, progression.level)
                 
                 SendNotification({
-                    type = 'success',
+                    notificationType = 'success',
                     message = 'Promoted to ' .. nextRank.name .. '!'
                 })
             end
@@ -103,7 +103,7 @@ function OpenJobProgressionMenu()
     
     if not currentJob then
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'You are not employed'
         })
         return
@@ -176,7 +176,7 @@ RegisterNetEvent('phantom:client:jobLevelUp', function(jobName, newLevel)
     local rank = GetJobRank(jobName, newLevel)
     if rank then
         SendNotification({
-            type = 'success',
+            notificationType = 'success',
             message = 'Promoted to ' .. rank.name .. '!'
         })
     end

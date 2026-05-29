@@ -7,7 +7,7 @@ function SortInventory(by)
     -- by could be: name, type, weight, quantity
     
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = 'Inventory sorted by ' .. by
     })
 end
@@ -23,7 +23,7 @@ function QuickDrop(itemName, amount)
             if confirmed then
                 -- This would call ox_inventory to remove item
                 SendNotification({
-                    type = 'success',
+                    notificationType = 'success',
                     message = 'Dropped ' .. amount .. 'x ' .. itemName
                 })
             end
@@ -34,7 +34,7 @@ end
 -- Quick use
 function QuickUse(itemName)
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = 'Using ' .. itemName
     })
     

@@ -57,6 +57,31 @@ local addMessage = function(message)
     }
   end
 
+  if type(message) ~= 'table' then
+    message = { args = { tostring(message or '') } }
+  end
+
+  if type(message.template) ~= 'string' then
+    message.template = nil
+  end
+
+  message.args = message.args or {}
+  if type(message.args) ~= 'table' then
+    message.args = { tostring(message.args) }
+  end
+
+  local sanitizedArgs = {}
+  for i, arg in ipairs(message.args) do
+    if arg == nil then
+      sanitizedArgs[i] = ''
+    elseif type(arg) == 'string' or type(arg) == 'number' then
+      sanitizedArgs[i] = tostring(arg)
+    else
+      sanitizedArgs[i] = tostring(arg)
+    end
+  end
+  message.args = sanitizedArgs
+
   SendNUIMessage({
     type = 'ON_MESSAGE',
     message = message

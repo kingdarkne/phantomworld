@@ -119,7 +119,7 @@ function AddToCart(item)
         if cartItem.name == item.name then
             cartItem.quantity = cartItem.quantity + 1
             SendNotification({
-                type = 'info',
+                notificationType = 'info',
                 message = item.label .. ' added to cart (' .. cartItem.quantity .. ')'
             })
             return
@@ -134,7 +134,7 @@ function AddToCart(item)
     })
     
     SendNotification({
-        type = 'info',
+        notificationType = 'info',
         message = item.label .. ' added to cart'
     })
 end
@@ -224,7 +224,7 @@ function Checkout()
                 
                 if grandTotal > cash then
                     SendNotification({
-                        type = 'error',
+                        notificationType = 'error',
                         message = 'Insufficient cash'
                     })
                     return
@@ -235,7 +235,7 @@ function Checkout()
                 
                 cart = {}
                 SendNotification({
-                    type = 'success',
+                    notificationType = 'success',
                     message = 'Purchase completed!'
                 })
                 CloseMenu()
@@ -308,7 +308,7 @@ RegisterCommand('shop', function()
         OpenShopMenu(nearestShop)
     else
         SendNotification({
-            type = 'error',
+            notificationType = 'error',
             message = 'No shop nearby'
         })
     end
@@ -317,7 +317,7 @@ end)
 -- Server event
 RegisterNetEvent('phantom:client:purchaseComplete', function()
     SendNotification({
-        type = 'success',
+        notificationType = 'success',
         message = 'Items added to your inventory'
     })
 end)
