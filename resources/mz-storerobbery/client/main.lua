@@ -1905,12 +1905,12 @@ end
 local safeCheck = true 
 
 function ExchangeSuccessSafe() 
+    local rewardSafe = currentSafe
     SetNuiFocus(false, false)
     SendNUIMessage({
         action = "closeKeypad",
         error = false,
     })
-    currentSafe = 0
     if Config.mzskills then
         local BetterXP = math.random(Config.HackingXPLow, Config.HackingXPHigh)
         local MidXP = math.random(Config.HackingXPLow, Config.HackingXPMid)
@@ -1940,8 +1940,9 @@ function ExchangeSuccessSafe()
     }, {}, {}, function() -- Done
         RobberyNui.hide()
         safeCheck = false
-        TriggerServerEvent("mz-storerobbery:server:SafeReward", currentSafe, safeCheck)
+        TriggerServerEvent("mz-storerobbery:server:SafeReward", rewardSafe, safeCheck)
         safeCheck = true
+        currentSafe = 0
         ClearPedTasks(PlayerPedId())
         Wait(1000)
         if Config.mzskills then  
@@ -1958,6 +1959,7 @@ function ExchangeSuccessSafe()
         end
     end, function() -- Cancel
         RobberyNui.hide()
+        currentSafe = 0
         ClearPedTasks(PlayerPedId())
         if Config.NotifyType == 'qb' then
             QBCore.Functions.Notify('Process Cancelled', "error", 3500)
@@ -1968,12 +1970,12 @@ function ExchangeSuccessSafe()
 end
 
 function ExchangeSuccessSafeLiquor() 
+    local rewardSafe = currentSafe
     SetNuiFocus(false, false)
     SendNUIMessage({
         action = "closeKeypad",
         error = false,
     })
-    currentSafe = 0
     if Config.mzskills then
         local BetterXP = math.random(Config.HackingXPLow, Config.HackingXPHigh)
         local MidXP = math.random(Config.HackingXPLow, Config.HackingXPMid)
@@ -2003,8 +2005,9 @@ function ExchangeSuccessSafeLiquor()
     }, {}, {}, function() -- Done
         RobberyNui.hide()
         safeCheck = false
-        TriggerServerEvent("mz-storerobbery:server:SafeRewardAlcohol", currentSafe, safeCheck)
+        TriggerServerEvent("mz-storerobbery:server:SafeRewardAlcohol", rewardSafe, safeCheck)
         safeCheck = true
+        currentSafe = 0
         ClearPedTasks(PlayerPedId())
         Wait(1000)
         if Config.mzskills then  
@@ -2021,6 +2024,7 @@ function ExchangeSuccessSafeLiquor()
         end
     end, function() -- Cancel
         RobberyNui.hide()
+        currentSafe = 0
         ClearPedTasks(PlayerPedId())
         if Config.NotifyType == 'qb' then
             QBCore.Functions.Notify('Process Cancelled', "error", 3500)

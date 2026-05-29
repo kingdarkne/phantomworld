@@ -1,6 +1,28 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local SafeCodes = {}
+local activeRegisterRobbers = {}
+local activeSafeRobbers = {}
+
+local function getRegisterTable()
+    return Config.UseGabz and Config.RegistersTargetGabz or Config.RegistersTarget
+end
+
+local function getSafeTable()
+    return Config.UseGabz and Config.SafesTargetGabz or Config.SafesTarget
+end
+
+local function isPlayerNearTarget(src, target, maxDistance)
+    if not target or not target.coords then return false end
+
+    local ped = GetPlayerPed(src)
+    if not ped or ped == 0 then return false end
+
+    local coords = GetEntityCoords(ped)
+    if not coords then return false end
+
+    return #(coords - target.coords) <= (maxDistance or 8.0)
+end
 
 ----------------
 --POLICE CHECK--
@@ -30,59 +52,106 @@ end)
 -------------------
 
 RegisterNetEvent('mz-storerobbery:server:setRegisterStatus', function(k)
+    local src = source
+    k = tonumber(k)
+
+    local registers = getRegisterTable()
+    local register = registers and registers[k]
+    if not register or register.robbed or not isPlayerNearTarget(src, register, 8.0) then
+        return
+    end
+
+    activeRegisterRobbers[k] = src
+    register.robbed = true
+    register.paidOut = false
+    register.time = Config.resetTime
+
     if not Config.UseGabz then 
-        Config.RegistersTarget[k].robbed = true
-        Config.RegistersTarget[k].time = Config.resetTime
         TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, true)
         SetTimeout(Config.resetTime, function()
             Config.RegistersTarget[k].robbed = false
+            Config.RegistersTarget[k].paidOut = false
+            activeRegisterRobbers[k] = nil
             TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, false)
         end)
     else
-        Config.RegistersTargetGabz[k].robbed = true
-        Config.RegistersTargetGabz[k].time = Config.resetTime
         TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, true)
         SetTimeout(Config.resetTime, function()
             Config.RegistersTargetGabz[k].robbed = false
+            Config.RegistersTargetGabz[k].paidOut = false
+            activeRegisterRobbers[k] = nil
             TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, false)
         end) 
     end 
 end)
 
 RegisterNetEvent('mz-storerobbery:server:setRegisterStatusFailed', function(k)
+    local src = source
+    k = tonumber(k)
+    if not k or activeRegisterRobbers[k] ~= src then return end
+    activeRegisterRobbers[k] = nil
+
     if not Config.UseGabz then 
+        if not Config.RegistersTarget[k] then return end
         Config.RegistersTarget[k].robbed = false
+        Config.RegistersTarget[k].paidOut = false
         TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, false)
     else 
+        if not Config.RegistersTargetGabz[k] then return end
         Config.RegistersTargetGabz[k].robbed = false
+        Config.RegistersTargetGabz[k].paidOut = false
         TriggerClientEvent('mz-storerobbery:client:setRegisterStatus', -1, k, false)
     end
 end)
 
 RegisterNetEvent('mz-storerobbery:server:setSafeStatus', function(safe)
+    local src = source
+    safe = tonumber(safe)
+
+    local safes = getSafeTable()
+    local safeConfig = safes and safes[safe]
+    if not safeConfig or safeConfig.robbed or not isPlayerNearTarget(src, safeConfig, 10.0) then
+        return
+    end
+
+    activeSafeRobbers[safe] = src
+    safeConfig.robbed = true
+    safeConfig.paidOut = false
+
     if not Config.UseGabz then 
-        Config.SafesTarget[safe].robbed = true
         TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, true)
         SetTimeout(Config.SafeResetTime, function()
             Config.SafesTarget[safe].robbed = false
+            Config.SafesTarget[safe].paidOut = false
+            activeSafeRobbers[safe] = nil
             TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, false)
         end)
     else 
-        Config.SafesTargetGabz[safe].robbed = true
         TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, true)
         SetTimeout(Config.SafeResetTime, function()
             Config.SafesTargetGabz[safe].robbed = false
+            Config.SafesTargetGabz[safe].paidOut = false
+            activeSafeRobbers[safe] = nil
             TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, false)
         end)
     end 
 end)
 
 RegisterNetEvent('mz-storerobbery:server:setSafeStatusFailed', function(safe)
+    local src = source
+    safe = tonumber(safe)
+    if not safe or activeSafeRobbers[safe] ~= src then return end
+    activeSafeRobbers[safe] = nil
+
     if not Config.UseGabz then
+        if not Config.SafesTarget[safe] then return end
         Config.SafesTarget[safe].robbed = false
+        Config.SafesTarget[safe].paidOut = false
         TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, false)
     else 
+        if not Config.SafesTargetGabz[safe] then return end
         Config.SafesTargetGabz[safe].robbed = false
+        Config.SafesTargetGabz[safe].paidOut = false
         TriggerClientEvent('mz-storerobbery:client:setSafeStatus', -1, safe, false)
     end 
 end)
@@ -100,8 +169,23 @@ RegisterNetEvent('mz-storerobbery:server:takeMoney', function(register, isDone, 
         if not Player then 
             return 
         end
-        local playerPed = GetPlayerPed(src)
-        local playerCoords = GetEntityCoords(playerPed)
+
+        register = tonumber(register)
+        local registers = getRegisterTable()
+        local registerConfig = registers and registers[register]
+        if not isDone
+            or not registerConfig
+            or not registerConfig.robbed
+            or registerConfig.paidOut
+            or activeRegisterRobbers[register] ~= src
+            or not isPlayerNearTarget(src, registerConfig, 8.0) then
+            print("Rejected invalid mz-storerobbery register payout attempt from " .. tostring(src))
+            return
+        end
+
+        registerConfig.paidOut = true
+        activeRegisterRobbers[register] = nil
+
         if isDone then
             if Config.CashRegisterReturn == "dirtymoney" then 
                 local amount = math.random(Config.minRegisterEarn, Config.maxRegisterEarn)
@@ -163,6 +247,22 @@ RegisterNetEvent('mz-storerobbery:server:SafeReward', function(safe, safeCheck)
         if not Player then 
             return 
         end
+
+        safe = tonumber(safe)
+        local safes = getSafeTable()
+        local safeConfig = safes and safes[safe]
+        if not safeConfig
+            or not safeConfig.robbed
+            or safeConfig.paidOut
+            or activeSafeRobbers[safe] ~= src
+            or not isPlayerNearTarget(src, safeConfig, 10.0) then
+            print("Rejected invalid mz-storerobbery safe payout attempt from " .. tostring(src))
+            return
+        end
+
+        safeConfig.paidOut = true
+        activeSafeRobbers[safe] = nil
+
         if Config.SafeReturn == "dirtymoney" then 
             local amount = math.random(Config.minSafeEarn, Config.maxSafeEarn)
             Player.Functions.AddItem('dirtymoney', amount)
@@ -262,6 +362,22 @@ RegisterNetEvent('mz-storerobbery:server:SafeRewardAlcohol', function(safe, safe
         if not Player then 
             return 
         end
+
+        safe = tonumber(safe)
+        local safes = getSafeTable()
+        local safeConfig = safes and safes[safe]
+        if not safeConfig
+            or not safeConfig.robbed
+            or safeConfig.paidOut
+            or activeSafeRobbers[safe] ~= src
+            or not isPlayerNearTarget(src, safeConfig, 10.0) then
+            print("Rejected invalid mz-storerobbery liquor safe payout attempt from " .. tostring(src))
+            return
+        end
+
+        safeConfig.paidOut = true
+        activeSafeRobbers[safe] = nil
+
         if Config.AlcoholReturn == "dirtymoney" then 
             local amount = math.random(Config.AlcoholminSafeEarn, Config.AlcoholmaxSafeEarn)
             Player.Functions.AddItem('dirtymoney', amount, false)
@@ -433,6 +549,8 @@ CreateThread(function()
                     if Config.RegistersTarget[k].robbed then
                         Config.RegistersTarget[k].time = 0
                         Config.RegistersTarget[k].robbed = false
+                        Config.RegistersTarget[k].paidOut = false
+                        activeRegisterRobbers[k] = nil
                         toSend[#toSend+1] = Config.RegistersTarget[k]
                     end
                 end
@@ -445,6 +563,8 @@ CreateThread(function()
                     if Config.RegistersTargetGabz[k].robbed then
                         Config.RegistersTargetGabz[k].time = 0
                         Config.RegistersTargetGabz[k].robbed = false
+                        Config.RegistersTargetGabz[k].paidOut = false
+                        activeRegisterRobbers[k] = nil
                         toSend[#toSend+1] = Config.RegistersTargetGabz[k]
                     end
                 end
