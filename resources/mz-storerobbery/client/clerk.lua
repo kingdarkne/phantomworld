@@ -186,12 +186,16 @@ local function startClerkRegisterRobbery(store, clerkPed)
 
         TriggerEvent('animations:client:EmoteCommandStart', { 'uncuff' })
         local robTime = (Config.ClerkRobTime or 15) * 1000
+        local storeLabel = store.label or ('Store #' .. tostring(store.id))
+        RobberyNui.show(storeLabel, 'Intimidating clerk & emptying register', 'clerk')
+        RobberyNui.trackProgress(robTime, storeLabel, 'Emptying the register...', 'clerk')
         QBCore.Functions.Progressbar('clerk_register_rob', 'Robbing the register...', robTime, false, true, {
             disableMovement = true,
             disableCarMovement = true,
             disableMouse = false,
             disableCombat = true,
         }, {}, {}, {}, function()
+            RobberyNui.hide()
             TriggerEvent('animations:client:EmoteCommandStart', { 'c' })
             ClearPedTasks(ped)
             TriggerServerEvent('mz-storerobbery:server:takeMoney', registerKey, true, false)
@@ -204,6 +208,7 @@ local function startClerkRegisterRobbery(store, clerkPed)
             end
             isClerkRobbing = false
         end, function()
+            RobberyNui.hide()
             TriggerEvent('animations:client:EmoteCommandStart', { 'c' })
             ClearPedTasks(ped)
             TriggerServerEvent('mz-storerobbery:server:setRegisterStatusFailed', registerKey)

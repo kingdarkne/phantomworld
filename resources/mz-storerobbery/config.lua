@@ -89,18 +89,20 @@ Config.HeistXPhigh = 8                          -- Highest amount of "Heist Repu
 Config.LockpickBreakChance = 40                 -- Percentage chance of lockpick breaking upon player failing to lockpick cash register.
 Config.AdvancedBreakChance = 20                 -- Percentage chance of advanced lockpick breaking upon player failing to lockpick cash register.
 
--- Mini-game to steal from till
-Config.BreakRegister = "circle"                 -- PLEASE DO NOT CHANGE THIS "STANDARD" IS NO LONGER SUPPORTED
--- if "Config.BreakRegister" = "circle", then the following parameters apply:  
-Config.circleparses = 7                         -- number of circle parses a player will need to complete
-Config.circletime = 13                          -- time for player to complete one parse of the circle
+-- Mini-game to steal from till (lockpick removed — registers use direct robbery; safes keep hack minigames)
+Config.RegisterRequiresLockpick = false          -- Registers never require lockpick/screwdriver
+Config.BreakRegister = "direct"                  -- Legacy setting; register lockpick circle is disabled
+
+-- Legacy circle settings (unused for registers; kept for reference)
+Config.circleparses = 7
+Config.circletime = 13
 
 -- Reward type:
 Config.CashRegisterReturn = "dirtymoney"        -- Set to "dirtymoney", "markedbills" or "cash" to alter the reward given.
 Config.minRegisterEarn = 2000                   -- Minimum amount earnt from stealing from a cash register
 Config.maxRegisterEarn = 5000                   -- Maximum amount earnt from stealing from a cash register
 
-Config.RegisterTime = 25                        -- progressBar time it takes for player to rob cash register after lockpicking (in seconds)
+Config.RegisterTime = 25                        -- Seconds to empty a cash register (no lockpick minigame)
 
 --Chance to drop item to get into liquor store robbery
 
@@ -1135,3 +1137,8 @@ Config.ClerkStores = {
 
 Config.ClerkAimDistance = 6.0
 Config.ClerkRobTime = 15 -- seconds (gun-point register grab)
+
+-- React NUI overlay during register/clerk robberies
+Config.RobberyReactUi = true
+Config.RobberyUiMaxCash = 850 -- cosmetic cash counter max shown in UI (registers/clerk)
+Config.RobberyUiMaxSafeCash = 22000 -- cosmetic loot counter max shown in UI (safes)
