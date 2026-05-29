@@ -54,9 +54,15 @@ end
 
 local function isPlayerDown()
     local ped = PlayerPedId()
-    if IsEntityDead(ped) or IsPedFatallyInjured(ped) then
+    if IsEntityDead(ped) or IsPedFatallyInjured(ped) or IsPedDeadOrDying(ped, true) then
         return true
     end
+
+    local state = LocalPlayer.state
+    if state.isDead or state.dead or state.inLastStand or state.inlaststand then
+        return true
+    end
+
     local pdata = QBCore.Functions.GetPlayerData()
     if pdata and pdata.metadata then
         if pdata.metadata.isdead or pdata.metadata.inlaststand then
@@ -64,6 +70,15 @@ local function isPlayerDown()
         end
     end
     return false
+end
+
+local function notifyPlayerDown()
+    local now = GetGameTimer()
+    if notifyPlayerDown.lastAt and (now - notifyPlayerDown.lastAt) < 5000 then
+        return
+    end
+    notifyPlayerDown.lastAt = now
+    TriggerServerEvent('fenix-ems:server:playerDown')
 end
 
 local function revivePlayer()
@@ -233,14 +248,28 @@ end)
 CreateThread(function()
     local wasDown = false
     while true do
-        Wait(1000)
+        Wait(400)
         local down = isPlayerDown()
         if down and not wasDown then
-            TriggerServerEvent('fenix-ems:server:playerDown')
+            notifyPlayerDown()
         elseif not down and wasDown then
             cleanupUnits()
         end
         wasDown = down
+    end
+end)
+
+AddEventHandler('gameEventTriggered', function(name, args)
+    if name ~= 'CEventNetworkEntityDamage' then return end
+    if args[1] ~= PlayerPedId() then return end
+    if isPlayerDown() then
+        notifyPlayerDown()
+    end
+end)
+
+RegisterNetEvent('hospital:client:SetDeathStatus', function(isDead)
+    if isDead and isPlayerDown() then
+        notifyPlayerDown()
     end
 end)
 

@@ -1,7 +1,10 @@
 local wantedLevel = 0
 local wantedPoints = 0
 local lastPedCrime = {}
-local useFenixPolice = GetResourceState('fenix-police') == 'started'
+
+local function isFenixPoliceActive()
+    return GetResourceState('fenix-police') == 'started'
+end
 
 local dispatchServices = {
     [1] = true,  -- Police Vehicles
@@ -36,6 +39,16 @@ end
 local function applyNativeWanted(level)
     level = math.max(0, math.min(tonumber(level) or 0, 5))
 
+    if isFenixPoliceActive() then
+        if level <= 0 then
+            ClearPlayerWantedLevel(PlayerId())
+            SetPlayerWantedLevelNow(PlayerId(), false)
+        else
+            exports['fenix-police']:SetWantedLevel(level)
+        end
+        return
+    end
+
     if level <= 0 then
         ClearPlayerWantedLevel(PlayerId())
         SetPlayerWantedLevelNow(PlayerId(), false)
@@ -49,11 +62,6 @@ local function applyNativeWanted(level)
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
     if vehicle ~= 0 then
         SetVehicleIsWanted(vehicle, true)
-    end
-
-    if useFenixPolice then
-        -- fenix-police owns AI dispatch/spawning; only sync wanted stars here.
-        return
     end
 
     enableNativePoliceResponse()
@@ -91,7 +99,7 @@ end)
 CreateThread(function()
     while true do
         Wait(5000)
-        if wantedLevel > 0 and not useFenixPolice then
+        if wantedLevel > 0 and not isFenixPoliceActive() then
             applyNativeWanted(wantedLevel)
         end
     end

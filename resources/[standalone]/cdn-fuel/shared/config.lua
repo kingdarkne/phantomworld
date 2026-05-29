@@ -49,7 +49,7 @@ Config.EmergencyServicesDiscount = {
         "ambulance",
     }
 }
-Config.Core = 'qbx-core' -- Change this to your core resources (Ex: 'qbx-core' | 'qb-core'), must be qb based!
+Config.Core = 'qbx_core' -- Change this to your core resources (Ex: 'qbx_core' | 'qb-core'), must be qb based!
 Config.Ox = {
     Inventory = false, -- Uses OX_Inventory's metadata instead of QB-Inventory's.
     Menu = false, -- Uses OX Libraries instead of qb-menu.

@@ -1,4 +1,4 @@
-local lastRobbed = {} -- [registerIndex] = os.time()
+local lastRobbed = {}
 
 local function CountCops()
     local count = 0
@@ -28,33 +28,39 @@ local function GetMembershipMultiplier(src)
     return 1.0 + bonus
 end
 
-RegisterNetEvent('dr-storerobbery:server:tryRob', function(index)
+RegisterNetEvent('dr-storerobbery:server:tryRob', function(storeId, registerIndex)
     local src = source
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
-    if CountCops() < Config.MinCops then
+    storeId = tonumber(storeId)
+    registerIndex = tonumber(registerIndex)
+    if not storeId or not registerIndex then return end
+
+    if CountCops() < (Config.MinCops or 0) then
         TriggerClientEvent('ox_lib:notify', src, { description = 'Not enough police on duty.', type = 'error' })
         return
     end
 
     local now = os.time()
-    local last = lastRobbed[index] or 0
-    if now - last < Config.RegisterCooldown then
+    local cooldownKey = ('store_%s'):format(storeId)
+    local last = lastRobbed[cooldownKey] or 0
+    if now - last < (Config.RegisterCooldown or 600) then
         local remaining = Config.RegisterCooldown - (now - last)
         local mins = math.ceil(remaining / 60)
-        TriggerClientEvent('ox_lib:notify', src, { description = ('This register was robbed recently. Wait about %d minutes.'):format(mins), type = 'error' })
+        TriggerClientEvent('ox_lib:notify', src, {
+            description = ('This store was robbed recently. Wait about %d minutes.'):format(mins),
+            type = 'error',
+        })
         return
     end
 
-    lastRobbed[index] = now
+    lastRobbed[cooldownKey] = now
 
-    -- Payout with membership bonus
     local baseMin, baseMax = Config.Reward.min, Config.Reward.max
-    -- If this is a red-zone register, boost the base dramatically
-    if Config.RedRegisters and Config.RedRegisters[index] then
-        baseMin = 50000   -- 50k minimum
-        baseMax = 250000  -- 250k max before membership bonus
+    if Config.RedRegisters and Config.RedRegisters[registerIndex] then
+        baseMin = 50000
+        baseMax = 250000
     end
 
     local reward = math.random(baseMin, baseMax)
@@ -62,24 +68,27 @@ RegisterNetEvent('dr-storerobbery:server:tryRob', function(index)
     reward = math.floor(reward * multi)
 
     Player.Functions.AddMoney('cash', reward, 'store-robbery')
-    TriggerClientEvent('ox_lib:notify', src, { description = ('You grabbed $%d from the register.'):format(reward), type = 'success' })
+    TriggerClientEvent('ox_lib:notify', src, {
+        description = ('You grabbed $%d from the register.'):format(reward),
+        type = 'success',
+    })
 
-    -- XP (if dr-rankxp exists)
     if GetResourceState('dr-rankxp') == 'started' and Config.XPReward and Config.XPReward > 0 then
         exports['dr-rankxp']:GiveXP(src, Config.XPReward)
     end
 
-    -- Simple dispatch to cops
     for _, pid in ipairs(GetPlayers()) do
         local policeSrc = tonumber(pid)
         if policeSrc then
             local p = exports.qbx_core:GetPlayer(policeSrc)
             local job = p and p.PlayerData and p.PlayerData.job
             if job and job.name == 'police' and job.onduty then
-                TriggerClientEvent('ox_lib:notify', policeSrc, { description = 'Robbery in progress at a store! Check your GPS.', type = 'error' })
-                TriggerClientEvent('dr-storerobbery:client:blip', policeSrc, index)
+                TriggerClientEvent('ox_lib:notify', policeSrc, {
+                    description = 'Robbery in progress at a store! Check your GPS.',
+                    type = 'error',
+                })
+                TriggerClientEvent('dr-storerobbery:client:blip', policeSrc, registerIndex)
             end
         end
     end
 end)
-

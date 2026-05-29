@@ -1,4 +1,3 @@
-QBCore = exports['qbx_core']:GetCoreObject()
 Config = {}
 
 Config.Modules = {
@@ -17,3 +16,13 @@ Config.Modules = {
 }
 
 Config.InventoryName = 'qs-inventory'
+
+local qbCore
+
+--- Lazy-load qbx_core so ox_compat can start before qbx_core (targeting.cfg early pass).
+function GetQBCore()
+    if qbCore then return qbCore end
+    if GetResourceState('qbx_core') ~= 'started' then return nil end
+    qbCore = exports['qbx_core']:GetCoreObject()
+    return qbCore
+end

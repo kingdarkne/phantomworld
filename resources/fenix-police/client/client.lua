@@ -47,6 +47,24 @@
 -- Get the QBCore object so we can do notifications, check for nearest vehicle using their improved call, and handle isDying and isLastStand situations for the player. 
 QBCore = exports['qbx_core']:GetCoreObject()
 
+local function isPlayerPhysicallyDown()
+    local ped = PlayerPedId()
+    if IsEntityDead(ped) or IsPedFatallyInjured(ped) or IsPedDeadOrDying(ped, true) then
+        return true
+    end
+
+    local state = LocalPlayer.state
+    if state.isDead or state.dead or state.inLastStand or state.inlaststand then
+        return true
+    end
+
+    return false
+end
+
+local function shouldClearWantedWhileDown(metadata)
+    return isPlayerPhysicallyDown()
+end
+
 
 
 
@@ -1978,7 +1996,7 @@ Citizen.CreateThread(function()
 
             local playerData = QBCore.Functions.GetPlayerData()
             local metadata = playerData and playerData.metadata or {}
-            if metadata['isdead'] or metadata['inlaststand'] then
+            if shouldClearWantedWhileDown(metadata) then
 
                 local vehicle = GetVehiclePedIsIn(playerPed, false)
 
