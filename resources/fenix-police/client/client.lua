@@ -68,9 +68,21 @@ local stuckAttempts = {}  -- Table to keep track of the number of attempts to un
 local stolenVehicles = {} -- Table to store vehicles by netID that the player stole and were not cleaned up, to delete later when the player has abandoned them
 
 local isSpawning = false -- Variable to prevent spawning more units when spawning is already in progress.
+local spawnRequestStartedAt = 0
+local SPAWN_RESPONSE_TIMEOUT_MS = 15000
 
 local disableAIPolice = nil -- Toggle to turn AI police response on and off if players are online or not if that config option is used. 
 
+CreateThread(function()
+    while true do
+        Wait(2000)
+        if isSpawning and spawnRequestStartedAt > 0 and (GetGameTimer() - spawnRequestStartedAt) > SPAWN_RESPONSE_TIMEOUT_MS then
+            if Config.isDebug then print('Fenix police spawn request timed out; allowing new spawn attempts.') end
+            isSpawning = false
+            spawnRequestStartedAt = 0
+        end
+    end
+end)
 
 
 
@@ -481,6 +493,7 @@ local function spawnHeliUnitNet(wantedLevel, spawnTable)
     end
 
     TriggerServerEvent('spawnPoliceHeliNet', wantedLevel, playerCoords, spawnCoords, spawnTable)
+    spawnRequestStartedAt = GetGameTimer()
 
 end
 
@@ -568,6 +581,7 @@ AddEventHandler('spawnPoliceHeliNetResponse', function(vehNetID, officers)
     end
 
     isSpawning = false
+    spawnRequestStartedAt = 0
 
 end)
 
@@ -590,6 +604,7 @@ local function spawnAirUnitNet(wantedLevel, spawnTable)
     end
 
     TriggerServerEvent('spawnPoliceAirNet', wantedLevel, playerCoords, spawnCoords, spawnTable)
+    spawnRequestStartedAt = GetGameTimer()
 
 end
 
@@ -680,6 +695,7 @@ AddEventHandler('spawnPoliceAirNetResponse', function(vehNetID, officers)
     end
 
     isSpawning = false
+    spawnRequestStartedAt = 0
 
 end)
 
@@ -713,6 +729,7 @@ local function spawnPoliceUnitNet(wantedLevel)
     end
 
     TriggerServerEvent('spawnPoliceUnitNet', wantedLevel, playerCoords, regionCode, spawnPoint, spawnHeading)
+    spawnRequestStartedAt = GetGameTimer()
 
 end
 
@@ -796,6 +813,7 @@ AddEventHandler('spawnPoliceUnitNetResponse', function(vehNetID, officers)
     
 
     isSpawning = false
+    spawnRequestStartedAt = 0
 
 end)
 
@@ -1958,7 +1976,9 @@ Citizen.CreateThread(function()
 
             
 
-            if QBCore.Functions.GetPlayerData().metadata['isdead'] or QBCore.Functions.GetPlayerData().metadata['inlaststand'] then
+            local playerData = QBCore.Functions.GetPlayerData()
+            local metadata = playerData and playerData.metadata or {}
+            if metadata['isdead'] or metadata['inlaststand'] then
 
                 local vehicle = GetVehiclePedIsIn(playerPed, false)
 

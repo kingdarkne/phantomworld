@@ -284,6 +284,53 @@ local function randomFloat(min, max)
     return min + math.random() * (max - min)
 end
 
+local FALLBACK_POLICE_VEHICLE = 'police'
+
+local function createDispatchVehicle(model, vehicleType, x, y, z, heading)
+    local function trySpawn(spawnModel)
+        local vehicle = CreateVehicleServerSetter(GetHashKey(spawnModel), vehicleType, x, y, z, heading)
+        local waitCount = 0
+        while not DoesEntityExist(vehicle) and waitCount < Config.spawnWaitCount do
+            Wait(10)
+            waitCount = waitCount + 1
+        end
+        if DoesEntityExist(vehicle) then
+            return vehicle, spawnModel
+        end
+        return nil, spawnModel
+    end
+
+    local vehicle, usedModel = trySpawn(model)
+    if vehicle then
+        return vehicle, usedModel
+    end
+
+    if model ~= FALLBACK_POLICE_VEHICLE then
+        local fallbackModel = FALLBACK_POLICE_VEHICLE
+        if vehicleType == 'heli' then
+            fallbackModel = 'polmav'
+        elseif vehicleType == 'plane' then
+            fallbackModel = 'luxor'
+        end
+
+        vehicle, usedModel = trySpawn(fallbackModel)
+        if vehicle then
+            if Config.isDebug then
+                print(('[fenix-police] Vehicle spawn failed for %s, using fallback %s'):format(model, fallbackModel))
+            end
+            return vehicle, usedModel
+        end
+    end
+
+    return nil, model
+end
+
+local function abortGroundSpawnAttempt(vehicle)
+    if vehicle and DoesEntityExist(vehicle) then
+        DeleteEntity(vehicle)
+    end
+end
+
 
 
 -- GROUND UNITS --
@@ -307,20 +354,22 @@ AddEventHandler('spawnPoliceUnitNet', function(wantedLevel, playerCoords, region
         local selectedEntry = getRandomVehicle(regionCode, wantedLevel)
         if not selectedEntry then
             if Config.isDebug then print('No suitable vehicle found for the given wanted level.') end
-            return
+            break
         end
-        local vehicleHash = GetHashKey(selectedEntry.vehicle.model)
 
-
-        local vehicle = CreateVehicleServerSetter(vehicleHash, 'automobile', spawnPoint.x, spawnPoint.y, spawnPoint.z, spawnHeading)
-        local waitCount = 0 
-        while not DoesEntityExist(vehicle) and waitCount < Config.spawnWaitCount do
-            Wait(10)
-            waitCount = waitCount + 1
-        end
-        if not DoesEntityExist(vehicle) then
-            if Config.isDebug then print('Spawning '..selectedEntry.vehicle.model.. ' failed.') end
-            return
+        local vehicle
+        vehicle, selectedEntry.vehicle.model = createDispatchVehicle(
+            selectedEntry.vehicle.model,
+            'automobile',
+            spawnPoint.x,
+            spawnPoint.y,
+            spawnPoint.z,
+            spawnHeading
+        )
+        if not vehicle then
+            if Config.isDebug then print('Spawning ' .. selectedEntry.vehicle.model .. ' failed.') end
+            hasDriverCount = hasDriverCount + 1
+            goto continue_ground_spawn
         end
         --NetworkRegisterEntityAsNetworked(vehicle)
         vehNetID = NetworkGetNetworkIdFromEntity(vehicle)
@@ -355,7 +404,9 @@ AddEventHandler('spawnPoliceUnitNet', function(wantedLevel, playerCoords, region
                 end
                 if not DoesEntityExist(officer) then
                     if Config.isDebug then print('Spawning '..pedModel.. ' failed.') end
-                    return
+                    abortGroundSpawnAttempt(vehicle)
+                    hasDriverCount = hasDriverCount + 1
+                    goto continue_ground_spawn
                 end
                 SetEntityDistanceCullingRadius(officer, 10000.0)
                 Wait(50)
@@ -415,7 +466,7 @@ AddEventHandler('spawnPoliceUnitNet', function(wantedLevel, playerCoords, region
             hasDriverCount = hasDriverCount + 1   
         end
 
-        
+        ::continue_ground_spawn::
 
     end
 
@@ -449,19 +500,22 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
         local selectedEntry = getRandomAirUnit(spawnTable, wantedLevel)
         if not selectedEntry then
             if Config.isDebug then print('No suitable heli found for the given wanted level.') end
-            return
+            break
         end
-        local vehicleHash = GetHashKey(selectedEntry.unit.model)
 
-        local vehicle = CreateVehicleServerSetter(vehicleHash, 'heli', spawnPoint.x, spawnPoint.y, spawnPoint.z, 0.0)
-        local waitCount = 0 
-        while not DoesEntityExist(vehicle) and waitCount < Config.spawnWaitCount do
-            Wait(10)
-            waitCount = waitCount + 1
-        end
-        if not DoesEntityExist(vehicle) then
-            if Config.isDebug then print('Spawning '..selectedEntry.unit.model.. ' failed.') end
-            return
+        local vehicle
+        vehicle, selectedEntry.unit.model = createDispatchVehicle(
+            selectedEntry.unit.model,
+            'heli',
+            spawnPoint.x,
+            spawnPoint.y,
+            spawnPoint.z,
+            0.0
+        )
+        if not vehicle then
+            if Config.isDebug then print('Spawning ' .. selectedEntry.unit.model .. ' failed.') end
+            hasDriverCount = hasDriverCount + 1
+            goto continue_heli_spawn
         end
         vehNetID = NetworkGetNetworkIdFromEntity(vehicle)
 
@@ -484,17 +538,19 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
             pedInSeat = nil
             while (not pedInSeat or pedInSeat == 0) and warpCount < Config.warpWaitCount do
 
-                local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                 local waitCount = 0
                 while not DoesEntityExist(officer) and waitCount < Config.spawnWaitCount do
                     if Config.isDebug then print('Waiting to spawn officer...') end
-                    officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                    officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                     Wait(10)
                     waitCount = waitCount + 1
                 end
                 if not DoesEntityExist(officer) then
                     if Config.isDebug then print('Spawning '..pedModel.. ' failed.') end
-                    return
+                    abortGroundSpawnAttempt(vehicle)
+                    hasDriverCount = hasDriverCount + 1
+                    goto continue_heli_spawn
                 end
                 SetEntityDistanceCullingRadius(officer, 10000.0)
                 Wait(50)
@@ -526,7 +582,7 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
                     if Config.isDebug then print('NET ped ' ..pedModel .. ' spawned with pedNetID = ' ..pedNetID .. ' for vehNetID = ' .. vehNetID) end
 
                     -- Give pilot loadout
-                    GiveWeaponToPed(pilot, GetHashKey('weapon_combatpistol'), 999, false, false)
+                    GiveWeaponToPed(officer, GetHashKey('weapon_combatpistol'), 999, false, false)
 
                     -- Add pilot to table to return
                     table.insert(officers, pedNetID)
@@ -560,17 +616,17 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
                 pedInSeat = nil
                 while (not pedInSeat or pedInSeat == 0) and warpCount < Config.warpWaitCount do
 
-                    local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                    local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                     local waitCount = 0
                     while not DoesEntityExist(officer) and waitCount < Config.spawnWaitCount do
                         if Config.isDebug then print('Waiting to spawn officer...') end
-                        officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                        officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                         Wait(10)
                         waitCount = waitCount + 1
                     end
                     if not DoesEntityExist(officer) then
                         if Config.isDebug then print('Spawning '..pedModel.. ' failed.') end
-                        return
+                        break
                     end
                     SetEntityDistanceCullingRadius(officer, 10000.0)
                     Wait(50)
@@ -628,6 +684,8 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
             -- Add 1 and try again
             hasDriverCount = hasDriverCount + 1   
         end
+
+        ::continue_heli_spawn::
     end
 
     -- Return the netIDs to the client
@@ -658,19 +716,22 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
         local selectedEntry = getRandomAirUnit(spawnTable, wantedLevel)
         if not selectedEntry then
             if Config.isDebug then print('No suitable air unit found for the given wanted level.') end
-            return
+            break
         end
-        local vehicleHash = GetHashKey(selectedEntry.unit.model)
 
-        local vehicle = CreateVehicleServerSetter(vehicleHash, 'plane', spawnPoint.x, spawnPoint.y, spawnPoint.z, 0.0)
-        local waitCount = 0 
-        while not DoesEntityExist(vehicle) and waitCount < Config.spawnWaitCount do
-            Wait(10)
-            waitCount = waitCount + 1
-        end
-        if not DoesEntityExist(vehicle) then
-            if Config.isDebug then print('Spawning '..selectedEntry.unit.model.. ' failed.') end
-            return
+        local vehicle
+        vehicle, selectedEntry.unit.model = createDispatchVehicle(
+            selectedEntry.unit.model,
+            'plane',
+            spawnPoint.x,
+            spawnPoint.y,
+            spawnPoint.z,
+            0.0
+        )
+        if not vehicle then
+            if Config.isDebug then print('Spawning ' .. selectedEntry.unit.model .. ' failed.') end
+            hasDriverCount = hasDriverCount + 1
+            goto continue_air_spawn
         end
         vehNetID = NetworkGetNetworkIdFromEntity(vehicle)
 
@@ -689,17 +750,19 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
             local pedInSeat = nil
             while (not pedInSeat or pedInSeat == 0) and warpCount < Config.warpWaitCount do
 
-                local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                local officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                 local waitCount = 0
                 while not DoesEntityExist(officer) and waitCount < Config.spawnWaitCount do
                     if Config.isDebug then print('Waiting to spawn officer...') end
-                    officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, spawnHeading, true, true)
+                    officer = CreatePed(4, pedHash, spawnPoint.x+20, spawnPoint.y+20, spawnPoint.z, 0.0, true, true)
                     Wait(10)
                     waitCount = waitCount + 1
                 end
                 if not DoesEntityExist(officer) then
                     if Config.isDebug then print('Spawning '..pedModel.. ' failed.') end
-                    return
+                    abortGroundSpawnAttempt(vehicle)
+                    hasDriverCount = hasDriverCount + 1
+                    goto continue_air_spawn
                 end
                 SetEntityDistanceCullingRadius(officer, 10000.0)
                 Wait(50)
@@ -731,7 +794,7 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
                     if Config.isDebug then print('NET ped ' ..pedModel .. ' spawned with pedNetID = ' ..pedNetID .. ' for vehNetID = ' .. vehNetID) end
 
                     -- Give pilot loadout
-                    GiveWeaponToPed(pilot, GetHashKey('weapon_combatpistol'), 999, false, false)
+                    GiveWeaponToPed(officer, GetHashKey('weapon_combatpistol'), 999, false, false)
 
                     -- Add pilot to table to return
                     table.insert(officers, pedNetID)
@@ -764,6 +827,7 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
             hasDriverCount = hasDriverCount + 1   
         end
 
+        ::continue_air_spawn::
     end
 
     -- Return the netIDs to the client
