@@ -138,7 +138,7 @@ end
 
 ---@param allow boolean
 exportHandler('AllowTargeting', function(allow)
-    target:setAllowTargeting(not allow)
+    target:disableTargeting(not allow)
 end)
 
 
@@ -445,14 +445,14 @@ local function SpawnPed(data)
 
 				if v.target then
 					if v.target.useModel then
-                        target:addModel(data.model, convert({
-                            options = data.target.options,
-                            distance = data.target.distance
+                        target:addModel(v.model, convert({
+                            options = v.target.options,
+                            distance = v.target.distance
                         }))
                     else
                         target:addLocalEntity(spawnedped, convert({
-                            options = data.target.options,
-                            distance = data.target.distance
+                            options = v.target.options,
+                            distance = v.target.distance
                         }))
 					end
 				end
@@ -645,15 +645,15 @@ function SpawnPeds()
 
 			if v.target then
 				if v.target.useModel then
-					AddTargetModel(v.model, {
-						options = v.target.options,
-						distance = v.target.distance
-					})
+                    target:addModel(v.model, convert({
+                        options = v.target.options,
+                        distance = v.target.distance
+                    }))
 				else
-					AddTargetEntity(spawnedped, {
-						options = v.target.options,
-						distance = v.target.distance
-					})
+                    target:addLocalEntity(spawnedped, convert({
+                        options = v.target.options,
+                        distance = v.target.distance
+                    }))
 				end
 			end
 
