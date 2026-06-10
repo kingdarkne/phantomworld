@@ -17,6 +17,15 @@ local IGNORE_RESOURCE_ALERTS = {
     hardcap = true,
 }
 
+--- After FXServer boot, skip noisy per-resource alerts until grace ends.
+local bootAtMs = 0
+local BOOT_GRACE_MS = tonumber(GetConvar('phantom_dashboard:bootGraceSeconds', '120')) * 1000
+
+local function pastBootGrace()
+    if bootAtMs == 0 then return true end
+    return (GetGameTimer() - bootAtMs) >= BOOT_GRACE_MS
+end
+
 local function playerCount()
     return #GetPlayers()
 end
@@ -66,8 +75,18 @@ local function embedPayload(title, description, color)
 end
 
 local function postWebhook(payload)
-    if not webhook or webhook == '' then return end
-    PerformHttpRequest(webhook, function() end, 'POST', json.encode(payload), {
+    if not webhook or webhook == '' then
+        print('[phantom_dashboard] webhook not set — add phantom_dashboard.secrets.cfg on the HOST')
+        return
+    end
+    PerformHttpRequest(webhook, function(statusCode, responseText)
+        if statusCode ~= 200 and statusCode ~= 204 then
+            print(('[phantom_dashboard] webhook failed HTTP %s: %s'):format(
+                tostring(statusCode),
+                responseText and responseText:sub(1, 200) or 'no body'
+            ))
+        end
+    end, 'POST', json.encode(payload), {
         ['Content-Type'] = 'application/json',
     })
 end
@@ -79,7 +98,27 @@ local function postBotRelay(entry)
         headers['Authorization'] = 'Bearer ' .. relayToken
         headers['X-Phantom-Token'] = relayToken
     end
-    PerformHttpRequest(botRelay, function() end, 'POST', json.encode(entry), headers)
+    PerformHttpRequest(botRelay, function(statusCode, responseText)
+        if statusCode == 0 or (statusCode and statusCode >= 300) then
+            print(('[phantom_dashboard] bot relay failed (%s). Run discord-bot ON THE GAME HOST (not your PC).'):format(
+                tostring(statusCode)
+            ))
+            if responseText then
+                print(('[phantom_dashboard] relay response: %s'):format(responseText:sub(1, 120)))
+            end
+        end
+    end, 'POST', json.encode(entry), headers)
+end
+
+local function postBotRelayWithRetries(entry, attempts)
+    postBotRelay(entry)
+    if attempts <= 1 then return end
+    CreateThread(function()
+        for i = 2, attempts do
+            Wait(10000)
+            postBotRelay(entry)
+        end
+    end)
 end
 
 --- Public emit for other resources
@@ -102,6 +141,26 @@ function PhantomDashboardEmit(category, title, description, color)
     postBotRelay(entry)
 end
 
+--- Lifecycle alerts: always webhook; retry bot relay (bot may start after FXServer).
+function PhantomDashboardEmitLifecycle(category, title, description, color)
+    if not alertAll then return end
+
+    local entry = {
+        category = category or 'lifecycle',
+        title = title or 'Alert',
+        description = description or '',
+        color = color or 5814783,
+        time = os.date('%Y-%m-%d %H:%M:%S'),
+        timestamp = os.time(),
+        players = playerCount(),
+        maxPlayers = GetConvarInt('sv_maxclients', 48),
+    }
+
+    pushLog(entry)
+    postWebhook(embedPayload(title, description, color))
+    postBotRelayWithRetries(entry, 6)
+end
+
 exports('EmitAlert', function(title, message, color)
     PhantomDashboardEmit('export', title, message, color)
 end)
@@ -113,15 +172,17 @@ end)
 -- Server lifecycle
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName ~= RESOURCE then return end
+    bootAtMs = GetGameTimer()
     if Config.Discord.PostStartup then
         local status = exports[RESOURCE]:GetStatus()
-        PhantomDashboardEmit(
+        PhantomDashboardEmitLifecycle(
             'server',
-            '🟢 Phantom Dashboard Online',
-            ('**%s** is running\nPlayers: **%s/%s**'):format(
+            '🟢 FXServer / Phantom Dashboard Online',
+            ('**%s** started on the **game host**\nPlayers: **%s/%s**\nBot relay: %s'):format(
                 status.serverName,
                 status.playerCount,
-                status.maxPlayers
+                status.maxPlayers,
+                botRelay or 'not set'
             ),
             5763719
         )
@@ -130,7 +191,7 @@ end)
 
 AddEventHandler('onResourceStart', function(resourceName)
     if IGNORE_RESOURCE_ALERTS[resourceName] then return end
-    if not shouldAlert() then return end
+    if not shouldAlert() or not pastBootGrace() then return end
     PhantomDashboardEmit(
         'resource',
         '📦 Resource Started',
@@ -141,7 +202,7 @@ end)
 
 AddEventHandler('onResourceStop', function(resourceName)
     if IGNORE_RESOURCE_ALERTS[resourceName] then return end
-    if not shouldAlert() then return end
+    if not shouldAlert() or not pastBootGrace() then return end
     PhantomDashboardEmit(
         'resource',
         '📦 Resource Stopped',
@@ -260,7 +321,7 @@ end)
 
 -- txAdmin
 AddEventHandler('txAdmin:events:serverShuttingDown', function()
-    PhantomDashboardEmit('txadmin', '🔴 Server Shutting Down', 'txAdmin shutdown initiated', 15158332)
+    PhantomDashboardEmitLifecycle('txadmin', '🔴 FXServer Shutting Down', 'txAdmin shutdown / server restart', 15158332)
 end)
 
 AddEventHandler('txAdmin:events:scheduledRestart', function(eventData)

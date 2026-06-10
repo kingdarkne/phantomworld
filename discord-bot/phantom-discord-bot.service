@@ -1,0 +1,15 @@
+[Unit]
+Description=Phantom World Discord Bot (FiveM alerts + multipurpose)
+After=network.target
+
+[Service]
+Type=simple
+User=fxserver
+WorkingDirectory=/path/to/phantomworld/discord-bot
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

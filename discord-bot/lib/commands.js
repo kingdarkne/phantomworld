@@ -2,6 +2,7 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { getStatus, getPlayers, buildStatusEmbed } from './fivem.js';
 import { fetchJoke, fetchGifUrl, eightBallAnswer } from './fun.js';
 import { playInChannel, skipTrack, stopMusic, getQueue } from './music.js';
+import { coinFlip, rollDice, pickChoice, buildAvatarEmbed, buildPoll } from './more.js';
 
 export const slashCommands = [
   new SlashCommandBuilder().setName('status').setDescription('Phantom World server status'),
@@ -27,6 +28,24 @@ export const slashCommands = [
   new SlashCommandBuilder().setName('stop').setDescription('Stop music and leave voice'),
   new SlashCommandBuilder().setName('queue').setDescription('Show music queue'),
   new SlashCommandBuilder().setName('phantomhelp').setDescription('List Phantom bot commands'),
+  new SlashCommandBuilder().setName('coinflip').setDescription('Flip a coin'),
+  new SlashCommandBuilder()
+    .setName('roll')
+    .setDescription('Roll a dice')
+    .addIntegerOption((o) => o.setName('max').setDescription('Max number (default 6)').setMinValue(2).setMaxValue(1000)),
+  new SlashCommandBuilder()
+    .setName('choose')
+    .setDescription('Pick between options')
+    .addStringOption((o) => o.setName('options').setDescription('Comma-separated options').setRequired(true)),
+  new SlashCommandBuilder()
+    .setName('avatar')
+    .setDescription('Show a user avatar')
+    .addUserOption((o) => o.setName('user').setDescription('User (optional)')),
+  new SlashCommandBuilder()
+    .setName('poll')
+    .setDescription('Quick poll embed')
+    .addStringOption((o) => o.setName('question').setDescription('Poll question').setRequired(true))
+    .addStringOption((o) => o.setName('options').setDescription('Comma-separated options').setRequired(true)),
 ].map((c) => c.toJSON());
 
 export async function handleCommand(interaction, ctx) {
@@ -117,14 +136,39 @@ export async function handleCommand(interaction, ctx) {
     case 'phantomhelp': {
       const embed = new EmbedBuilder()
         .setColor(0x8b5cf6)
-        .setTitle('Phantom World Bot')
+        .setTitle('Phantom World Multipurpose Bot')
         .setDescription(
-          '**Host:** `/status` `/players` `/alert`\n' +
-            '**Fun:** `/gif` `/joke` `/8ball`\n' +
-            '**Music:** `/play` `/skip` `/stop` `/queue` (join VC first)\n\n' +
-            'Server events DM the owner automatically when FXServer + this bot run on the host.',
+          '**FiveM host:** `/status` `/players` `/alert` + auto DMs on server events\n' +
+            '**Fun:** `/gif` `/joke` `/8ball` `/coinflip` `/roll` `/choose` `/poll` `/avatar`\n' +
+            '**Music:** `/play` `/skip` `/stop` `/queue` (join voice first)\n\n' +
+            'Run this bot **on the game server host** — not your gaming PC.',
         );
       await interaction.reply({ embeds: [embed] });
+      break;
+    }
+    case 'coinflip': {
+      await interaction.reply(coinFlip());
+      break;
+    }
+    case 'roll': {
+      const max = interaction.options.getInteger('max') || 6;
+      await interaction.reply(rollDice(max));
+      break;
+    }
+    case 'choose': {
+      const options = interaction.options.getString('options', true);
+      await interaction.reply(pickChoice(options));
+      break;
+    }
+    case 'avatar': {
+      const target = interaction.options.getUser('user') || interaction.user;
+      await interaction.reply({ embeds: [await buildAvatarEmbed(target)] });
+      break;
+    }
+    case 'poll': {
+      const question = interaction.options.getString('question', true);
+      const options = interaction.options.getString('options', true);
+      await interaction.reply({ embeds: [buildPoll(question, options)] });
       break;
     }
     default:

@@ -1,0 +1,25 @@
+name: Discord push notification
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_SHA: ${{ github.event.head_commit.id }}
+          PUSHER: ${{ github.event.head_commit.author.name }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "Add repository secret DISCORD_WEBHOOK (full webhook URL) in GitHub Settings → Secrets"
+            exit 0
+          fi
+          MSG=$(echo "$COMMIT_MSG" | head -c 500 | sed 's/"/\\"/g')
+          curl -sS -H "Content-Type: application/json" \
+            -d "{\"username\":\"Phantom GitHub\",\"embeds\":[{\"title\":\"📦 Git push to main\",\"description\":\"**${PUSHER}** pushed\n\`\`\`${MSG}\`\`\`\nSHA: ${COMMIT_SHA:0:7}\",\"color\":5814783}]}" \
+            "$DISCORD_WEBHOOK"
