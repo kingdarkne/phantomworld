@@ -82,13 +82,51 @@ export async function handleCommand(interaction, ctx) {
         color: 0xf59e0b,
         time: new Date().toISOString(),
       };
+      const embed = eventEmbed(entry);
+
       await notifyOwnerEvent(entry);
-      const channelId = statusChannelId || interaction.channelId;
-      const channel = await interaction.client.channels.fetch(channelId);
-      if (channel?.isTextBased()) {
-        await channel.send({ embeds: [eventEmbed(entry)] });
+
+      const targetIds = new Set();
+      if (interaction.channelId) targetIds.add(interaction.channelId);
+      if (statusChannelId) targetIds.add(statusChannelId);
+
+      const postedTo = [];
+      const failures = [];
+
+      for (const channelId of targetIds) {
+        try {
+          const channel = await interaction.client.channels.fetch(channelId);
+          if (!channel?.isTextBased()) continue;
+
+          const perms = channel.permissionsFor(interaction.client.user);
+          if (!perms?.has('ViewChannel') || !perms.has('SendMessages')) {
+            failures.push(`#${'name' in channel ? channel.name : channelId}: missing Send Messages`);
+            continue;
+          }
+
+          await channel.send({ embeds: [embed] });
+          postedTo.push('name' in channel ? `#${channel.name}` : channelId);
+        } catch (err) {
+          failures.push(`${channelId}: ${err?.message || 'send failed'}`);
+        }
       }
-      await interaction.reply({ content: 'Alert sent.', ephemeral: true });
+
+      if (postedTo.length === 0) {
+        await interaction.reply({
+          content:
+            'Could not post the alert. Add the bot to this channel with **View Channel**, **Send Messages**, and **Embed Links**, or run `/alert` in a channel the bot can post in.\n' +
+            (failures.length ? `\nDetails: ${failures.join('; ')}` : ''),
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const note =
+        failures.length > 0 ? `\n(Some targets failed: ${failures.join('; ')})` : '';
+      await interaction.reply({
+        content: `Alert posted to ${postedTo.join(', ')}.${note}`,
+        ephemeral: true,
+      });
       break;
     }
     case 'gif': {
