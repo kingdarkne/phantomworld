@@ -48,8 +48,10 @@ You should see:
 - Message in webhook Discord channel
 - DM from your bot
 
-## If no DM
+## If no DM / HTTP 401
 
+- **401** = invalid `botToken` on the **host** (wrong token, placeholder, or deploy wiped it before we excluded secrets from deploy)
+- Paste the **same** token that works in `discord-bot/.env` on your PC
 - Bot token wrong or not saved in `phantom_dashboard.secrets.cfg`
 - Bot not in your Discord server (invite link from Developer Portal)
 - Discord → allow DMs from server members

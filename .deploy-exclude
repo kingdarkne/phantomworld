@@ -19,6 +19,10 @@ txData/
 db/
 *.log
 
+# Host-only secrets — never overwrite from git (set via panel File Manager)
+phantom_dashboard.secrets.cfg
+mysql.cfg
+
 # Dev-only (not needed at runtime)
 **/node_modules/
 **/.vscode/
