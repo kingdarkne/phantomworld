@@ -9,10 +9,10 @@ import {
   REST,
   Routes,
   EmbedBuilder,
-  ActivityType,
 } from 'discord.js';
 import { slashCommands, handleCommand } from './lib/commands.js';
 import { getStatus } from './lib/fivem.js';
+import { startLivePresence } from './lib/presence.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -128,14 +128,7 @@ client.once('ready', async () => {
     console.warn('Slash registration failed (invite bot first):', err?.message || err);
   }
 
-  try {
-    const status = await getStatus();
-    client.user.setActivity(`${status.playerCount}/${status.maxPlayers} online`, {
-      type: ActivityType.Watching,
-    });
-  } catch {
-    client.user.setActivity('Phantom World', { type: ActivityType.Watching });
-  }
+  startLivePresence(client);
 
   await dmOwner({
     embeds: [
