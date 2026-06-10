@@ -682,6 +682,8 @@ function displayInitialData() {
         maxSlots = config.server.maxPlayers;
     }
 
+    setLiveSyncBadge(false);
+
     if (!dataLoaded) {
         updateServerData({
             serverUptime: 'Syncing uptime...',
