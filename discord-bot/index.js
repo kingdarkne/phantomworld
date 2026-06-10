@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-dotenv.config({ path: 'env.host' });
+import './load-env.js';
 
 import express from 'express';
 import {

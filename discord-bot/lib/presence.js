@@ -3,7 +3,9 @@ import { getStatus } from './fivem.js';
 
 const pollSeconds = Number(process.env.PRESENCE_POLL_SECONDS || 60);
 const rotateSeconds = Number(process.env.PRESENCE_ROTATE_SECONDS || 25);
-const cfxJoinId = process.env.CFX_SERVER_ID || '';
+function cfxJoinId() {
+  return process.env.CFX_SERVER_ID || '';
+}
 
 function formatUptime(seconds) {
   if (!seconds || seconds < 0) return null;
@@ -55,9 +57,10 @@ function buildActivities(status) {
     });
   }
 
-  if (cfxJoinId) {
+  const joinId = cfxJoinId();
+  if (joinId) {
     activities.push({
-      name: trimActivity(`cfx.re/join/${cfxJoinId}`),
+      name: trimActivity(`cfx.re/join/${joinId}`),
       type: ActivityType.Watching,
     });
   }
@@ -120,9 +123,10 @@ export function startLivePresence(client) {
       activities = [
         { name: 'Server unreachable — check /status', type: ActivityType.Watching },
       ];
-      if (cfxJoinId) {
+      const joinId = cfxJoinId();
+      if (joinId) {
         activities.push({
-          name: trimActivity(`cfx.re/join/${cfxJoinId}`),
+          name: trimActivity(`cfx.re/join/${joinId}`),
           type: ActivityType.Watching,
         });
       }

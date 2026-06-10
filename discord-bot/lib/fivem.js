@@ -1,24 +1,32 @@
 import { EmbedBuilder } from 'discord.js';
 
-const fivemUrl = (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
-const apiToken = process.env.FIVEM_API_TOKEN || '';
-const cfxServerId = process.env.CFX_SERVER_ID || '';
+function fivemBaseUrl() {
+  return (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
+}
+
+function apiToken() {
+  return process.env.FIVEM_API_TOKEN || '';
+}
+
+function cfxServerId() {
+  return process.env.CFX_SERVER_ID || '';
+}
 
 export async function fetchFivem(path) {
   const headers = {};
-  if (apiToken) headers.Authorization = `Bearer ${apiToken}`;
-  const res = await fetch(`${fivemUrl}${path}`, { headers, signal: AbortSignal.timeout(8000) });
+  const token = apiToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${fivemBaseUrl()}${path}`, { headers, signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-export async function fetchCfxListing() {
-  if (!cfxServerId) return null;
-  const res = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${cfxServerId}`, {
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
+const CFX_API_BASES = [
+  'https://frontend.cfx-services.net/api/servers/single',
+  'https://servers-frontend.fivem.net/api/servers/single',
+];
+
+function parseCfxPayload(data) {
   const d = data?.Data;
   if (!d) return null;
 
@@ -40,48 +48,117 @@ export async function fetchCfxListing() {
   };
 }
 
+export async function fetchCfxListing() {
+  const serverId = cfxServerId();
+  if (!serverId) return null;
+
+  for (const base of CFX_API_BASES) {
+    try {
+      const res = await fetch(`${base}/${serverId}`, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const parsed = parseCfxPayload(await res.json());
+      if (parsed) return parsed;
+    } catch (err) {
+      console.warn(`CFX listing failed (${base}):`, err.message);
+    }
+  }
+
+  return null;
+}
+
+export async function fetchFivemPublic() {
+  const headers = {};
+  const token = apiToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const base = fivemBaseUrl();
+
+  const infoRes = await fetch(`${base}/info.json`, {
+    headers,
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!infoRes.ok) throw new Error(`info.json HTTP ${infoRes.status}`);
+
+  const playersRes = await fetch(`${base}/players.json`, {
+    headers,
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!playersRes.ok) throw new Error(`players.json HTTP ${playersRes.status}`);
+
+  const info = await infoRes.json();
+  const players = await playersRes.json();
+  const vars = info.vars || {};
+  const maxPlayers =
+    Number(vars.sv_maxclients || vars.sv_maxClients || vars.SV_MAXCLIENTS) || 48;
+
+  const topPlayers = (Array.isArray(players) ? players : [])
+    .map((p) => p.name)
+    .filter(Boolean)
+    .slice(0, 8);
+
+  return {
+    serverName: vars.sv_projectName || vars.sv_hostname || 'Phantom World',
+    playerCount: topPlayers.length,
+    maxPlayers,
+    serverTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    mapName: info.mapname || vars.mapname || null,
+    gameType: info.gametype || vars.gametype || null,
+    topPlayers,
+    source: 'fivem-public',
+  };
+}
+
+function mergeStatus(primary, secondary) {
+  if (!primary) return secondary;
+  if (!secondary) return primary;
+
+  return {
+    ...secondary,
+    ...primary,
+    serverName: primary.serverName || secondary.serverName,
+    playerCount: primary.playerCount ?? secondary.playerCount ?? 0,
+    maxPlayers: primary.maxPlayers ?? secondary.maxPlayers ?? 48,
+    uptimeSeconds: primary.uptimeSeconds ?? secondary.uptimeSeconds ?? null,
+    mapName: primary.mapName || secondary.mapName || null,
+    gameType: primary.gameType || secondary.gameType || null,
+    topPlayers:
+      (primary.topPlayers?.length ? primary.topPlayers : secondary.topPlayers) || [],
+    source: primary.source || secondary.source,
+  };
+}
+
 export async function getStatus() {
   const cfx = await fetchCfxListing();
 
-  let fivem = null;
+  let dashboard = null;
   try {
-    fivem = await fetchFivem('/phantom-dashboard/status');
-    fivem.source = 'fivem';
+    dashboard = await fetchFivem('/phantom-dashboard/status');
+    dashboard.source = 'fivem-dashboard';
   } catch (err) {
-    console.warn('FiveM HTTP failed:', err.message);
+    console.warn('FiveM dashboard HTTP failed:', err.message);
   }
 
-  if (fivem) {
-    const merged = {
-      ...cfx,
-      ...fivem,
-      serverName: fivem.serverName || cfx?.serverName,
-      playerCount: fivem.playerCount ?? cfx?.playerCount ?? 0,
-      maxPlayers: fivem.maxPlayers ?? cfx?.maxPlayers ?? 48,
-      uptimeSeconds: fivem.uptimeSeconds ?? cfx?.uptimeSeconds ?? null,
-      mapName: cfx?.mapName || null,
-      gameType: cfx?.gameType || null,
-    };
+  let publicData = null;
+  try {
+    publicData = await fetchFivemPublic();
+  } catch (err) {
+    console.warn('FiveM public JSON failed:', err.message);
+  }
 
-    if ((merged.playerCount ?? 0) > 0) {
-      try {
-        const playerData = await fetchFivem('/phantom-dashboard/players');
-        const names = (playerData.players || []).map((p) => p.name).filter(Boolean).slice(0, 8);
-        if (names.length > 0) {
-          merged.topPlayers = names;
-        }
-      } catch {
-        merged.topPlayers = merged.topPlayers || cfx?.topPlayers || [];
-      }
-    } else {
-      merged.topPlayers = [];
+  let merged = mergeStatus(publicData, cfx);
+  merged = mergeStatus(dashboard, merged);
+
+  if (dashboard && (merged.playerCount ?? 0) > 0) {
+    try {
+      const playerData = await fetchFivem('/phantom-dashboard/players');
+      const names = (playerData.players || []).map((p) => p.name).filter(Boolean).slice(0, 8);
+      if (names.length > 0) merged.topPlayers = names;
+    } catch {
+      // players.json / CFX list already applied
     }
-
-    return merged;
   }
 
-  if (cfx) return cfx;
-  throw new Error('No status source (FiveM HTTP and CFX listing both failed)');
+  if (merged) return merged;
+  throw new Error('No status source (FiveM and CFX listing both failed)');
 }
 
 export async function getPlayers() {
