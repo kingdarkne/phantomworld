@@ -6,59 +6,66 @@
     <title>Phantom Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div id="phantom-dashboard" class="pd-root pd-hidden" aria-live="polite">
-        <div class="pd-glass">
-            <header class="pd-header">
-                <div class="pd-brand">
-                    <span class="pd-dot" aria-hidden="true"></span>
-                    <span id="pd-server-name" class="pd-server">Phantom World</span>
-                </div>
-                <div class="pd-meta-chips">
-                    <span id="pd-time" class="pd-chip">—</span>
-                    <span id="pd-id" class="pd-chip pd-chip-accent">ID 0</span>
-                </div>
-            </header>
+        <div class="pd-shell">
+            <div class="pd-accent-bar" aria-hidden="true"></div>
+            <div class="pd-glass">
+                <header class="pd-header">
+                    <div class="pd-brand">
+                        <span class="pd-mark" aria-hidden="true">PW</span>
+                        <div class="pd-brand-text">
+                            <span id="pd-server-name" class="pd-server">Phantom World</span>
+                            <span class="pd-brand-sub">Roleplay HUD</span>
+                        </div>
+                    </div>
+                    <div class="pd-meta-chips">
+                        <span id="pd-time" class="pd-chip">—</span>
+                        <span id="pd-id" class="pd-chip pd-chip-accent">ID 0</span>
+                    </div>
+                </header>
 
-            <div id="pd-identity" class="pd-row pd-row-subtle">
-                <span id="pd-name">Player</span>
-                <span class="pd-sep">·</span>
-                <span id="pd-gang">—</span>
-            </div>
-            <div id="pd-street" class="pd-row pd-row-street">—</div>
-
-            <div id="pd-money" class="pd-grid">
-                <div class="pd-stat">
-                    <span class="pd-stat-label">Cash</span>
-                    <span id="pd-cash" class="pd-stat-value pd-cash">$0</span>
+                <div class="pd-live-row">
+                    <span id="pd-uptime" class="pd-chip pd-chip-muted">Uptime —</span>
+                    <span id="pd-players" class="pd-chip pd-chip-live">0/48 online</span>
                 </div>
-                <div class="pd-stat">
-                    <span class="pd-stat-label">Bank</span>
-                    <span id="pd-bank" class="pd-stat-value pd-bank">$0</span>
-                </div>
-            </div>
 
-            <div id="pd-extra" class="pd-grid pd-grid-compact">
-                <div id="pd-rank-wrap" class="pd-stat pd-stat-mini">
-                    <span class="pd-stat-label">Rank</span>
-                    <span id="pd-rank" class="pd-stat-value">0</span>
+                <div id="pd-identity" class="pd-row pd-row-subtle">
+                    <span id="pd-name">Player</span>
+                    <span class="pd-sep">·</span>
+                    <span id="pd-gang">—</span>
                 </div>
-                <div id="pd-job-wrap" class="pd-stat pd-stat-mini">
-                    <span class="pd-stat-label">Job</span>
-                    <span id="pd-job" class="pd-stat-value">—</span>
+                <div id="pd-street" class="pd-row pd-row-street">—</div>
+
+                <div id="pd-money" class="pd-grid">
+                    <div class="pd-stat pd-stat-money">
+                        <span class="pd-stat-label">Cash</span>
+                        <span id="pd-cash" class="pd-stat-value pd-cash">$0</span>
+                    </div>
+                    <div class="pd-stat pd-stat-money">
+                        <span class="pd-stat-label">Bank</span>
+                        <span id="pd-bank" class="pd-stat-value pd-bank">$0</span>
+                    </div>
                 </div>
-            </div>
 
-            <footer id="pd-voice" class="pd-voice">
-                <span class="pd-mic" aria-hidden="true">◉</span>
-                <span id="pd-voice-label">Voice</span>
-            </footer>
+                <div id="pd-extra" class="pd-grid pd-grid-compact">
+                    <div id="pd-rank-wrap" class="pd-stat pd-stat-mini">
+                        <span class="pd-stat-label">Rank</span>
+                        <span id="pd-rank" class="pd-stat-value">0</span>
+                    </div>
+                    <div id="pd-job-wrap" class="pd-stat pd-stat-mini">
+                        <span class="pd-stat-label">Job</span>
+                        <span id="pd-job" class="pd-stat-value">—</span>
+                    </div>
+                </div>
 
-            <div id="pd-population" class="pd-population">
-                <span id="pd-players">0/48 online</span>
+                <footer id="pd-voice" class="pd-voice">
+                    <span class="pd-mic" aria-hidden="true">◉</span>
+                    <span id="pd-voice-label">Voice</span>
+                </footer>
             </div>
         </div>
     </div>

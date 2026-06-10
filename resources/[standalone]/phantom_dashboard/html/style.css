@@ -1,13 +1,15 @@
 :root {
-  --pd-font: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
-  --pd-accent: #a78bfa;
-  --pd-accent-soft: rgba(167, 139, 250, 0.22);
-  --pd-cash: #6ee7b7;
-  --pd-bank: #93c5fd;
-  --pd-glass: rgba(12, 14, 22, 0.52);
-  --pd-border: rgba(255, 255, 255, 0.14);
-  --pd-text: rgba(255, 255, 255, 0.95);
-  --pd-muted: rgba(255, 255, 255, 0.62);
+  --pd-font: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  --pd-display: 'Rajdhani', 'Segoe UI', sans-serif;
+  --pd-gold: #f1e542;
+  --pd-gold-soft: rgba(241, 229, 66, 0.22);
+  --pd-gold-dim: rgba(241, 229, 66, 0.55);
+  --pd-cash: #86efac;
+  --pd-bank: #7dd3fc;
+  --pd-glass: rgba(6, 8, 12, 0.78);
+  --pd-border: rgba(241, 229, 66, 0.22);
+  --pd-text: rgba(255, 255, 255, 0.96);
+  --pd-muted: rgba(255, 255, 255, 0.58);
 }
 
 * {
@@ -27,18 +29,18 @@ html, body {
 
 .pd-root {
   position: fixed;
-  left: 1.15vw;
+  left: 1.1vw;
   bottom: 22vh;
-  max-width: min(320px, 42vw);
+  max-width: min(340px, 44vw);
   z-index: 900;
   pointer-events: none;
   transform-origin: bottom left;
-  animation: pd-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pd-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .pd-hidden {
   opacity: 0;
-  transform: translateY(8px) scale(0.98);
+  transform: translateY(10px) scale(0.97);
   visibility: hidden;
   transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
 }
@@ -52,7 +54,7 @@ html, body {
 @keyframes pd-enter {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.96);
+    transform: translateY(14px) scale(0.94);
   }
   to {
     opacity: 1;
@@ -60,62 +62,95 @@ html, body {
   }
 }
 
-.pd-glass {
-  padding: 0.55rem 0.7rem 0.6rem;
-  border-radius: 14px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.11) 0%,
-    var(--pd-glass) 45%,
-    rgba(8, 10, 18, 0.65) 100%
-  );
-  border: 1px solid var(--pd-border);
-  backdrop-filter: blur(16px) saturate(1.35);
-  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+.pd-shell {
+  position: relative;
+  border-radius: 16px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(241, 229, 66, 0.55), rgba(241, 229, 66, 0.05) 45%, rgba(255, 255, 255, 0.08));
   box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(241, 229, 66, 0.08);
+}
+
+.pd-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pd-gold), transparent);
+  opacity: 0.85;
+  z-index: 2;
+}
+
+.pd-glass {
+  padding: 0.65rem 0.75rem 0.7rem;
+  border-radius: 14px;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.07) 0%, transparent 40%),
+    var(--pd-glass);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
   color: var(--pd-text);
 }
 
 .pd-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.45rem;
-  margin-bottom: 0.35rem;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .pd-brand {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
-.pd-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--pd-accent);
-  box-shadow: 0 0 8px var(--pd-accent);
+.pd-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-family: var(--pd-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #0a0a0a;
+  background: linear-gradient(145deg, #fff6a8, var(--pd-gold));
+  box-shadow: 0 2px 12px rgba(241, 229, 66, 0.35);
   flex-shrink: 0;
-  animation: pd-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes pd-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.55; transform: scale(0.85); }
+.pd-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .pd-server {
-  font-size: clamp(10px, 1.05vh, 13px);
+  font-family: var(--pd-display);
+  font-size: clamp(11px, 1.1vh, 14px);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--pd-gold);
+}
+
+.pd-brand-sub {
+  font-size: clamp(7px, 0.72vh, 9px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pd-muted);
+  margin-top: 0.05rem;
 }
 
 .pd-meta-chips {
@@ -124,26 +159,43 @@ html, body {
   flex-shrink: 0;
 }
 
+.pd-live-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.35rem;
+}
+
 .pd-chip {
-  font-size: clamp(9px, 0.95vh, 11px);
+  font-size: clamp(8px, 0.85vh, 10px);
   font-weight: 600;
-  padding: 0.15rem 0.45rem;
+  padding: 0.18rem 0.5rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
 }
 
 .pd-chip-accent {
-  background: var(--pd-accent-soft);
-  border-color: rgba(167, 139, 250, 0.35);
-  color: #ddd6fe;
+  background: var(--pd-gold-soft);
+  border-color: rgba(241, 229, 66, 0.35);
+  color: var(--pd-gold);
+}
+
+.pd-chip-muted {
+  color: var(--pd-muted);
+}
+
+.pd-chip-live {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #bbf7d0;
 }
 
 .pd-row {
   font-size: clamp(9px, 0.92vh, 11px);
   line-height: 1.35;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.22rem;
 }
 
 .pd-row-subtle {
@@ -161,45 +213,52 @@ html, body {
 
 .pd-row-street {
   font-size: clamp(8px, 0.85vh, 10px);
-  color: rgba(255, 255, 255, 0.48);
-  margin-bottom: 0.35rem;
+  color: rgba(255, 255, 255, 0.42);
+  margin-bottom: 0.4rem;
+  padding-left: 0.1rem;
 }
 
 .pd-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.3rem;
-  margin-bottom: 0.3rem;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
 }
 
 .pd-grid-compact {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
 }
 
 .pd-stat {
-  padding: 0.28rem 0.4rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.45rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.pd-stat-money {
+  background: linear-gradient(145deg, rgba(241, 229, 66, 0.06), rgba(0, 0, 0, 0.15));
+  border-color: rgba(241, 229, 66, 0.12);
 }
 
 .pd-stat-mini {
-  padding: 0.22rem 0.38rem;
+  padding: 0.28rem 0.4rem;
 }
 
 .pd-stat-label {
   display: block;
   font-size: clamp(7px, 0.72vh, 9px);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--pd-muted);
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.12rem;
 }
 
 .pd-stat-value {
   display: block;
-  font-size: clamp(10px, 1.05vh, 12px);
+  font-family: var(--pd-display);
+  font-size: clamp(11px, 1.1vh, 13px);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -213,39 +272,31 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.25rem;
-  padding-top: 0.3rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.3rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(241, 229, 66, 0.12);
   font-size: clamp(8px, 0.88vh, 10px);
   color: var(--pd-muted);
   transition: color 0.2s ease;
 }
 
 .pd-voice.pd-talking {
-  color: #fde68a;
+  color: var(--pd-gold);
 }
 
 .pd-voice.pd-talking .pd-mic {
-  color: #fde68a;
+  color: var(--pd-gold);
   animation: pd-talk 0.6s ease-in-out infinite alternate;
 }
 
 @keyframes pd-talk {
-  from { opacity: 0.5; }
+  from { opacity: 0.45; }
   to { opacity: 1; }
 }
 
 .pd-mic {
   font-size: 7px;
-  color: var(--pd-accent);
-}
-
-.pd-population {
-  margin-top: 0.25rem;
-  font-size: clamp(7px, 0.75vh, 9px);
-  color: rgba(255, 255, 255, 0.4);
-  text-align: right;
-  letter-spacing: 0.04em;
+  color: var(--pd-gold-dim);
 }
 
 @media (max-height: 800px) {
@@ -258,6 +309,6 @@ html, body {
 
 @media (max-width: 1280px) {
   .pd-root {
-    max-width: min(280px, 44vw);
+    max-width: min(300px, 46vw);
   }
 }

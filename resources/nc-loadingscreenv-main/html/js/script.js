@@ -642,6 +642,18 @@ function updateStaffHighlight(text) {
     }
 }
 
+function setLiveSyncBadge(live) {
+    const badge = document.getElementById('live-sync-badge');
+    if (!badge) return;
+    if (live) {
+        badge.textContent = 'Live server data';
+        badge.classList.add('is-live');
+    } else {
+        badge.textContent = 'Connecting…';
+        badge.classList.remove('is-live');
+    }
+}
+
 function applyHandoverData() {
     try {
         if (!window.nuiHandoverData) return;
@@ -985,6 +997,8 @@ function updateServerData(data) {
             if (data.staffOnlineText) {
                 updateStaffHighlight(data.staffOnlineText);
             }
+
+            setLiveSyncBadge(true);
             
             debugLog('UI updated successfully');
         } else {

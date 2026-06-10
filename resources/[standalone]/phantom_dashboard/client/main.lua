@@ -71,6 +71,7 @@ RegisterNetEvent('phantom_dashboard:client:serverInfo', function(info)
         serverTime = info.serverTime,
         playerCount = info.playerCount,
         maxPlayers = info.maxPlayers,
+        uptimeSeconds = info.uptimeSeconds,
     })
 end)
 

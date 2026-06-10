@@ -17,8 +17,18 @@
     voice: document.getElementById('pd-voice'),
     voiceLabel: document.getElementById('pd-voice-label'),
     players: document.getElementById('pd-players'),
+    uptime: document.getElementById('pd-uptime'),
     identity: document.getElementById('pd-identity'),
   };
+
+  function formatUptime(seconds) {
+    const total = Math.floor(Number(seconds) || 0);
+    if (total <= 0) return 'Uptime —';
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    if (h > 0) return `Uptime ${h}h ${m}m`;
+    return `Uptime ${m}m`;
+  }
 
   const fmt = (value) => {
     const n = Number(value);
@@ -65,6 +75,10 @@
 
     if (d.showJob === false) els.jobWrap.style.display = 'none';
     else els.jobWrap.style.display = '';
+
+    if (d.uptimeSeconds !== undefined && els.uptime) {
+      els.uptime.textContent = formatUptime(d.uptimeSeconds);
+    }
 
     if (d.playerCount !== undefined && d.maxPlayers !== undefined) {
       els.players.textContent = d.playerCount + '/' + d.maxPlayers + ' online';
