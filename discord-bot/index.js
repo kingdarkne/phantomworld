@@ -186,8 +186,16 @@ function startRelayServer() {
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`Invite bot to your server: ${botInviteUrl(client.user.id)}`);
-  await registerCommands(client.user.id);
   startRelayServer();
+
+  try {
+    await registerCommands(client.user.id);
+  } catch (err) {
+    console.warn(
+      'Slash command registration failed (invite the bot to your guild first):',
+      err?.message || err,
+    );
+  }
 
   try {
     const status = await getStatus();
@@ -277,6 +285,28 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.editReply({ content: `Failed: ${msg}` });
     } else {
       await interaction.reply({ content: `Failed: ${msg}`, ephemeral: true });
+    }
+  }
+});
+
+client.on('guildCreate', async (guild) => {
+  if (guild.id === guildId) {
+    try {
+      await registerCommands(client.user.id);
+      console.log('Slash commands registered after joining guild', guild.name);
+    } catch (err) {
+      console.warn('guildCreate command registration failed:', err?.message || err);
+    }
+    if (ownerUserId) {
+      await dmOwner({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x8b5cf6)
+            .setTitle('Bot joined your server')
+            .setDescription('Phantom World alerts are active. You should receive server event DMs here.')
+            .setTimestamp(),
+        ],
+      });
     }
   }
 });
