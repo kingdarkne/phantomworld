@@ -31,6 +31,7 @@ Desktop.ini
 # Secrets not in repo (mysql.cfg + secrets.cfg ARE tracked — private repo)
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 server.cfg.local
