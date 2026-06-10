@@ -21,6 +21,7 @@ client_scripts {
 
 server_scripts {
     'server/main.lua',
+    'server/discord_dm.lua',
     'server/alerts.lua',
     'server/discord.lua',
     'server/http.lua',

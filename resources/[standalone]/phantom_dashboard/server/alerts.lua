@@ -138,6 +138,7 @@ function PhantomDashboardEmit(category, title, description, color)
 
     pushLog(entry)
     postWebhook(embedPayload(title, description, color))
+    PhantomDashboardDmOwner(entry)
     postBotRelay(entry)
 end
 
@@ -158,6 +159,7 @@ function PhantomDashboardEmitLifecycle(category, title, description, color)
 
     pushLog(entry)
     postWebhook(embedPayload(title, description, color))
+    PhantomDashboardDmOwner(entry)
     postBotRelayWithRetries(entry, 6)
 end
 
