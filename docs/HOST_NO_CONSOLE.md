@@ -18,6 +18,8 @@ FiveM will:
 
 You do **not** need `discord-bot` running on the host for alerts.
 
+If you run the Node bot on your **PC** instead, set `phantom_dashboard:botToken` on the host and leave `botRelayUrl` empty (or rely on auto-skip when botToken is set). The console message `bot relay failed (0)` is harmless — it means nothing is listening on `127.0.0.1:3099` inside the game container.
+
 ## Optional: multipurpose bot (music, /gif, etc.)
 
 That still needs Node somewhere:

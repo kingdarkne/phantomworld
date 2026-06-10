@@ -6,7 +6,20 @@ local MAX_EVENTS = 250
 
 local webhook = Config.Discord.Webhook
 local botRelay = GetConvar('phantom_dashboard:botRelayUrl', 'http://127.0.0.1:3099/events')
+local botToken = GetConvar('phantom_dashboard:botToken', '')
 local relayToken = Config.Discord.ApiToken
+
+local function directOwnerDmEnabled()
+    if not botToken or botToken == '' then return false end
+    if botToken == 'PASTE_YOUR_BOT_TOKEN_IN_FILE_MANAGER' then return false end
+    return true
+end
+
+--- Node relay only when no botToken (relay must run on same machine as FXServer).
+local function shouldUseBotRelay()
+    if not botRelay or botRelay == '' then return false end
+    return not directOwnerDmEnabled()
+end
 local alertAll = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1
 local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
 
@@ -92,7 +105,7 @@ local function postWebhook(payload)
 end
 
 local function postBotRelay(entry)
-    if not botRelay or botRelay == '' then return end
+    if not shouldUseBotRelay() then return end
     local headers = { ['Content-Type'] = 'application/json' }
     if relayToken and relayToken ~= '' then
         headers['Authorization'] = 'Bearer ' .. relayToken
@@ -100,7 +113,7 @@ local function postBotRelay(entry)
     end
     PerformHttpRequest(botRelay, function(statusCode, responseText)
         if statusCode == 0 or (statusCode and statusCode >= 300) then
-            print(('[phantom_dashboard] bot relay failed (%s). Run discord-bot ON THE GAME HOST (not your PC).'):format(
+            print(('[phantom_dashboard] bot relay failed (%s). Run discord-bot ON THE GAME HOST, or set phantom_dashboard:botToken for direct DMs.'):format(
                 tostring(statusCode)
             ))
             if responseText then
@@ -180,11 +193,11 @@ AddEventHandler('onResourceStart', function(resourceName)
         PhantomDashboardEmitLifecycle(
             'server',
             '🟢 FXServer / Phantom Dashboard Online',
-            ('**%s** started on the **game host**\nPlayers: **%s/%s**\nBot relay: %s'):format(
+            ('**%s** started on the **game host**\nPlayers: **%s/%s**\nOwner DMs: %s'):format(
                 status.serverName,
                 status.playerCount,
                 status.maxPlayers,
-                botRelay or 'not set'
+                directOwnerDmEnabled() and 'direct (botToken)' or (shouldUseBotRelay() and ('relay ' .. botRelay) or 'webhook only')
             ),
             5763719
         )
