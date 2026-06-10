@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 author 'Phantom World'
 description 'Phantom Core - Custom UI, Vehicle, Player, Economy, and Game Mechanics'
-version '1.0.1'
+version '1.0.2'
 
 shared_scripts {
     '@ox_lib/init.lua',
