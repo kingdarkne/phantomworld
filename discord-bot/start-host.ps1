@@ -12,6 +12,16 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+if (-not $nodeCmd) {
+    $fallback = 'C:\Program Files\nodejs\node.exe'
+    if (Test-Path $fallback) { $nodeCmd = Get-Command $fallback }
+}
+if (-not $nodeCmd) {
+    Write-Host 'Node.js 18+ required. Install from https://nodejs.org then restart the panel.'
+    exit 1
+}
+
 npm install --omit=dev
 Write-Host 'Starting Phantom World Discord bot (relay on 127.0.0.1:3099)...'
-node index.js
+& $nodeCmd.Source index.js

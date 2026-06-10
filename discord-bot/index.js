@@ -1,45 +1,32 @@
 import dotenv from 'dotenv';
 dotenv.config();
 dotenv.config({ path: 'env.host' });
+
 import express from 'express';
 import {
   Client,
   GatewayIntentBits,
   REST,
   Routes,
-  SlashCommandBuilder,
   EmbedBuilder,
   ActivityType,
 } from 'discord.js';
+import { slashCommands, handleCommand } from './lib/commands.js';
+import { getStatus } from './lib/fivem.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
 const statusChannelId = process.env.DISCORD_STATUS_CHANNEL_ID;
 const ownerUserId = process.env.DISCORD_OWNER_USER_ID;
 const fivemUrl = (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
-const apiToken = process.env.FIVEM_API_TOKEN || '';
-const cfxServerId = process.env.CFX_SERVER_ID || '';
 const pollMinutes = Number(process.env.STATUS_POLL_MINUTES || 0);
 const relayPort = Number(process.env.BOT_HTTP_PORT || 3099);
-const relaySecret = process.env.BOT_RELAY_SECRET || apiToken;
+const relaySecret = process.env.BOT_RELAY_SECRET || process.env.FIVEM_API_TOKEN || '';
 
 if (!token) {
   console.error('Missing DISCORD_BOT_TOKEN in .env');
   process.exit(1);
 }
-
-const commands = [
-  new SlashCommandBuilder()
-    .setName('status')
-    .setDescription('Show Phantom World server status'),
-  new SlashCommandBuilder()
-    .setName('players')
-    .setDescription('List online players'),
-  new SlashCommandBuilder()
-    .setName('alert')
-    .setDescription('Send a dashboard alert (admin)')
-    .addStringOption((o) => o.setName('message').setDescription('Alert text').setRequired(true)),
-].map((c) => c.toJSON());
 
 async function registerCommands(clientId) {
   if (!guildId) {
@@ -47,68 +34,8 @@ async function registerCommands(clientId) {
     return;
   }
   const rest = new REST({ version: '10' }).setToken(token);
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: slashCommands });
   console.log('Slash commands registered for guild', guildId);
-}
-
-async function fetchFivem(path) {
-  const headers = {};
-  if (apiToken) headers.Authorization = `Bearer ${apiToken}`;
-  const res = await fetch(`${fivemUrl}${path}`, { headers, signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-async function fetchCfxFallback() {
-  if (!cfxServerId) return null;
-  const res = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${cfxServerId}`, {
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const d = data?.Data;
-  if (!d) return null;
-  return {
-    serverName: d.hostname || 'Phantom World',
-    playerCount: d.clients ?? 0,
-    maxPlayers: d.sv_maxclients ?? 48,
-    serverTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    source: 'cfx',
-  };
-}
-
-async function getStatus() {
-  try {
-    const status = await fetchFivem('/phantom-dashboard/status');
-    return { ...status, source: 'fivem' };
-  } catch (err) {
-    console.warn('FiveM HTTP failed:', err.message);
-    const fallback = await fetchCfxFallback();
-    if (fallback) return fallback;
-    throw err;
-  }
-}
-
-async function getPlayers() {
-  try {
-    const data = await fetchFivem('/phantom-dashboard/players');
-    return data.players || [];
-  } catch {
-    return [];
-  }
-}
-
-function statusEmbed(status) {
-  return new EmbedBuilder()
-    .setColor(0x8b5cf6)
-    .setTitle('Phantom World — Server Status')
-    .addFields(
-      { name: 'Server', value: status.serverName || 'Unknown', inline: true },
-      { name: 'Players', value: `${status.playerCount ?? '?'}/${status.maxPlayers ?? '?'}`, inline: true },
-      { name: 'Time', value: status.serverTime || '—', inline: true },
-    )
-    .setFooter({ text: `Source: ${status.source || 'fivem'}` })
-    .setTimestamp();
 }
 
 function eventEmbed(entry) {
@@ -127,7 +54,9 @@ function eventEmbed(entry) {
     .setTimestamp(entry.timestamp ? new Date(entry.timestamp * 1000) : undefined);
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+});
 
 async function dmOwner(contentOrPayload) {
   if (!ownerUserId) return;
@@ -144,8 +73,7 @@ async function notifyOwnerEvent(entry) {
 }
 
 function botInviteUrl(clientId) {
-  const perms = '2147567616';
-  return `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=${perms}&scope=bot%20applications.commands`;
+  return `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=2147567616&scope=bot%20applications.commands`;
 }
 
 function startRelayServer() {
@@ -183,18 +111,21 @@ function startRelayServer() {
   });
 }
 
+const commandCtx = {
+  notifyOwnerEvent,
+  eventEmbed,
+  statusChannelId,
+};
+
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
-  console.log(`Invite bot to your server: ${botInviteUrl(client.user.id)}`);
+  console.log(`Invite: ${botInviteUrl(client.user.id)}`);
   startRelayServer();
 
   try {
     await registerCommands(client.user.id);
   } catch (err) {
-    console.warn(
-      'Slash command registration failed (invite the bot to your guild first):',
-      err?.message || err,
-    );
+    console.warn('Slash registration failed (invite bot first):', err?.message || err);
   }
 
   try {
@@ -210,11 +141,11 @@ client.once('ready', async () => {
     embeds: [
       new EmbedBuilder()
         .setColor(0x8b5cf6)
-        .setTitle('Phantom World Alert Bot Online')
+        .setTitle('Phantom World Bot Online')
         .setDescription(
-          'You will receive **DM alerts** for server events (join/leave, resources, deaths, txAdmin, etc.).\n\n' +
-            `Guild: ${guildId || 'not set'}\n` +
-            `FiveM API: ${fivemUrl}`,
+          '**Host alerts** → your DMs when FXServer posts events.\n' +
+            '**Commands:** `/phantomhelp` for music, GIFs, jokes, status.\n\n' +
+            `FiveM: ${fivemUrl}`,
         )
         .setTimestamp(),
     ],
@@ -224,9 +155,10 @@ client.once('ready', async () => {
     setInterval(async () => {
       try {
         const status = await getStatus();
+        const { buildStatusEmbed } = await import('./lib/fivem.js');
         const channel = await client.channels.fetch(statusChannelId);
         if (channel?.isTextBased()) {
-          await channel.send({ embeds: [statusEmbed(status)] });
+          await channel.send({ embeds: [buildStatusEmbed(status)] });
         }
       } catch (err) {
         console.warn('Status poll failed:', err.message);
@@ -237,48 +169,8 @@ client.once('ready', async () => {
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
   try {
-    if (interaction.commandName === 'status') {
-      await interaction.deferReply();
-      const status = await getStatus();
-      await interaction.editReply({ embeds: [statusEmbed(status)] });
-      return;
-    }
-
-    if (interaction.commandName === 'players') {
-      await interaction.deferReply();
-      const [status, players] = await Promise.all([getStatus(), getPlayers()]);
-      const lines =
-        players.length > 0
-          ? players.map((p) => `• **${p.name}** (ID ${p.id})`).join('\n')
-          : '_No players online or player list unavailable._';
-      const embed = statusEmbed(status).setDescription(lines.slice(0, 4000));
-      await interaction.editReply({ embeds: [embed] });
-      return;
-    }
-
-    if (interaction.commandName === 'alert') {
-      if (!interaction.memberPermissions?.has('ManageGuild')) {
-        await interaction.reply({ content: 'You need Manage Server permission.', ephemeral: true });
-        return;
-      }
-      const message = interaction.options.getString('message', true);
-      const entry = {
-        category: 'slash',
-        title: 'Dashboard Alert',
-        description: message,
-        color: 0xf59e0b,
-        time: new Date().toISOString(),
-      };
-      await notifyOwnerEvent(entry);
-      const channelId = statusChannelId || interaction.channelId;
-      const channel = await client.channels.fetch(channelId);
-      if (channel?.isTextBased()) {
-        await channel.send({ embeds: [eventEmbed(entry)] });
-      }
-      await interaction.reply({ content: 'Alert sent to owner DM and status channel.', ephemeral: true });
-    }
+    await handleCommand(interaction, commandCtx);
   } catch (err) {
     const msg = err?.message || 'Unknown error';
     if (interaction.deferred || interaction.replied) {
@@ -293,21 +185,19 @@ client.on('guildCreate', async (guild) => {
   if (guild.id === guildId) {
     try {
       await registerCommands(client.user.id);
-      console.log('Slash commands registered after joining guild', guild.name);
+      console.log('Commands registered after joining', guild.name);
     } catch (err) {
-      console.warn('guildCreate command registration failed:', err?.message || err);
+      console.warn('guildCreate registration failed:', err?.message || err);
     }
-    if (ownerUserId) {
-      await dmOwner({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0x8b5cf6)
-            .setTitle('Bot joined your server')
-            .setDescription('Phantom World alerts are active. You should receive server event DMs here.')
-            .setTimestamp(),
-        ],
-      });
-    }
+    await dmOwner({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x8b5cf6)
+          .setTitle('Bot joined your server')
+          .setDescription('Alerts + `/phantomhelp` for commands.')
+          .setTimestamp(),
+      ],
+    });
   }
 });
 

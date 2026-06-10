@@ -25,6 +25,8 @@ Desktop.ini
 
 # Dev deps (tracked web/dist bundles are fine)
 **/node_modules/
+discord-bot/logs/
+discord-bot/bot.pid
 **/.yarn/
 **/.cache/
 
