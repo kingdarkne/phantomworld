@@ -62,10 +62,10 @@ RegisterNUICallback('getServerData', function(data, cb)
         status = "ok",
         maxSlots = maxSlots,
         defaultData = {
-            serverUptime = "150 days online",
-            totalActivities = "45 activities",
-            availableVehicles = "250 vehicles",
-            availableJobs = "25 jobs"
+            serverUptime = "Syncing uptime...",
+            totalActivities = "Syncing players...",
+            availableVehicles = "Syncing...",
+            availableJobs = "Syncing jobs...",
         }
     })
 end)

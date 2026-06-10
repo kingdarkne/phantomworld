@@ -1,3 +1,5 @@
+local serverBootAt = os.time()
+
 local function getServerDisplayName()
     local name = GetConvar('sv_projectName', '')
     if name == '' then name = GetConvar('sv_hostname', '') end
@@ -11,7 +13,8 @@ local function buildStatusPayload()
         serverTime = os.date('%a %H:%M'),
         playerCount = #GetPlayers(),
         maxPlayers = GetConvarInt('sv_maxclients', 48),
-        uptime = os.time(),
+        bootAt = serverBootAt,
+        uptimeSeconds = os.time() - serverBootAt,
     }
 end
 

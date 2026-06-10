@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSocialLinks();
     initTabSystem();
     applyConfig();
+    applyHandoverData();
     displayInitialData();
     
     setTimeout(() => {
@@ -590,18 +591,39 @@ function toggleAudio() {
     }
 }
 
+function applyHandoverData() {
+    try {
+        if (!window.nuiHandoverData) return;
+
+        debugLog('Applying nuiHandoverData from server handover');
+
+        if (window.nuiHandoverData.maxSlots && window.nuiHandoverData.maxSlots > 0) {
+            maxSlots = window.nuiHandoverData.maxSlots;
+        }
+
+        if (window.nuiHandoverData.serverInfo) {
+            dataLoaded = true;
+            updateServerData(window.nuiHandoverData.serverInfo);
+        }
+    } catch (error) {
+        debugLog('Error applying handover data:', error);
+    }
+}
+
 function displayInitialData() {
-    const serverIP = (typeof config !== 'undefined' && config.server && config.server.ip) ? config.server.ip : "0.0.0.0";
-    const serverPort = (typeof config !== 'undefined' && config.server && config.server.port) ? config.server.port : "0";
-    maxSlots = (typeof config !== 'undefined' && config.server && config.server.maxPlayers) ? config.server.maxPlayers : 64;
-    
-    updateServerData({
-        serverUptime: "150 days online",
-        totalActivities: "45 activities",
-        availableVehicles: "250 vehicles",
-        availableJobs: "25 jobs"
-    });
-    
+    if (typeof config !== 'undefined' && config.server && config.server.maxPlayers) {
+        maxSlots = config.server.maxPlayers;
+    }
+
+    if (!dataLoaded) {
+        updateServerData({
+            serverUptime: 'Syncing uptime...',
+            totalActivities: 'Syncing players...',
+            availableVehicles: 'Syncing...',
+            availableJobs: 'Syncing jobs...',
+        });
+    }
+
     debugLog('Initial data displayed');
 }
 
@@ -710,6 +732,31 @@ function applyConfig() {
         
         if (config.server && config.server.maxPlayers) {
             maxSlots = config.server.maxPlayers;
+        }
+
+        const staffGrid = document.querySelector('.staff-grid');
+        if (staffGrid && config.staff && config.staff.length > 0) {
+            staffGrid.innerHTML = '';
+            config.staff.forEach((member) => {
+                const card = document.createElement('div');
+                card.className = 'staff-card';
+                const status = member.status || 'offline';
+                const badges = (member.badges || [])
+                    .map((badge) => `<span class="badge ${badge}" title="${badge}"><i class="fas fa-star"></i></span>`)
+                    .join('');
+                card.innerHTML = `
+                    <div class="staff-avatar">
+                        <div class="avatar-background" style="background-image: url('${member.avatar || 'img/avatars/founder.png'}')"></div>
+                        <div class="staff-status ${status}"></div>
+                    </div>
+                    <div class="staff-info">
+                        <div class="staff-name">${member.name || 'Staff'}</div>
+                        <div class="staff-role ${member.roleType || 'mod'}">${member.role || 'Staff'}</div>
+                    </div>
+                    <div class="staff-badges">${badges}</div>
+                `;
+                staffGrid.appendChild(card);
+            });
         }
         
         debugLog('Configuration applied successfully');

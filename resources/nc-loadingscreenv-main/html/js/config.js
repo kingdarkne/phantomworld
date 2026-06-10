@@ -1,6 +1,15 @@
 // Configuration file for Phantom World loading screen
 
 const config = {
+    // Live stats come from server (handover + refresh). These are display defaults only.
+    server: {
+        name: "Phantom World",
+        ip: "135.148.136.32",
+        port: "50334",
+        maxPlayers: 48,
+        cfxJoin: "https://cfx.re/join/3m87mo"
+    },
+
     // Appearance
     appearance: {
         primaryColor: "241, 229, 66",
