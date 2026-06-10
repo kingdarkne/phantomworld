@@ -591,6 +591,57 @@ function toggleAudio() {
     }
 }
 
+function badgeIcon(badge) {
+    const icons = {
+        founder: 'crown',
+        dev: 'code',
+        admin: 'shield-alt',
+        mod: 'shield',
+    };
+    return icons[badge] || 'star';
+}
+
+function renderStaffList(staff) {
+    const staffGrid = document.getElementById('staff-grid') || document.querySelector('.staff-grid');
+    if (!staffGrid || !staff || !staff.length) {
+        return;
+    }
+
+    staffGrid.innerHTML = '';
+
+    staff.forEach((member) => {
+        const card = document.createElement('div');
+        card.className = 'staff-card';
+        const status = member.status === 'online' ? 'online' : 'offline';
+        const badges = (member.badges || [])
+            .map((badge) => `<span class="badge ${badge}" title="${badge}"><i class="fas fa-${badgeIcon(badge)}"></i></span>`)
+            .join('');
+        const avatar = member.avatar || 'img/avatars/admin1.png';
+
+        card.innerHTML = `
+            <div class="staff-avatar">
+                <div class="avatar-background" style="background-image: url('${avatar}')"></div>
+                <div class="staff-status ${status}"></div>
+            </div>
+            <div class="staff-info">
+                <div class="staff-name">${member.name || 'Staff'}</div>
+                <div class="staff-role ${member.roleType || 'mod'}">${member.role || 'Staff'}</div>
+            </div>
+            <div class="staff-badges">${badges}</div>
+        `;
+        staffGrid.appendChild(card);
+    });
+
+    debugLog('Staff list rendered:', staff.length);
+}
+
+function updateStaffHighlight(text) {
+    const el = document.getElementById('staff-online-highlight');
+    if (el && text) {
+        el.textContent = text;
+    }
+}
+
 function applyHandoverData() {
     try {
         if (!window.nuiHandoverData) return;
@@ -599,6 +650,10 @@ function applyHandoverData() {
 
         if (window.nuiHandoverData.maxSlots && window.nuiHandoverData.maxSlots > 0) {
             maxSlots = window.nuiHandoverData.maxSlots;
+        }
+
+        if (window.nuiHandoverData.staff) {
+            renderStaffList(window.nuiHandoverData.staff);
         }
 
         if (window.nuiHandoverData.serverInfo) {
@@ -734,29 +789,12 @@ function applyConfig() {
             maxSlots = config.server.maxPlayers;
         }
 
-        const staffGrid = document.querySelector('.staff-grid');
-        if (staffGrid && config.staff && config.staff.length > 0) {
-            staffGrid.innerHTML = '';
-            config.staff.forEach((member) => {
-                const card = document.createElement('div');
-                card.className = 'staff-card';
-                const status = member.status || 'offline';
-                const badges = (member.badges || [])
-                    .map((badge) => `<span class="badge ${badge}" title="${badge}"><i class="fas fa-star"></i></span>`)
-                    .join('');
-                card.innerHTML = `
-                    <div class="staff-avatar">
-                        <div class="avatar-background" style="background-image: url('${member.avatar || 'img/avatars/founder.png'}')"></div>
-                        <div class="staff-status ${status}"></div>
-                    </div>
-                    <div class="staff-info">
-                        <div class="staff-name">${member.name || 'Staff'}</div>
-                        <div class="staff-role ${member.roleType || 'mod'}">${member.role || 'Staff'}</div>
-                    </div>
-                    <div class="staff-badges">${badges}</div>
-                `;
-                staffGrid.appendChild(card);
-            });
+        if (config.staff && config.staff.length > 0) {
+            const fallbackStaff = config.staff.map((member) => ({
+                ...member,
+                status: 'offline',
+            }));
+            renderStaffList(fallbackStaff);
         }
         
         debugLog('Configuration applied successfully');
@@ -939,6 +977,14 @@ function updateServerData(data) {
                     element.textContent = value;
                 }
             }
+
+            if (data.staff) {
+                renderStaffList(data.staff);
+            }
+
+            if (data.staffOnlineText) {
+                updateStaffHighlight(data.staffOnlineText);
+            }
             
             debugLog('UI updated successfully');
         } else {
@@ -954,6 +1000,9 @@ window.addEventListener('message', (event) => {
     
     if (data && data.type === 'updateServerData') {
         debugLog('Received data update event from script:', data.serverInfo);
+        if (data.staff) {
+            renderStaffList(data.staff);
+        }
         updateServerData(data.serverInfo);
     }
     

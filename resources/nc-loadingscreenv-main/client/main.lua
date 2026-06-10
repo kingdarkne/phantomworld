@@ -42,6 +42,7 @@ AddEventHandler('loadingscreen:receiveData', function(data)
     SendNUIMessage({
         type = "updateServerData",
         serverInfo = data,
+        staff = data.staff,
         maxSlots = maxSlots
     })
 end)

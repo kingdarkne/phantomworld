@@ -25,6 +25,7 @@ client_scripts {
 }
 
 server_scripts {
+    'staff_roster.lua',
     'server/main.lua',
 }
 

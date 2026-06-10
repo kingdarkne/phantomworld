@@ -36,14 +36,14 @@ const config = {
         { icon: "fish",           label: "Fishing, Hunting & Mini-Games" }
     ],
 
-    // STAFF — Phantom World owner only
+    // STAFF — display fallback only; online/offline synced from server (staff_roster.lua)
     staff: [
         {
             name: "Phantom",
             role: "Owner",
             roleType: "admin",
             avatar: "img/avatars/founder.png",
-            status: "online",
+            discordId: "413173364216168449",
             badges: ["founder", "dev"]
         }
     ],

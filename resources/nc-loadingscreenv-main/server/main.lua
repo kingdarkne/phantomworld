@@ -1,6 +1,6 @@
 --- Live server stats for loading screen (no fake random numbers).
 
-local VERSION = '1.1.0'
+local VERSION = '1.2.0'
 local CFX_ID = GetConvar('nc_loadscreen:cfxId', '3m87mo')
 local VEHICLE_COUNT = tonumber(GetConvar('nc_loadscreen:vehicleCount', '300')) or 300
 
@@ -94,6 +94,118 @@ local function fetchCfxListing()
     )
 end
 
+local function playerDiscordId(src)
+    local n = GetNumPlayerIdentifiers(src)
+    for i = 0, n - 1 do
+        local id = GetPlayerIdentifier(src, i)
+        if id and id:sub(1, 8) == 'discord:' then
+            return id:sub(9)
+        end
+    end
+    return nil
+end
+
+local function playerLicense(src)
+    local license = GetPlayerIdentifierByType(src, 'license')
+    if license then return license:gsub('license:', '') end
+    local license2 = GetPlayerIdentifierByType(src, 'license2')
+    if license2 then return license2:gsub('license2:', '') end
+    return nil
+end
+
+local function isPlayerStaff(src)
+    return IsPlayerAceAllowed(src, 'group.admin')
+        or IsPlayerAceAllowed(src, 'admin')
+        or IsPlayerAceAllowed(src, 'qbcore.god')
+        or IsPlayerAceAllowed(src, 'qbcore.admin')
+end
+
+local function rosterMemberOnline(member)
+    for _, src in ipairs(GetPlayers()) do
+        local pid = tonumber(src)
+        if not pid then goto continue end
+
+        if member.discordId and playerDiscordId(pid) == member.discordId then
+            return pid
+        end
+
+        if member.license and playerLicense(pid) == member.license then
+            return pid
+        end
+
+        ::continue::
+    end
+    return nil
+end
+
+local function copyBadges(badges)
+    if type(badges) ~= 'table' then return {} end
+    local out = {}
+    for i = 1, #badges do
+        out[i] = badges[i]
+    end
+    return out
+end
+
+function BuildStaffList()
+    local list = {}
+    local matched = {}
+
+    for _, member in ipairs(StaffRoster or {}) do
+        local onlineSrc = rosterMemberOnline(member)
+        local status = onlineSrc and 'online' or 'offline'
+        local displayName = member.name
+
+        if onlineSrc then
+            matched[onlineSrc] = true
+            local liveName = GetPlayerName(onlineSrc)
+            if liveName and liveName ~= '' then
+                displayName = liveName
+            end
+        end
+
+        list[#list + 1] = {
+            name = displayName,
+            role = member.role,
+            roleType = member.roleType or 'mod',
+            avatar = member.avatar or 'img/avatars/admin1.png',
+            status = status,
+            badges = copyBadges(member.badges),
+        }
+    end
+
+    for _, src in ipairs(GetPlayers()) do
+        local pid = tonumber(src)
+        if not pid or matched[pid] then goto continue end
+
+        if isPlayerStaff(pid) then
+            list[#list + 1] = {
+                name = GetPlayerName(pid) or ('Staff ' .. pid),
+                role = 'Staff',
+                roleType = 'moderator',
+                avatar = 'img/avatars/admin3.png',
+                status = 'online',
+                badges = { 'admin' },
+            }
+            matched[pid] = true
+        end
+
+        ::continue::
+    end
+
+    return list
+end
+
+local function countStaffOnline(staff)
+    local n = 0
+    for i = 1, #staff do
+        if staff[i].status == 'online' then
+            n = n + 1
+        end
+    end
+    return n
+end
+
 local function getUptimeSeconds()
     if cfxCache.uptimeSeconds and (os.time() - cfxCache.lastFetch) < 120 then
         local elapsed = os.time() - cfxCache.lastFetch
@@ -117,6 +229,8 @@ function BuildLiveServerData()
     local playerCount = #GetPlayers()
     local jobCount = countJobs()
     local jobs = jobCount > 0 and ('%d jobs'):format(jobCount) or 'Loading jobs...'
+    local staff = BuildStaffList()
+    local staffOnline = countStaffOnline(staff)
 
     return {
         serverName = getServerDisplayName(),
@@ -127,6 +241,11 @@ function BuildLiveServerData()
         playerCount = playerCount,
         maxPlayers = maxPlayers,
         cfxJoin = ('https://cfx.re/join/%s'):format(CFX_ID),
+        staff = staff,
+        staffOnline = staffOnline,
+        staffOnlineText = staffOnline > 0
+            and ('%d staff member%s online now'):format(staffOnline, staffOnline == 1 and '' or 's')
+            or 'No staff online right now — Discord support is always open',
     }
 end
 
@@ -147,6 +266,7 @@ AddEventHandler('playerConnecting', function(_, _, deferrals)
     local data = BuildLiveServerData()
     deferrals.handover({
         serverInfo = data,
+        staff = data.staff,
         maxSlots = data.maxPlayers,
         serverName = data.serverName,
     })
