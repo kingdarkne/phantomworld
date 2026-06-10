@@ -41,7 +41,7 @@ end
 
 function ps.circleTarget(name, location, size, options)
     if not name then return end
-    local resource = GetInvokingResource()
+    local resource = GetInvokingResource() or GetCurrentResourceName()
     if not zones[resource] then
         zones[resource] = {}
     end
@@ -117,7 +117,8 @@ end
 
 function ps.destroyTarget(name)
     if not name then return end
-    local resource = GetInvokingResource()
+    local resource = GetInvokingResource() or GetCurrentResourceName()
+    if not zones[resource] or not zones[resource][name] then return end
     exports.interact:RemoveInteraction(zones[resource][name])
     zones[resource][name] = nil
 end
