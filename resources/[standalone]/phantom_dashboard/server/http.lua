@@ -1,6 +1,7 @@
 --- Lightweight HTTP status API for the Discord bot (requires server HTTP enabled).
 
 local apiToken = Config.Discord.ApiToken
+local missingTokenWarned = false
 
 local function unauthorized(res)
     res.writeHead(401, { ['Content-Type'] = 'application/json' })
@@ -16,7 +17,13 @@ local function readAuth(req)
 end
 
 local function authorized(req)
-    if not apiToken or apiToken == '' then return true end
+    if not apiToken or apiToken == '' then
+        if not missingTokenWarned then
+            missingTokenWarned = true
+            print('[phantom_dashboard] HTTP API disabled: phantom_dashboard:apiToken is not set')
+        end
+        return false
+    end
     return readAuth(req) == apiToken
 end
 
