@@ -102,7 +102,23 @@ CreateThread(function()
     end
 end)
 
+-- checks if a player is one of the police jobs configured and returns true if they are.
+local function isPlayerPoliceOfficer()
+    local playerData = QBCore.Functions.GetPlayerData()
+    local isPolice = false
 
+    for _, job in ipairs(Config.PoliceJobsToCheck) do
+        if playerData.job.name == job.jobName then
+            if Config.PlayerPoliceOnlyOnDuty then
+                isPolice = playerData.job.onduty
+            else
+                isPolice = true
+            end
+        end
+    end
+
+    return isPolice
+end
 
 -- EXPORTS --
 function ApplyWantedLevel(level)
@@ -1939,35 +1955,6 @@ CreateThread(function()
     end
     UpdateDispatchServices()
 end)
-
--- checks if a player is one of the police jobs configured and returns true if they are.
-local function isPlayerPoliceOfficer()
-
-    local playerData = QBCore.Functions.GetPlayerData()
-    local isPolice = false
-
-    
-    for _, job in ipairs(Config.PoliceJobsToCheck) do
-        if playerData.job.name == job.jobName then
-            -- Check if configured to only count on-duty players?
-            if Config.PlayerPoliceOnlyOnDuty then
-                if playerData.job.onduty then
-                    isPolice = true
-                else
-                    isPolice = false
-                end
-            else
-                isPolice = true
-            end
-        end
-    end
-
-    return isPolice
-
-end
-
-
-    
 
 -- MAIN THREAD --
 -- Monitor the player's wanted level and maintain police units

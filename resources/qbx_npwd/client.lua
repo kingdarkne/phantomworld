@@ -1,5 +1,21 @@
 local hasPhone = false
 
+local function inventorySearchCount(searchType, items)
+    if GetResourceState('ox_inventory') ~= 'started' then
+        return nil
+    end
+
+    local ok, result = pcall(function()
+        return exports.ox_inventory:Search(searchType, items)
+    end)
+
+    if not ok then
+        return nil
+    end
+
+    return result
+end
+
 local function doPhoneCheck(isUnload, totalCount)
     hasPhone = false
 
@@ -14,7 +30,10 @@ local function doPhoneCheck(isUnload, totalCount)
         return
     end
 
-    local items = exports.ox_inventory:Search('count', PhoneList)
+    local items = inventorySearchCount('count', PhoneList)
+    if items == nil then
+        return
+    end
 
     if type(items) == 'number' then
         hasPhone = items > 0
@@ -36,7 +55,16 @@ end)
 
 -- Handles state right when the player selects their character and location.
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    doPhoneCheck()
+    CreateThread(function()
+        for _ = 1, 40 do
+            if GetResourceState('ox_inventory') == 'started' and inventorySearchCount('count', PhoneList) ~= nil then
+                doPhoneCheck()
+                return
+            end
+            Wait(250)
+        end
+        doPhoneCheck()
+    end)
 end)
 
 -- Resets state on logout, in case of character change.

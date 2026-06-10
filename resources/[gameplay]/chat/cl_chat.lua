@@ -81,6 +81,11 @@ local addMessage = function(message)
     end
   end
   message.args = sanitizedArgs
+  message.mode = message.mode or '_global'
+
+  if message.color ~= nil and type(message.color) ~= 'table' then
+    message.color = nil
+  end
 
   SendNUIMessage({
     type = 'ON_MESSAGE',

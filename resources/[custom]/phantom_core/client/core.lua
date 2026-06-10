@@ -14,6 +14,7 @@ CreateThread(function()
     end
     
     isInitialized = true
+    print('^2[Phantom Core]^7 Client v1.0.1 initialized (notifications use table API)')
     DebugPrint('Phantom Core initialized')
     
     -- Register NUI callbacks
