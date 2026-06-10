@@ -17,17 +17,22 @@ cd discord-bot
 cp .env.example .env
 ```
 
-2. Fill in `.env`:
+2. On the **game server host**, only `.env` needs the bot token (other vars are in `env.host`):
+
+```env
+DISCORD_BOT_TOKEN=your_bot_token_here
+```
 
 | Variable | Description |
 |----------|-------------|
-| `DISCORD_BOT_TOKEN` | Bot token from [Discord Developer Portal](https://discord.com/developers/applications) |
-| `DISCORD_GUILD_ID` | Your Discord server ID |
-| `DISCORD_STATUS_CHANNEL_ID` | Channel for optional auto status posts |
-| `FIVEM_SERVER_URL` | e.g. `http://YOUR_SERVER_IP:30120` |
-| `FIVEM_API_TOKEN` | Same value as `phantom_dashboard:apiToken` in server.cfg |
-| `CFX_SERVER_ID` | Optional fallback (public listing ID) if HTTP is blocked |
-| `STATUS_POLL_MINUTES` | Auto-post interval; `0` disables |
+| `DISCORD_BOT_TOKEN` | Bot token (.env only — never commit) |
+| `DISCORD_GUILD_ID` | In `env.host` |
+| `DISCORD_OWNER_USER_ID` | Your Discord user ID — receives all event DMs |
+| `DISCORD_STATUS_CHANNEL_ID` | Optional channel mirror (webhook channel works too) |
+| `FIVEM_SERVER_URL` | `http://127.0.0.1:50334` on host |
+| `FIVEM_API_TOKEN` | Matches `phantom_dashboard.secrets.cfg` |
+| `BOT_RELAY_SECRET` | Same as API token; FiveM posts events to bot |
+| `BOT_HTTP_PORT` | Default `3099` |
 
 3. Install and run:
 

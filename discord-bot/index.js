@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config();
+dotenv.config({ path: 'env.host' });
+import express from 'express';
 import {
   Client,
   GatewayIntentBits,
@@ -12,10 +15,13 @@ import {
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
 const statusChannelId = process.env.DISCORD_STATUS_CHANNEL_ID;
+const ownerUserId = process.env.DISCORD_OWNER_USER_ID;
 const fivemUrl = (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
 const apiToken = process.env.FIVEM_API_TOKEN || '';
 const cfxServerId = process.env.CFX_SERVER_ID || '';
 const pollMinutes = Number(process.env.STATUS_POLL_MINUTES || 0);
+const relayPort = Number(process.env.BOT_HTTP_PORT || 3099);
+const relaySecret = process.env.BOT_RELAY_SECRET || apiToken;
 
 if (!token) {
   console.error('Missing DISCORD_BOT_TOKEN in .env');
@@ -31,7 +37,7 @@ const commands = [
     .setDescription('List online players'),
   new SlashCommandBuilder()
     .setName('alert')
-    .setDescription('Send a dashboard alert to the status channel (admin)')
+    .setDescription('Send a dashboard alert (admin)')
     .addStringOption((o) => o.setName('message').setDescription('Alert text').setRequired(true)),
 ].map((c) => c.toJSON());
 
@@ -105,11 +111,83 @@ function statusEmbed(status) {
     .setTimestamp();
 }
 
+function eventEmbed(entry) {
+  const color = Number(entry.color) || 0x8b5cf6;
+  const desc = entry.description || '';
+  const footer = entry.time || new Date().toISOString();
+  const players =
+    entry.players != null && entry.maxPlayers != null
+      ? `\n\nPlayers: ${entry.players}/${entry.maxPlayers}`
+      : '';
+  return new EmbedBuilder()
+    .setColor(color)
+    .setTitle(entry.title || 'Server Event')
+    .setDescription((desc + players).slice(0, 4096))
+    .setFooter({ text: `${entry.category || 'event'} • ${footer}` })
+    .setTimestamp(entry.timestamp ? new Date(entry.timestamp * 1000) : undefined);
+}
+
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+async function dmOwner(contentOrPayload) {
+  if (!ownerUserId) return;
+  try {
+    const user = await client.users.fetch(ownerUserId);
+    await user.send(contentOrPayload);
+  } catch (err) {
+    console.warn('Owner DM failed:', err.message);
+  }
+}
+
+async function notifyOwnerEvent(entry) {
+  await dmOwner({ embeds: [eventEmbed(entry)] });
+}
+
+function botInviteUrl(clientId) {
+  const perms = '2147567616';
+  return `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=${perms}&scope=bot%20applications.commands`;
+}
+
+function startRelayServer() {
+  const app = express();
+  app.use(express.json({ limit: '64kb' }));
+
+  app.post('/events', async (req, res) => {
+    const auth = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-phantom-token'];
+    if (relaySecret && auth !== relaySecret) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+    const entry = req.body || {};
+    try {
+      await notifyOwnerEvent(entry);
+      if (statusChannelId) {
+        const channel = await client.channels.fetch(statusChannelId);
+        if (channel?.isTextBased()) {
+          await channel.send({ embeds: [eventEmbed(entry)] });
+        }
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn('Relay notify failed:', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/health', (_req, res) => {
+    res.json({ ok: true, bot: client.user?.tag || 'starting' });
+  });
+
+  app.listen(relayPort, '127.0.0.1', () => {
+    console.log(`Event relay listening on http://127.0.0.1:${relayPort}/events`);
+  });
+}
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+  console.log(`Invite bot to your server: ${botInviteUrl(client.user.id)}`);
   await registerCommands(client.user.id);
+  startRelayServer();
 
   try {
     const status = await getStatus();
@@ -119,6 +197,20 @@ client.once('ready', async () => {
   } catch {
     client.user.setActivity('Phantom World', { type: ActivityType.Watching });
   }
+
+  await dmOwner({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x8b5cf6)
+        .setTitle('Phantom World Alert Bot Online')
+        .setDescription(
+          'You will receive **DM alerts** for server events (join/leave, resources, deaths, txAdmin, etc.).\n\n' +
+            `Guild: ${guildId || 'not set'}\n` +
+            `FiveM API: ${fivemUrl}`,
+        )
+        .setTimestamp(),
+    ],
+  });
 
   if (pollMinutes > 0 && statusChannelId) {
     setInterval(async () => {
@@ -164,20 +256,20 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
       const message = interaction.options.getString('message', true);
+      const entry = {
+        category: 'slash',
+        title: 'Dashboard Alert',
+        description: message,
+        color: 0xf59e0b,
+        time: new Date().toISOString(),
+      };
+      await notifyOwnerEvent(entry);
       const channelId = statusChannelId || interaction.channelId;
       const channel = await client.channels.fetch(channelId);
-      if (!channel?.isTextBased()) {
-        await interaction.reply({ content: 'Status channel not found.', ephemeral: true });
-        return;
+      if (channel?.isTextBased()) {
+        await channel.send({ embeds: [eventEmbed(entry)] });
       }
-      const embed = new EmbedBuilder()
-        .setColor(0xf59e0b)
-        .setTitle('Dashboard Alert')
-        .setDescription(message)
-        .setFooter({ text: `From ${interaction.user.tag}` })
-        .setTimestamp();
-      await channel.send({ embeds: [embed] });
-      await interaction.reply({ content: 'Alert posted.', ephemeral: true });
+      await interaction.reply({ content: 'Alert sent to owner DM and status channel.', ephemeral: true });
     }
   } catch (err) {
     const msg = err?.message || 'Unknown error';

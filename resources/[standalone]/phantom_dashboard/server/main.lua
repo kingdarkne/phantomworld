@@ -34,9 +34,3 @@ exports('GetPlayers', function()
     return list
 end)
 
-AddEventHandler('onResourceStart', function(resourceName)
-    if resourceName ~= GetCurrentResourceName() then return end
-    if Config.Discord.PostStartup then
-        TriggerEvent('phantom_dashboard:discord:serverOnline')
-    end
-end)

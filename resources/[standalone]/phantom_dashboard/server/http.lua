@@ -64,6 +64,16 @@ SetHttpHandler(function(req, res)
         return
     end
 
+    if path == '/phantom-dashboard/events' or path == '/events' then
+        local events = exports[GetCurrentResourceName()]:GetRecentEvents()
+        res.writeHead(200, {
+            ['Content-Type'] = 'application/json',
+            ['Access-Control-Allow-Origin'] = '*',
+        })
+        res.send(json.encode({ events = events, count = #events }))
+        return
+    end
+
     res.writeHead(404, { ['Content-Type'] = 'application/json' })
     res.send(json.encode({ error = 'not_found' }))
 end)
