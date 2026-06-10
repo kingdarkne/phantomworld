@@ -25,8 +25,8 @@ Config.Discord = {
     AlertMinPlayers = tonumber(GetConvar('phantom_dashboard:alertMinPlayers', '0')) or 0,
     --- Post server online embed on resource start
     PostStartup = GetConvarInt('phantom_dashboard:postStartup', 1) == 1,
-    --- Relay events to Node discord-bot for owner DMs (phantom_dashboard:botRelayUrl)
-    BotRelayUrl = GetConvar('phantom_dashboard:botRelayUrl', 'http://127.0.0.1:3099/events'),
+    --- Node relay URL (phantom_dashboard:botRelayUrl). Empty = use botToken for direct DMs.
+    BotRelayUrl = GetConvar('phantom_dashboard:botRelayUrl', ''),
     --- Owner Discord user id for webhook mentions (phantom_dashboard:ownerDiscordId)
     OwnerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', ''),
     --- Post join/leave/resource/txAdmin/combat alerts

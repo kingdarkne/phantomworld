@@ -5,7 +5,7 @@ local eventLog = {}
 local MAX_EVENTS = 250
 
 local webhook = Config.Discord.Webhook
-local botRelay = GetConvar('phantom_dashboard:botRelayUrl', 'http://127.0.0.1:3099/events')
+local botRelay = GetConvar('phantom_dashboard:botRelayUrl', '')
 local botToken = GetConvar('phantom_dashboard:botToken', '')
 local relayToken = Config.Discord.ApiToken
 
