@@ -28,7 +28,7 @@ Config.PoliceJobsToCheck = {
 Config.PoliceWantedProtection = true
 
 -- 1.0.1 Are players treated as police (and protected from being wanted) only when on-duty?
-Config.PlayerPoliceOnlyOnDuty = false
+Config.PlayerPoliceOnlyOnDuty = true
 
 -- 1.0.1 This removes vehicles from generating at PDs when police are online. 
 Config.RemoveVehicleGenerators = true

@@ -27,14 +27,30 @@ local function IsProtectedPolice(src)
     local job = Player.PlayerData.job
     if not job then return false end
 
-    return (job.type == 'leo' or job.name == 'police' or job.name == 'lspd' or job.name == 'bcso' or job.name == 'sahp') and job.onduty
+    local policeJobs = {
+        police = true,
+        lspd = true,
+        bcso = true,
+        sahp = true,
+        sasp = true,
+    }
+
+    if job.type == 'leo' or policeJobs[job.name] then
+        return job.onduty == true
+    end
+
+    return false
 end
 
 local function SyncToClient(src)
     local cid = GetCitizenIdFromSource(src)
     if not cid then return end
     local data = Wanted[cid] or { level = 0, points = 0 }
-    TriggerClientEvent('dr-wanted:client:update', src, data.level or 0, data.points or 0)
+    local level = data.level or 0
+    TriggerClientEvent('dr-wanted:client:update', src, level, data.points or 0)
+    if level > 0 and GetResourceState('fenix-police') == 'started' then
+        TriggerClientEvent('fenix-police:client:SetWantedLevel', src, level)
+    end
 end
 
 -- Public helpers

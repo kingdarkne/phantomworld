@@ -1,6 +1,7 @@
 local wantedLevel = 0
 local wantedPoints = 0
 local lastPedCrime = {}
+local lastDispatchNotifyLevel = 0
 
 local function isFenixPoliceActive()
     return GetResourceState('fenix-police') == 'started'
@@ -71,6 +72,18 @@ RegisterNetEvent('dr-wanted:client:update', function(level, points)
     wantedLevel = level or 0
     wantedPoints = points or 0
     applyNativeWanted(wantedLevel)
+
+    if isFenixPoliceActive() and wantedLevel > 0 and wantedLevel > lastDispatchNotifyLevel then
+        lastDispatchNotifyLevel = wantedLevel
+        lib.notify({
+            title = 'Police dispatch',
+            description = ('Wanted level %d — AI units are responding.'):format(wantedLevel),
+            type = 'error',
+            duration = 6000,
+        })
+    elseif wantedLevel == 0 then
+        lastDispatchNotifyLevel = 0
+    end
 end)
 
 local function DrawTextSimple(x, y, scale, text, r, g, b, a)
@@ -119,24 +132,38 @@ CreateThread(function()
     end
 end)
 
-AddEventHandler('gameEventTriggered', function(name, args)
-    if name ~= 'CEventNetworkEntityDamage' then return end
-
-    local victim = args[1]
-    local attacker = args[2]
-    local ped = PlayerPedId()
-
-    if attacker ~= ped or victim == ped or not victim or victim == 0 or not DoesEntityExist(victim) or not IsEntityAPed(victim) then
-        return
+local function isLocalPlayerAttacker(attacker, ped)
+    if attacker == ped then
+        return true
     end
 
+    if not attacker or attacker == 0 or not DoesEntityExist(attacker) then
+        return false
+    end
+
+    if IsEntityAVehicle(attacker) then
+        return GetPedInVehicleSeat(attacker, -1) == ped
+    end
+
+    return false
+end
+
+local function isVictimFatallyDamaged(victim, args)
+    if args[4] == 1 or args[6] == 1 then
+        return true
+    end
+
+    return IsEntityDead(victim) or IsPedFatallyInjured(victim) or IsPedDeadOrDying(victim, true)
+end
+
+local function reportPedCrime(victim, isFatal)
     local now = GetGameTimer()
     if lastPedCrime[victim] and now - lastPedCrime[victim] < 5000 then
         return
     end
     lastPedCrime[victim] = now
 
-    local isFatal = IsEntityDead(victim)
+    local ped = PlayerPedId()
     if IsPedAPlayer(victim) then
         local targetPlayer = NetworkGetPlayerIndexFromPed(victim)
         if targetPlayer ~= -1 then
@@ -146,6 +173,37 @@ AddEventHandler('gameEventTriggered', function(name, args)
     end
 
     TriggerServerEvent('dr-wanted:server:npcAttack', isFatal)
+end
+
+AddEventHandler('gameEventTriggered', function(name, args)
+    if name ~= 'CEventNetworkEntityDamage' then return end
+
+    local victim = args[1]
+    local attacker = args[2]
+    local ped = PlayerPedId()
+
+    if not isLocalPlayerAttacker(attacker, ped) then
+        return
+    end
+
+    if victim == ped or not victim or victim == 0 or not DoesEntityExist(victim) or not IsEntityAPed(victim) then
+        return
+    end
+
+    reportPedCrime(victim, isVictimFatallyDamaged(victim, args))
+end)
+
+AddEventHandler('entityDamaged', function(victim, culprit, _weapon, _baseDamage)
+    local ped = PlayerPedId()
+    if not isLocalPlayerAttacker(culprit, ped) then
+        return
+    end
+
+    if victim == ped or not victim or victim == 0 or not DoesEntityExist(victim) or not IsEntityAPed(victim) then
+        return
+    end
+
+    reportPedCrime(victim, isVictimFatallyDamaged(victim, {}))
 end)
 
 -- Damage events above attribute crimes from the attacker's client. Avoid

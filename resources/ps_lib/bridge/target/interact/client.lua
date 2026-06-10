@@ -2,7 +2,7 @@ local zones = {}
 
 function ps.boxTarget(name, location, size, options)
     if not name then return end
-    local resource = GetInvokingResource()
+    local resource = GetInvokingResource() or GetCurrentResourceName()
     if not zones[resource] then
         zones[resource] = {}
     end

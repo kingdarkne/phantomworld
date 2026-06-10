@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 author 'Fenix'
 description 'Police'
-version '1.0'
+version '1.0.3'
 lua54 'yes'
 
 shared_scripts {
