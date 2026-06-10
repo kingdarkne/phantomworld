@@ -1,5 +1,20 @@
 local QBCore = exports['qbx_core']:GetCoreObject()
 
+local META_COMPLETED = 'phantom_citytour_completed'
+
+lib.callback.register('phantom_citytour:hasCompleted', function(source)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then return false end
+    return Player.PlayerData.metadata[META_COMPLETED] == true
+end)
+
+RegisterNetEvent('phantom_citytour:markCompleted', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    Player.Functions.SetMetaData(META_COMPLETED, true)
+end)
+
 -- Server-side tour management
 local PlayerTours = {}
 local TourStats = {}

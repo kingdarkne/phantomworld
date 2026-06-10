@@ -56,8 +56,9 @@ Config.Language = {
 Config.NewPlayerSettings = {
     AutoStartOnFirstJoin = true,
     ShowPromptOnSpawn = true,
+    AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
     RequiredPlayTime = 0, -- minutes before tour can be started again
-    CooldownTime = 30 -- minutes between tours
+    CooldownTime = 30 -- minutes between repeat tours (after first completion)
 }
 
 -- Admin settings

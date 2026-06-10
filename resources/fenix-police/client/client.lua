@@ -738,6 +738,24 @@ end)
 
 -- GROUND UNITS --
 
+local function ensureClientNetworkEntity(entity, netId)
+    if not entity or entity == 0 or not netId then return end
+
+    NetworkSetNetworkIdDynamic(netId, false)
+    SetNetworkIdCanMigrate(netId, false)
+    SetNetworkIdExistsOnAllMachines(netId, true)
+
+    for _ = 1, 25 do
+        if NetworkHasControlOfEntity(entity) then break end
+        NetworkRequestControlOfEntity(entity)
+        Wait(50)
+    end
+
+    SetEntityAsMissionEntity(entity, true, true)
+    SetEntityVisible(entity, true, false)
+    SetEntityLodDist(entity, 500)
+end
+
 -- This function will tell the server to spawn a police unit, and the server will pass back the Network ID of the vehicle + officers spawned so the client can handle them. 
 local function spawnPoliceUnitNet(wantedLevel)
     --if Config.isDebug then print('Spawning Net Unit') end
@@ -778,7 +796,7 @@ AddEventHandler('spawnPoliceUnitNetResponse', function(vehNetID, officers)
     local playerCoords = GetEntityCoords(playerPed)   
 
 
-    if vehNetID and officers then
+    if vehNetID and officers and #officers > 0 then
         local vehicle = NetToVeh(vehNetID) -- Try to set the local vehicle entity from the network ID returned by the server
 
         -- I've found that one call isn't enough, and it can take multiple NetToVeh calls before it is not nil or = 0 regardless of the time that has passed since spawn. 
@@ -789,13 +807,15 @@ AddEventHandler('spawnPoliceUnitNetResponse', function(vehNetID, officers)
             Wait(Config.netWaitTime)
             waitCount = waitCount + 1
         end
-        --if Config.isDebug then print('CLIENT NetToVeh for netID ' ..vehNetID .. ' returned entityID ' .. vehicle)  end
-        --if Config.isDebug then print('CLIENT VehToNet for entityID ' ..vehicle.. ' returned NetID = ' .. VehToNet(vehicle))  end
 
-        NetworkSetNetworkIdDynamic(vehNetID, false)  -- Allow the networked vehicle to be controlled dynamically.
-        SetNetworkIdCanMigrate(vehNetID, false) -- Allow the network ID to be migrated to other clients.
-        SetNetworkIdExistsOnAllMachines(vehNetID, true)
-        SetEntityAsMissionEntity(vehicle, true, true) -- Prevent despawning by game garbage collection
+        if not vehicle or vehicle == 0 then
+            if Config.isDebug then print('UnitSpawn failed: vehicle never resolved from net id ' .. vehNetID) end
+            isSpawning = false
+            spawnRequestStartedAt = 0
+            return
+        end
+
+        ensureClientNetworkEntity(vehicle, vehNetID)
 
         spawnedVehicles[vehNetID] = {vehicle = vehicle, officers = {}, officerTasks = {} }
 
@@ -809,13 +829,13 @@ AddEventHandler('spawnPoliceUnitNetResponse', function(vehNetID, officers)
                 Wait(Config.netWaitTime)
                 waitCount = waitCount + 1
             end
-            --if Config.isDebug then print('CLIENT NetToPed for netID ' ..pedNetID .. ' returned entityID ' .. officer)  end
-            --if Config.isDebug then print('CLIENT PedToNet for entityID ' ..officer.. ' returned NetID = ' .. PedToNet(officer))  end
 
-            NetworkSetNetworkIdDynamic(pedNetID, false) -- Allow the networked ped to be controlled dynamically.
-            SetNetworkIdCanMigrate(pedNetID, false) -- Allow the network ID to be migrated to other clients.
-            SetNetworkIdExistsOnAllMachines(pedNetID, true)
-            SetEntityAsMissionEntity(officer, true, true) -- Prevent despawning by game garbage collection
+            if not officer or officer == 0 then
+                if Config.isDebug then print('UnitSpawn failed: officer net id ' .. pedNetID) end
+                goto continue_officer_spawn
+            end
+
+            ensureClientNetworkEntity(officer, pedNetID)
 
             SetPedAsCop(officer, true)
             SetPedCombatAttributes(officer, 2, true) -- Able to driveby
@@ -837,11 +857,14 @@ AddEventHandler('spawnPoliceUnitNetResponse', function(vehNetID, officers)
             
             -- Adds the spawned ped "officer" to the .officers table by key pedNetID so it can be retrieved by key pedNetID later. 
             spawnedVehicles[vehNetID].officers[pedNetID] = officer
+            ::continue_officer_spawn::
         end
 
         -- Will check if vehicle is stuck and try to free it. 
         MonitorVehicle(vehNetID) 
 
+    elseif Config.isDebug then
+        print('UnitSpawn failed: server returned no vehicle/officers')
     end
 
     
@@ -1895,12 +1918,14 @@ local function UpdateDispatchServices()
             QBCore.Functions.Notify('Fenix Police Response: Enabled')
             if Config.isDebug then print('Fenix Police Response: Enabled') end
 
-            SetAudioFlag('PoliceScannerDisabled', false)
-            SetCreateRandomCops(true)
-            SetCreateRandomCopsNotOnScenarios(true)
-            SetCreateRandomCopsOnScenarios(true)
-            DistantCopCarSirens(false) --I keep this off for personal preference, I found sometimes they got stuck on and it was annoying.
-        
+            -- Custom AI spawns units — disable scanner/native cop audio so you hear units you can see.
+            SetAudioFlag('PoliceScannerDisabled', true)
+            SetCreateRandomCops(false)
+            SetCreateRandomCopsNotOnScenarios(false)
+            SetCreateRandomCopsOnScenarios(false)
+            DistantCopCarSirens(false)
+            SetDispatchCopsForPlayer(PlayerId(), false)
+
             SetMaxWantedLevel(5) -- Uses max 5 star wanted level
         end
 

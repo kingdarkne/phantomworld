@@ -9,6 +9,7 @@ version '1.0.0'
 ui_page 'web/build/index.html'
 
 shared_scripts {
+    '@ox_lib/init.lua',
     'config.lua',
     'shared/tour_data.lua'
 }
@@ -29,7 +30,8 @@ files {
 }
 
 dependencies {
-    'qbx_core'
+    'qbx_core',
+    'ox_lib'
 }
 
 export 'StartCityTour'

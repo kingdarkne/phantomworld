@@ -9,6 +9,17 @@ local playerHandle = nil
 local PlayerData = {}
 local tourStartTime = 0
 local lastTourTime = 0
+local tourCompleted = false
+
+local function refreshTourCompleted()
+    local ok, completed = pcall(function()
+        return lib.callback.await('phantom_citytour:hasCompleted', false)
+    end)
+    if ok then
+        tourCompleted = completed == true
+    end
+    return tourCompleted
+end
 
 -- Initialize
 CreateThread(function()
@@ -18,7 +29,6 @@ CreateThread(function()
     
     PlayerData = QBCore.Functions.GetPlayerData()
     
-    -- Register events
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         PlayerData = QBCore.Functions.GetPlayerData()
         CheckForNewPlayer()
@@ -27,25 +37,54 @@ CreateThread(function()
     RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
         PlayerData.job = JobInfo
     end)
+
+    Wait(4000)
+    if PlayerData and PlayerData.citizenid then
+        CheckForNewPlayer()
+    end
 end)
 
--- Check if player is new and should auto-start tour
-function CheckForNewPlayer()
-    if Config.NewPlayerSettings.AutoStartOnFirstJoin and not HasPlayerCompletedTour() then
-        Wait(2000) -- Wait for player to fully load
-        TriggerEvent('chat:addMessage', {
-            color = {0, 255, 0},
-            multiline = true,
-            args = {"[Phantom Tour]", Config.Language.PressToStart:format(Config.Keybinds.StartTour)}
-        })
-    end
+function HasPlayerCompletedTour()
+    return tourCompleted
 end
 
--- Check if player has completed tour before
-function HasPlayerCompletedTour()
-    -- This would typically check a database or player data
-    -- For now, return false to allow multiple tours
-    return false
+-- First join: auto-play tour once. Returning players skip unless they press F7 or /citytour.
+function CheckForNewPlayer()
+    CreateThread(function()
+        refreshTourCompleted()
+
+        if tourCompleted then
+            return
+        end
+
+        local delay = (Config.NewPlayerSettings.AutoStartDelay or 5) * 1000
+        Wait(delay)
+
+        if tourCompleted or isTourActive then
+            return
+        end
+
+        if Config.NewPlayerSettings.AutoStartOnFirstJoin then
+            if lib and lib.notify then
+                lib.notify({
+                    title = 'Phantom World',
+                    description = Config.Language.WelcomeMessage,
+                    type = 'inform',
+                    duration = 10000
+                })
+            end
+            StartCityTour()
+            return
+        end
+
+        if Config.NewPlayerSettings.ShowPromptOnSpawn then
+            TriggerEvent('chat:addMessage', {
+                color = {0, 255, 0},
+                multiline = true,
+                args = {'[Phantom Tour]', Config.Language.PressToStart:format(Config.Keybinds.StartTour)}
+            })
+        end
+    end)
 end
 
 -- Main tour functions
@@ -59,18 +98,20 @@ function StartCityTour()
         return
     end
     
-    -- Check cooldown
-    local currentTime = GetGameTimer()
-    local cooldownMs = Config.NewPlayerSettings.CooldownTime * 60000 -- Convert minutes to milliseconds
-    
-    if currentTime - lastTourTime < cooldownMs then
-        local remainingTime = math.ceil((cooldownMs - (currentTime - lastTourTime)) / 60000)
-        TriggerEvent('chat:addMessage', {
-            color = {255, 165, 0},
-            multiline = true,
-            args = {"[Phantom Tour]", "Please wait " .. remainingTime .. " minutes before starting another tour."}
-        })
-        return
+    -- Repeat tours only after the player has completed once.
+    if tourCompleted then
+        local currentTime = GetGameTimer()
+        local cooldownMs = Config.NewPlayerSettings.CooldownTime * 60000
+
+        if currentTime - lastTourTime < cooldownMs then
+            local remainingTime = math.ceil((cooldownMs - (currentTime - lastTourTime)) / 60000)
+            TriggerEvent('chat:addMessage', {
+                color = {255, 165, 0},
+                multiline = true,
+                args = {'[Phantom Tour]', 'Please wait ' .. remainingTime .. ' minutes before starting another tour.'}
+            })
+            return
+        end
     end
     
     isTourActive = true
@@ -98,16 +139,21 @@ function StartCityTour()
     })
 end
 
-function StopCityTour()
+function StopCityTour(markCompleted)
     if not isTourActive then return end
     
     isTourActive = false
     isPaused = false
     lastTourTime = GetGameTimer()
+
+    if markCompleted then
+        tourCompleted = true
+        TriggerServerEvent('phantom_citytour:markCompleted')
+    end
     
-    -- Clean up camera
     if cameraHandle then
-        DeleteEntity(cameraHandle)
+        RenderScriptCams(false, true, 500, true, true)
+        DestroyCam(cameraHandle, false)
         cameraHandle = nil
     end
     
@@ -166,8 +212,12 @@ function RestorePlayer()
 end
 
 function ProcessLocation(index)
-    if not isTourActive or index > #TourLocations then
-        StopCityTour()
+    if not isTourActive then
+        return
+    end
+
+    if index > #TourLocations then
+        StopCityTour(true)
         return
     end
     
@@ -230,13 +280,12 @@ end
 function SetupCamera(cameraData)
     if not cameraData then return end
     
-    -- Clean up existing camera
     if cameraHandle then
-        DeleteEntity(cameraHandle)
+        DestroyCam(cameraHandle, false)
+        cameraHandle = nil
     end
     
-    -- Create camera
-    cameraHandle = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+    cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
     SetCamCoord(cameraHandle, cameraData.start.x, cameraData.start.y, cameraData.start.z)
     SetCamRot(cameraHandle, cameraData.start.w, 0.0, 0.0)
     SetCamFov(cameraHandle, cameraData.fov or 50.0)
@@ -288,7 +337,7 @@ function NextLocation()
     currentLocationIndex = currentLocationIndex + 1
     
     if currentLocationIndex > #TourLocations then
-        StopCityTour()
+        StopCityTour(true)
     else
         if isPaused then
             -- Just update UI to show next location is ready
@@ -383,36 +432,31 @@ function LoadAnimDict(dict)
     end
 end
 
--- Keybind handlers
-CreateThread(function()
-    while true do
-        Wait(0)
-        
-        if IsControlJustPressed(0, GetHashKey(Config.Keybinds.StartTour)) then
-            if isTourActive then
-                StopCityTour()
-            else
-                StartCityTour()
-            end
-        end
-        
-        if isTourActive then
-            if IsControlJustPressed(0, GetHashKey(Config.Keybinds.SkipLocation)) then
-                SkipLocation()
-            end
-            
-            if IsControlJustPressed(0, GetHashKey(Config.Keybinds.PauseTour)) then
-                PauseTour()
-            end
-            
-            if IsControlJustPressed(0, GetHashKey(Config.Keybinds.ToggleUI)) then
-                SendNUIMessage({
-                    action = "toggleUI"
-                })
-            end
-        end
+RegisterCommand('+phantom_citytour_toggle', function()
+    if isTourActive then
+        StopCityTour(false)
+    else
+        StartCityTour()
     end
-end)
+end, false)
+RegisterCommand('-phantom_citytour_toggle', function() end, false)
+RegisterKeyMapping('+phantom_citytour_toggle', 'Phantom City Tour (start/stop)', 'keyboard', Config.Keybinds.StartTour)
+
+RegisterCommand('phantom_citytour_skip', function()
+    if isTourActive then SkipLocation() end
+end, false)
+RegisterKeyMapping('phantom_citytour_skip', 'Phantom City Tour (skip location)', 'keyboard', Config.Keybinds.SkipLocation)
+
+RegisterCommand('phantom_citytour_pause', function()
+    if isTourActive then PauseTour() end
+end, false)
+
+RegisterCommand('phantom_citytour_toggle_ui', function()
+    if isTourActive then
+        SendNUIMessage({ action = 'toggleUI' })
+    end
+end, false)
+RegisterKeyMapping('phantom_citytour_toggle_ui', 'Phantom City Tour (toggle UI)', 'keyboard', Config.Keybinds.ToggleUI)
 
 -- NUI callbacks
 RegisterNUICallback('startTour', function(data, cb)
@@ -421,7 +465,7 @@ RegisterNUICallback('startTour', function(data, cb)
 end)
 
 RegisterNUICallback('stopTour', function(data, cb)
-    StopCityTour()
+    StopCityTour(false)
     cb('ok')
 end)
 
@@ -460,12 +504,20 @@ exports('IsTourActive', function() return isTourActive end)
 -- Commands
 RegisterCommand('citytour', function()
     if isTourActive then
-        StopCityTour()
+        StopCityTour(false)
     else
         StartCityTour()
     end
 end, false)
 
 RegisterCommand('stoptour', function()
-    StopCityTour()
+    StopCityTour(false)
 end, false)
+
+RegisterNetEvent('phantom_citytour:forceStart', function()
+    StartCityTour()
+end)
+
+RegisterNetEvent('phantom_citytour:forceStop', function()
+    StopCityTour(false)
+end)

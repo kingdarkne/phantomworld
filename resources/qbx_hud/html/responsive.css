@@ -385,10 +385,10 @@
 
 @media (max-height: 800px) {
   #top-right-stack {
-    bottom: 12vh;
-    gap: 0.4rem;
-    transform: scale(0.9);
-    transform-origin: bottom right;
+    bottom: 20vh;
+    gap: 0.35rem;
+    transform: scale(0.92);
+    transform-origin: bottom left;
   }
   .phantom-strip-glass {
     padding: 0.7rem 0.9rem 0.8rem;

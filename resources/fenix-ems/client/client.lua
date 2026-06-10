@@ -52,6 +52,68 @@ local function cleanupUnits()
     activeCall = false
 end
 
+local function releaseEmsUnitsAfterRevive()
+    clearBlip()
+    activeCall = false
+
+    local medic = spawnedMedic
+    local vehicle = spawnedVehicle
+    spawnedMedic = nil
+    spawnedVehicle = nil
+
+    if not medic or not DoesEntityExist(medic) or not vehicle or not DoesEntityExist(vehicle) then
+        if medic and DoesEntityExist(medic) then DeleteEntity(medic) end
+        if vehicle and DoesEntityExist(vehicle) then DeleteEntity(vehicle) end
+        return
+    end
+
+    CreateThread(function()
+        SetBlockingOfNonTemporaryEvents(medic, false)
+        TaskEnterVehicle(medic, vehicle, -1, -1, 2.0, 1, 0)
+        local enterDeadline = GetGameTimer() + 15000
+        while GetGameTimer() < enterDeadline do
+            if GetVehiclePedIsIn(medic, false) == vehicle then break end
+            Wait(500)
+        end
+
+        if GetVehiclePedIsIn(medic, false) == vehicle then
+            TaskVehicleDriveWander(medic, vehicle, 18.0, 786603)
+            Wait(30000)
+        end
+
+        if DoesEntityExist(vehicle) then DeleteEntity(vehicle) end
+        if DoesEntityExist(medic) then DeleteEntity(medic) end
+    end)
+end
+
+local function parkAmbulanceNearPlayer(playerCoords)
+    local parkDistance = math.min(Config.ReviveDistance or 12.0, 8.0)
+    local deadline = GetGameTimer() + 20000
+
+    while activeCall and GetGameTimer() < deadline do
+        if not DoesEntityExist(spawnedVehicle) or not DoesEntityExist(spawnedMedic) then
+            return false
+        end
+
+        local vCoords = GetEntityCoords(spawnedVehicle)
+        if #(vCoords - playerCoords) <= parkDistance then
+            BringVehicleToHalt(spawnedVehicle, 2.0, 1, false)
+            Wait(1500)
+            return true
+        end
+
+        TaskVehicleDriveToCoord(
+            spawnedMedic,
+            spawnedVehicle,
+            playerCoords.x, playerCoords.y, playerCoords.z,
+            10.0, 0, GetEntityModel(spawnedVehicle), 786603, 2.0, true
+        )
+        Wait(1500)
+    end
+
+    return false
+end
+
 local function isPlayerDown()
     local ped = PlayerPedId()
     if IsEntityDead(ped) or IsPedFatallyInjured(ped) or IsPedDeadOrDying(ped, true) then
@@ -153,10 +215,11 @@ local function driveMedicToPlayer()
             local dist = #(pCoords - vCoords)
 
             if dist <= (Config.ReviveDistance or 12.0) then
+                parkAmbulanceNearPlayer(pCoords)
                 TaskVehicleTempAction(spawnedMedic, spawnedVehicle, 27, 3000)
                 Wait(1500)
-                TaskLeaveVehicle(spawnedMedic, spawnedVehicle, 256)
-                Wait(2000)
+                TaskLeaveVehicle(spawnedMedic, spawnedVehicle, 0)
+                Wait(2500)
                 TaskGoToCoordAnyMeans(spawnedMedic, pCoords.x, pCoords.y, pCoords.z, 2.0, 0, false, 786603, 0.0)
                 local approachDeadline = GetGameTimer() + 20000
                 while GetGameTimer() < approachDeadline do
@@ -170,7 +233,7 @@ local function driveMedicToPlayer()
                 Wait(5000)
                 revivePlayer()
                 TriggerServerEvent('fenix-ems:server:chargeFee')
-                cleanupUnits()
+                releaseEmsUnitsAfterRevive()
                 return
             end
 
