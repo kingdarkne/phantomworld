@@ -357,8 +357,9 @@ AddEventHandler('txAdmin:events:healedPlayer', function(eventData)
     )
 end)
 
--- Manual / resource bridge (legacy event)
-RegisterNetEvent('phantom_dashboard:discord:alert', function(title, message, color)
+-- Manual / resource bridge (legacy server-local event). Do not register this
+-- as a net event; connected clients must not be able to post arbitrary alerts.
+AddEventHandler('phantom_dashboard:discord:alert', function(title, message, color)
     PhantomDashboardEmit('manual', title, message, color)
 end)
 
