@@ -1,6 +1,142 @@
 -- POLICE JOB CHECKING LOGIC --
 QBCore = exports['qbx_core']:GetCoreObject()
 
+local spawnedEntityOwners = {}
+local spawnRequestLastAt = {}
+local SPAWN_REQUEST_COOLDOWN_MS = tonumber(GetConvar('fenix_police:spawnCooldownMs', '8000')) or 8000
+
+local function normalizeNetId(netId)
+    local id = tonumber(netId)
+    if id and id > 0 then return id end
+    return nil
+end
+
+local function rememberSpawnedEntity(src, netId)
+    local id = normalizeNetId(netId)
+    if id then
+        spawnedEntityOwners[id] = tonumber(src)
+    end
+end
+
+local function forgetSpawnedEntity(netId)
+    local id = normalizeNetId(netId)
+    if id then
+        spawnedEntityOwners[id] = nil
+    end
+end
+
+local function canManageSpawnedEntity(src, netId)
+    local id = normalizeNetId(netId)
+    return id and spawnedEntityOwners[id] == tonumber(src)
+end
+
+local function coordsToVector(coords)
+    if not coords then return nil end
+    local x, y, z = tonumber(coords.x), tonumber(coords.y), tonumber(coords.z)
+    if not x or not y or not z then return nil end
+    return vector3(x, y, z)
+end
+
+local function isNearPlayer(src, coords, maxDistance)
+    local requestedCoords = coordsToVector(coords)
+    if not requestedCoords then return false end
+
+    local ped = GetPlayerPed(src)
+    if not ped or ped == 0 then return false end
+
+    return #(requestedCoords - GetEntityCoords(ped)) <= maxDistance
+end
+
+local function getAuthorizedWantedLevel(src, requestedLevel)
+    local requested = math.max(0, math.min(math.floor(tonumber(requestedLevel) or 0), 5))
+    if requested <= 0 then return nil end
+
+    if GetResourceState('dr-wanted') == 'started' then
+        local ok, data = pcall(function()
+            return exports['dr-wanted']:GetWantedData(src)
+        end)
+        local serverLevel = ok and data and tonumber(data.level) or 0
+        if serverLevel <= 0 then return nil end
+        return math.min(requested, serverLevel)
+    end
+
+    return requested
+end
+
+local function authorizeSpawnRequest(src, eventName, wantedLevel, playerCoords, spawnPoint, maxSpawnDistance)
+    if not GetPlayerName(src) then return nil end
+
+    local authorizedLevel = getAuthorizedWantedLevel(src, wantedLevel)
+    if not authorizedLevel then return nil end
+
+    if not isNearPlayer(src, playerCoords, 30.0) then return nil end
+    if not isNearPlayer(src, spawnPoint, maxSpawnDistance) then return nil end
+
+    local key = ('%s:%s'):format(src, eventName)
+    local now = GetGameTimer()
+    local last = spawnRequestLastAt[key]
+    if last and (now - last) < SPAWN_REQUEST_COOLDOWN_MS then
+        if Config.isDebug then print(('Rejected throttled %s from %s'):format(eventName, src)) end
+        return nil
+    end
+
+    spawnRequestLastAt[key] = now
+    return authorizedLevel
+end
+
+local function findAllowedAirUnit(model, allowedTables)
+    if type(model) ~= 'string' then return nil end
+
+    for _, units in ipairs(allowedTables) do
+        if type(units) == 'table' then
+            for _, unit in ipairs(units) do
+                if unit.model == model then
+                    return unit
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+local function sanitizeAirSpawnTable(spawnTable, allowedTables)
+    if type(spawnTable) ~= 'table' then return nil end
+
+    local sanitized = {}
+    local seen = {}
+    for _, unit in ipairs(spawnTable) do
+        local allowed = type(unit) == 'table' and findAllowedAirUnit(unit.model, allowedTables)
+        if allowed and not seen[allowed.model] then
+            sanitized[#sanitized + 1] = allowed
+            seen[allowed.model] = true
+        end
+    end
+
+    if #sanitized == 0 then return nil end
+    return sanitized
+end
+
+AddEventHandler('playerDropped', function()
+    local src = tonumber(source)
+    for netId, owner in pairs(spawnedEntityOwners) do
+        if owner == src then
+            local entity = NetworkGetEntityFromNetworkId(netId)
+            if DoesEntityExist(entity) then
+                DeleteEntity(entity)
+            end
+            spawnedEntityOwners[netId] = nil
+        end
+    end
+
+    local prefix = tostring(src) .. ':'
+    for key in pairs(spawnRequestLastAt) do
+        if key:sub(1, #prefix) == prefix then
+            spawnRequestLastAt[key] = nil
+        end
+    end
+end)
+
 CreateThread(function()
     while true do
         local polCount = 0
@@ -40,9 +176,12 @@ end)
 -- Server event to delete a vehicle or officer entity from the network ID.
 RegisterServerEvent('deleteSpawnedEntity')
 AddEventHandler('deleteSpawnedEntity', function(entityNetID)
+    if not canManageSpawnedEntity(source, entityNetID) then return end
+
     local entity = NetworkGetEntityFromNetworkId(entityNetID)
     if DoesEntityExist(entity) then
         DeleteEntity(entity)
+        forgetSpawnedEntity(entityNetID)
     end
 end)
 
@@ -52,9 +191,12 @@ end)
 -- Server event to delete a ped by network ID
 RegisterServerEvent('deleteSpawnedPed')
 AddEventHandler('deleteSpawnedPed', function(pedNetID)
+    if not canManageSpawnedEntity(source, pedNetID) then return end
+
     local entity = NetworkGetEntityFromNetworkId(pedNetID)
     if DoesEntityExist(entity) then
         DeleteEntity(entity)
+        forgetSpawnedEntity(pedNetID)
     end
 end)
 
@@ -67,6 +209,8 @@ end)
 RegisterServerEvent('deleteSpawnedVehicle')
 AddEventHandler('deleteSpawnedVehicle', function(vehNetID)
     local src = source
+    if not canManageSpawnedEntity(src, vehNetID) then return end
+
     local entity = NetworkGetEntityFromNetworkId(vehNetID)
     if DoesEntityExist(entity) then
 
@@ -84,6 +228,7 @@ AddEventHandler('deleteSpawnedVehicle', function(vehNetID)
             TriggerClientEvent('deleteSpawnedVehicleResponseStolen', src, vehNetID)
         else
             DeleteEntity(entity)
+            forgetSpawnedEntity(vehNetID)
         end 
     end   
 end)
@@ -337,6 +482,25 @@ end
 RegisterNetEvent('spawnPoliceUnitNet')
 AddEventHandler('spawnPoliceUnitNet', function(wantedLevel, playerCoords, regionCode, spawnPoint, spawnHeading)
     local src = source
+    local authorizedLevel = authorizeSpawnRequest(
+        src,
+        'spawnPoliceUnitNet',
+        wantedLevel,
+        playerCoords,
+        spawnPoint,
+        (Config.maxPoliceSpawnDistance or 220.0) + 100.0
+    )
+    if not authorizedLevel then
+        TriggerClientEvent('spawnPoliceUnitNetResponse', src, nil, {})
+        return
+    end
+    wantedLevel = authorizedLevel
+
+    if not Config.vehiclesByRegion[regionCode] then
+        TriggerClientEvent('spawnPoliceUnitNetResponse', src, nil, {})
+        return
+    end
+
     local seatIndex = -1
 
     -- Variable will be set true as soon as a vehicle has a driver. I'm less worried about a crew member not warping in properly.
@@ -472,6 +636,10 @@ AddEventHandler('spawnPoliceUnitNet', function(wantedLevel, playerCoords, region
 
     
     -- Return the netIDs to the client
+    rememberSpawnedEntity(src, vehNetID)
+    for _, pedNetID in ipairs(officers) do
+        rememberSpawnedEntity(src, pedNetID)
+    end
     TriggerClientEvent('spawnPoliceUnitNetResponse', src, vehNetID, officers)
     
 end)
@@ -483,6 +651,25 @@ end)
 RegisterNetEvent('spawnPoliceHeliNet')
 AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnPoint, spawnTable)
     local src = source
+    local authorizedLevel = authorizeSpawnRequest(
+        src,
+        'spawnPoliceHeliNet',
+        wantedLevel,
+        playerCoords,
+        spawnPoint,
+        (Config.maxHeliSpawnDistance or 500.0) + (Config.maxHeliSpawnHeight or 200.0) + 100.0
+    )
+    if not authorizedLevel then
+        TriggerClientEvent('spawnPoliceHeliNetResponse', src, nil, {})
+        return
+    end
+    wantedLevel = authorizedLevel
+    spawnTable = sanitizeAirSpawnTable(spawnTable, { Config.polHelis, Config.milHelis })
+    if not spawnTable then
+        TriggerClientEvent('spawnPoliceHeliNetResponse', src, nil, {})
+        return
+    end
+
     local seatIndex = -1
     
     -- Variable will be set true as soon as a vehicle has a driver. I'm less worried about a crew member not warping in properly.
@@ -689,6 +876,10 @@ AddEventHandler('spawnPoliceHeliNet', function(wantedLevel, playerCoords, spawnP
     end
 
     -- Return the netIDs to the client
+    rememberSpawnedEntity(src, vehNetID)
+    for _, pedNetID in ipairs(officers) do
+        rememberSpawnedEntity(src, pedNetID)
+    end
     TriggerClientEvent('spawnPoliceHeliNetResponse', src, vehNetID, officers)
 end)
 
@@ -699,6 +890,25 @@ end)
 RegisterNetEvent('spawnPoliceAirNet')
 AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPoint, spawnTable)
     local src = source
+    local authorizedLevel = authorizeSpawnRequest(
+        src,
+        'spawnPoliceAirNet',
+        wantedLevel,
+        playerCoords,
+        spawnPoint,
+        (Config.maxAirSpawnDistance or 600.0) + (Config.maxAirSpawnHeight or 300.0) + 100.0
+    )
+    if not authorizedLevel then
+        TriggerClientEvent('spawnPoliceAirNetResponse', src, nil, {})
+        return
+    end
+    wantedLevel = authorizedLevel
+    spawnTable = sanitizeAirSpawnTable(spawnTable, { Config.milPlanes })
+    if not spawnTable then
+        TriggerClientEvent('spawnPoliceAirNetResponse', src, nil, {})
+        return
+    end
+
     local seatIndex = -1
 
     -- Variable will be set true as soon as a vehicle has a driver. I'm less worried about a crew member not warping in properly.
@@ -831,6 +1041,10 @@ AddEventHandler('spawnPoliceAirNet', function(wantedLevel, playerCoords, spawnPo
     end
 
     -- Return the netIDs to the client
+    rememberSpawnedEntity(src, vehNetID)
+    for _, pedNetID in ipairs(officers) do
+        rememberSpawnedEntity(src, pedNetID)
+    end
     TriggerClientEvent('spawnPoliceAirNetResponse', src, vehNetID, officers)
 end)
 
@@ -888,10 +1102,11 @@ end
 
 --Uesed to receive alerts from qbpolice trigger fuction
 --Needs to be added to QB-Police police:server:policeAlert
-RegisterNetEvent('fenix:server:trigger')
+-- Keep this server-local; otherwise clients can assign wanted levels by
+-- supplying coordinates near another player.
 AddEventHandler('fenix:server:trigger', function(pdata,alertData)
     
-    if alertData.coords then
+    if alertData and alertData.coords then
         local wantedlevel = GetWantedLevelFromCoords({x = alertData.coords.x, y = alertData.coords.y, z = alertData.coords.z })
     
         if wantedlevel then
