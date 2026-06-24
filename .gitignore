@@ -30,10 +30,12 @@ discord-bot/bot.pid
 **/.yarn/
 **/.cache/
 
-# Secrets not in repo (mysql.cfg + secrets.cfg ARE tracked — private repo)
+# Secrets not in repo
 .env
 .env.*
 !.env.example
+/phantom_dashboard.secrets.cfg
+/mysql.cfg
 *.pem
 *.key
 server.cfg.local

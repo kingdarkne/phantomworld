@@ -9,6 +9,13 @@ local cfxCache = {
     hostname = nil,
     lastFetch = 0,
 }
+local liveDataCache = {
+    data = nil,
+    updatedAt = 0,
+}
+local requestLastAt = {}
+local LIVE_DATA_CACHE_MS = tonumber(GetConvar('nc_loadscreen:liveDataCacheMs', '3000')) or 3000
+local REQUEST_COOLDOWN_MS = tonumber(GetConvar('nc_loadscreen:requestCooldownMs', '5000')) or 5000
 
 local function DebugPrint(...)
     if GetConvarInt('nc_loadscreen:debug', 0) == 1 then
@@ -249,9 +256,34 @@ function BuildLiveServerData()
     }
 end
 
+local function GetCachedLiveServerData()
+    local now = GetGameTimer()
+    if liveDataCache.data and (now - liveDataCache.updatedAt) < LIVE_DATA_CACHE_MS then
+        return liveDataCache.data
+    end
+
+    liveDataCache.data = BuildLiveServerData()
+    liveDataCache.updatedAt = now
+    return liveDataCache.data
+end
+
+local function ShouldServeLiveDataRequest(src)
+    local key = tostring(src)
+    local now = GetGameTimer()
+    local last = requestLastAt[key]
+    if last and (now - last) < REQUEST_COOLDOWN_MS then
+        DebugPrint(('rate-limited live data request from %s'):format(key))
+        return false
+    end
+
+    requestLastAt[key] = now
+    return true
+end
+
 RegisterNetEvent('loadingscreen:requestData', function()
     local src = source
-    TriggerClientEvent('loadingscreen:receiveData', src, BuildLiveServerData())
+    if not ShouldServeLiveDataRequest(src) then return end
+    TriggerClientEvent('loadingscreen:receiveData', src, GetCachedLiveServerData())
 end)
 
 RegisterNetEvent('loadingscreen:getMaxSlots', function()
@@ -259,11 +291,15 @@ RegisterNetEvent('loadingscreen:getMaxSlots', function()
     TriggerClientEvent('loadingscreen:receiveMaxSlots', src, GetConvarInt('sv_maxclients', 48))
 end)
 
+AddEventHandler('playerDropped', function()
+    requestLastAt[tostring(source)] = nil
+end)
+
 AddEventHandler('playerConnecting', function(_, _, deferrals)
     deferrals.defer()
     Wait(0)
 
-    local data = BuildLiveServerData()
+    local data = GetCachedLiveServerData()
     deferrals.handover({
         serverInfo = data,
         staff = data.staff,

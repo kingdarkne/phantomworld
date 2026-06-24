@@ -601,34 +601,74 @@ function badgeIcon(badge) {
     return icons[badge] || 'star';
 }
 
+function safeClassToken(value, fallback) {
+    const token = String(value || '').toLowerCase();
+    return /^[a-z0-9_-]+$/.test(token) ? token : fallback;
+}
+
+function safeAvatarUrl(value) {
+    const url = String(value || '').trim();
+    return /^(https?:\/\/|img\/)[^\s"'()]+$/i.test(url) ? url : 'img/avatars/admin1.png';
+}
+
 function renderStaffList(staff) {
     const staffGrid = document.getElementById('staff-grid') || document.querySelector('.staff-grid');
     if (!staffGrid || !staff || !staff.length) {
         return;
     }
 
-    staffGrid.innerHTML = '';
+    staffGrid.textContent = '';
 
     staff.forEach((member) => {
         const card = document.createElement('div');
         card.className = 'staff-card';
         const status = member.status === 'online' ? 'online' : 'offline';
-        const badges = (member.badges || [])
-            .map((badge) => `<span class="badge ${badge}" title="${badge}"><i class="fas fa-${badgeIcon(badge)}"></i></span>`)
-            .join('');
-        const avatar = member.avatar || 'img/avatars/admin1.png';
+        const avatar = safeAvatarUrl(member.avatar);
 
-        card.innerHTML = `
-            <div class="staff-avatar">
-                <div class="avatar-background" style="background-image: url('${avatar}')"></div>
-                <div class="staff-status ${status}"></div>
-            </div>
-            <div class="staff-info">
-                <div class="staff-name">${member.name || 'Staff'}</div>
-                <div class="staff-role ${member.roleType || 'mod'}">${member.role || 'Staff'}</div>
-            </div>
-            <div class="staff-badges">${badges}</div>
-        `;
+        const avatarContainer = document.createElement('div');
+        avatarContainer.className = 'staff-avatar';
+
+        const avatarBackground = document.createElement('div');
+        avatarBackground.className = 'avatar-background';
+        avatarBackground.style.backgroundImage = `url("${avatar}")`;
+
+        const staffStatus = document.createElement('div');
+        staffStatus.classList.add('staff-status', status);
+
+        avatarContainer.appendChild(avatarBackground);
+        avatarContainer.appendChild(staffStatus);
+
+        const info = document.createElement('div');
+        info.className = 'staff-info';
+
+        const name = document.createElement('div');
+        name.className = 'staff-name';
+        name.textContent = member.name || 'Staff';
+
+        const role = document.createElement('div');
+        role.classList.add('staff-role', safeClassToken(member.roleType, 'mod'));
+        role.textContent = member.role || 'Staff';
+
+        info.appendChild(name);
+        info.appendChild(role);
+
+        const badges = document.createElement('div');
+        badges.className = 'staff-badges';
+        (member.badges || []).forEach((badge) => {
+            const badgeToken = safeClassToken(badge, 'star');
+            const badgeEl = document.createElement('span');
+            badgeEl.classList.add('badge', badgeToken);
+            badgeEl.title = badgeToken;
+
+            const icon = document.createElement('i');
+            icon.classList.add('fas', `fa-${badgeIcon(badgeToken)}`);
+            badgeEl.appendChild(icon);
+            badges.appendChild(badgeEl);
+        });
+
+        card.appendChild(avatarContainer);
+        card.appendChild(info);
+        card.appendChild(badges);
         staffGrid.appendChild(card);
     });
 
