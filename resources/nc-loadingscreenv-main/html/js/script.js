@@ -601,6 +601,11 @@ function badgeIcon(badge) {
     return icons[badge] || 'star';
 }
 
+function cssToken(value, fallback) {
+    const token = String(value || '').trim();
+    return /^[a-z0-9_-]+$/i.test(token) ? token : fallback;
+}
+
 function renderStaffList(staff) {
     const staffGrid = document.getElementById('staff-grid') || document.querySelector('.staff-grid');
     if (!staffGrid || !staff || !staff.length) {
@@ -613,22 +618,50 @@ function renderStaffList(staff) {
         const card = document.createElement('div');
         card.className = 'staff-card';
         const status = member.status === 'online' ? 'online' : 'offline';
-        const badges = (member.badges || [])
-            .map((badge) => `<span class="badge ${badge}" title="${badge}"><i class="fas fa-${badgeIcon(badge)}"></i></span>`)
-            .join('');
         const avatar = member.avatar || 'img/avatars/admin1.png';
 
-        card.innerHTML = `
-            <div class="staff-avatar">
-                <div class="avatar-background" style="background-image: url('${avatar}')"></div>
-                <div class="staff-status ${status}"></div>
-            </div>
-            <div class="staff-info">
-                <div class="staff-name">${member.name || 'Staff'}</div>
-                <div class="staff-role ${member.roleType || 'mod'}">${member.role || 'Staff'}</div>
-            </div>
-            <div class="staff-badges">${badges}</div>
-        `;
+        const avatarContainer = document.createElement('div');
+        avatarContainer.className = 'staff-avatar';
+
+        const avatarBackground = document.createElement('div');
+        avatarBackground.className = 'avatar-background';
+        avatarBackground.style.backgroundImage = `url("${avatar}")`;
+        avatarContainer.appendChild(avatarBackground);
+
+        const statusIndicator = document.createElement('div');
+        statusIndicator.classList.add('staff-status', status);
+        avatarContainer.appendChild(statusIndicator);
+
+        const staffInfo = document.createElement('div');
+        staffInfo.className = 'staff-info';
+
+        const staffName = document.createElement('div');
+        staffName.className = 'staff-name';
+        staffName.textContent = member.name || 'Staff';
+        staffInfo.appendChild(staffName);
+
+        const staffRole = document.createElement('div');
+        staffRole.classList.add('staff-role', cssToken(member.roleType, 'mod'));
+        staffRole.textContent = member.role || 'Staff';
+        staffInfo.appendChild(staffRole);
+
+        const staffBadges = document.createElement('div');
+        staffBadges.className = 'staff-badges';
+        (member.badges || []).forEach((badge) => {
+            const badgeToken = cssToken(badge, 'staff');
+            const badgeEl = document.createElement('span');
+            badgeEl.classList.add('badge', badgeToken);
+            badgeEl.title = badgeToken;
+
+            const icon = document.createElement('i');
+            icon.classList.add('fas', `fa-${badgeIcon(badgeToken)}`);
+            badgeEl.appendChild(icon);
+            staffBadges.appendChild(badgeEl);
+        });
+
+        card.appendChild(avatarContainer);
+        card.appendChild(staffInfo);
+        card.appendChild(staffBadges);
         staffGrid.appendChild(card);
     });
 
