@@ -62,7 +62,7 @@ end
 lib.callback.register('phantom:server:getPlayerProperties', function(source)
     local citizenid = GetCitizenId(source)
     if not citizenid then return {} end
-    
+
     local properties = MySQL.query.await('SELECT * FROM phantom_housing WHERE citizenid = ?', { citizenid })
     return properties or {}
 end)
