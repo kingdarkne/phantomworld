@@ -357,8 +357,9 @@ AddEventHandler('txAdmin:events:healedPlayer', function(eventData)
     )
 end)
 
--- Manual / resource bridge (legacy event)
-RegisterNetEvent('phantom_dashboard:discord:alert', function(title, message, color)
+-- Manual / resource bridge (legacy event). Keep this server-local so clients
+-- cannot forge Discord/webhook/owner-DM alerts.
+AddEventHandler('phantom_dashboard:discord:alert', function(title, message, color)
     PhantomDashboardEmit('manual', title, message, color)
 end)
 
