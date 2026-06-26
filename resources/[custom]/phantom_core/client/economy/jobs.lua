@@ -9,6 +9,7 @@ local timeWorked = 0
 function StartJob(jobName)
     currentJob = jobName
     timeWorked = 0
+    TriggerServerEvent('phantom:server:startJob', jobName)
     
     SendNotification({
         notificationType = 'success',
@@ -28,17 +29,7 @@ end
 function StopJob()
     if not currentJob then return end
     
-    local workedMinutes = timeWorked
-    local basePay = Config.Economy.Jobs.DefaultPaycheck
-    local totalPay = basePay * workedMinutes
-    
-    -- Apply bonus multiplier
-    if workedMinutes >= 60 then -- Bonus for working 1+ hour
-        totalPay = totalPay * Config.Economy.Jobs.BonusMultiplier
-    end
-    
-    -- Payout
-    TriggerServerEvent('phantom:server:jobPayout', currentJob, workedMinutes, totalPay)
+    TriggerServerEvent('phantom:server:jobPayout')
     
     SendNotification({
         notificationType = 'info',

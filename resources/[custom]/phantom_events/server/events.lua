@@ -1,4 +1,25 @@
 -- Event-specific server logic
+local eventRewardState = {}
+
+local function getEventState(eventType)
+    local event = activeEvents and activeEvents[eventType]
+    if not event then return nil end
+
+    local state = eventRewardState[eventType]
+    if not state or state.startTime ~= event.startTime then
+        state = { startTime = event.startTime, players = {}, claimed = {} }
+        eventRewardState[eventType] = state
+    end
+    return state
+end
+
+local function notifyInvalidClaim(src)
+    TriggerClientEvent('ox_lib:notify', src, {
+        title = 'Event Reward',
+        description = 'Invalid or duplicate reward claim.',
+        type = 'error',
+    })
+end
 
 -- Money Drop: Give money when player picks up bag
 RegisterNetEvent('phantom_events:server:collectMoneyBag', function(amount)
@@ -8,6 +29,23 @@ RegisterNetEvent('phantom_events:server:collectMoneyBag', function(amount)
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
+    local eventConfig = Config.Events.moneyDrop
+    local state = getEventState('moneyDrop')
+    if not state then return end
+
+    local cid = Player.PlayerData.citizenid
+    local playerClaims = state.players[cid] or { count = 0, lastClaim = 0 }
+    local now = GetGameTimer()
+    if playerClaims.count >= eventConfig.maxBags or (now - playerClaims.lastClaim) < 750 then
+        notifyInvalidClaim(src)
+        return
+    end
+
+    playerClaims.count = playerClaims.count + 1
+    playerClaims.lastClaim = now
+    state.players[cid] = playerClaims
+
+    amount = math.random(500, eventConfig.defaultAmount)
     Player.Functions.AddMoney('cash', amount, 'event-money-drop')
     TriggerClientEvent('phantom_events:client:collectedMoney', src, amount)
 end)
@@ -43,6 +81,15 @@ RegisterNetEvent('phantom_events:server:openTreasure', function(treasureId)
 
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
+
+    local state = getEventState('treasureHunt')
+    treasureId = tonumber(treasureId)
+    local maxTreasures = Config.Events.treasureHunt.treasureCount
+    if not state or not treasureId or treasureId < 1 or treasureId > maxTreasures or state.claimed[treasureId] then
+        notifyInvalidClaim(src)
+        return
+    end
+    state.claimed[treasureId] = Player.PlayerData.citizenid
 
     -- Roll reward
     local roll = math.random(100)
