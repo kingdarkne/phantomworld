@@ -1,20 +1,22 @@
 -- Phantom Core - Housing System (Server)
 -- Server-side housing management
+local Properties = {
+    apt_vinewood = { type = 'Apartment', price = 100000 },
+    house_richman = { type = 'House', price = 500000 },
+    mansion_vinewood = { type = 'Mansion', price = 2000000 },
+}
 
--- Get player properties
-lib.callback.register('phantom:server:getPlayerProperties', function(source)
-    local citizenid = GetCitizenId(source)
-    if not citizenid then return {} end
-    
-    local properties = MySQL.query.await('SELECT * FROM phantom_housing WHERE citizenid = ?', { citizenid })
-    return properties or {}
-end)
-
--- Purchase property
-lib.callback.register('phantom:server:purchaseProperty', function(source, propertyId, price)
+local function purchaseProperty(source, propertyId)
     local citizenid = GetCitizenId(source)
     if not citizenid then return { success = false, message = 'Player data not found' } end
-    
+
+    local property = Properties[propertyId]
+    if not property then
+        return { success = false, message = 'Invalid property' }
+    end
+
+    local price = property.price
+
     local playerData = GetPlayerDataByCitizenId(citizenid)
     if not playerData then return { success = false, message = 'Player data not found' } end
     
@@ -44,27 +46,34 @@ lib.callback.register('phantom:server:purchaseProperty', function(source, proper
         WHERE citizenid = ?
     ]], { newBank, citizenid })
     
-    -- Add property
-    local propertyType = nil
-    for _, propType in ipairs(Config.Mechanics.Housing.PropertyTypes) do
-        if string.find(propertyId, string.lower(propType.name)) then
-            propertyType = propType.name
-            break
-        end
-    end
-    
-    if not propertyType then propertyType = 'Apartment' end
-    
     MySQL.query([[
         INSERT INTO phantom_housing (citizenid, property_id, property_type, customization)
         VALUES (?, ?, ?, ?)
-    ]], { citizenid, propertyId, propertyType, json.encode({}) })
+    ]], { citizenid, propertyId, property.type, json.encode({}) })
     
     AddTransaction(citizenid, 'property_purchase', price, 'Property: ' .. propertyId, newBank)
     
     TriggerClientEvent('phantom:client:propertyPurchased', source, propertyId)
     
     return { success = true, bank = newBank }
+end
+
+-- Get player properties
+lib.callback.register('phantom:server:getPlayerProperties', function(source)
+    local citizenid = GetCitizenId(source)
+    if not citizenid then return {} end
+
+    local properties = MySQL.query.await('SELECT * FROM phantom_housing WHERE citizenid = ?', { citizenid })
+    return properties or {}
+end)
+
+-- Purchase property
+RegisterNetEvent('phantom:server:purchaseProperty', function(propertyId)
+    purchaseProperty(source, propertyId)
+end)
+
+lib.callback.register('phantom:server:purchaseProperty', function(source, propertyId)
+    return purchaseProperty(source, propertyId)
 end)
 
 function AddTransaction(citizenid, type, amount, description, balanceAfter)

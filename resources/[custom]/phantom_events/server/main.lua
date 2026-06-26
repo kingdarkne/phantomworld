@@ -1,6 +1,6 @@
 -- Phantom Events - Server Main
-local activeEvents = {}
-local playerEventData = {}
+activeEvents = activeEvents or {}
+playerEventData = playerEventData or {}
 
 -- Check if player is admin
 function IsAdmin(source)

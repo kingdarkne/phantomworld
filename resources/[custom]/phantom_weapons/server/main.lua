@@ -1,4 +1,18 @@
 -- Phantom Weapons - Server Main
+local function normalizeWeaponName(weaponName)
+    if type(weaponName) ~= 'string' then return nil end
+    weaponName = weaponName:lower()
+    if not Config.WeaponPrices[weaponName] then return nil end
+    return weaponName
+end
+
+local function notifyInvalidWeapon(src)
+    TriggerClientEvent('ox_lib:notify', src, {
+        title = 'Invalid Weapon',
+        description = 'That weapon is not available.',
+        type = 'error',
+    })
+end
 
 -- Buy weapon
 RegisterNetEvent('phantom_weapons:server:buyWeapon', function(weaponName)
@@ -6,7 +20,13 @@ RegisterNetEvent('phantom_weapons:server:buyWeapon', function(weaponName)
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
-    local price = Config.WeaponPrices[weaponName] or 1000
+    weaponName = normalizeWeaponName(weaponName)
+    if not weaponName then
+        notifyInvalidWeapon(src)
+        return
+    end
+
+    local price = Config.WeaponPrices[weaponName]
 
     if Player.PlayerData.money.cash < price then
         TriggerClientEvent('ox_lib:notify', src, { title = 'Insufficient Funds', description = 'Need $' .. price, type = 'error' })
@@ -31,6 +51,13 @@ RegisterNetEvent('phantom_weapons:server:buyAmmo', function(weaponName, amount)
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
+    weaponName = normalizeWeaponName(weaponName)
+    amount = math.floor(tonumber(amount) or 0)
+    if not weaponName or amount < 1 or amount > 10 then
+        notifyInvalidWeapon(src)
+        return
+    end
+
     local ammoType = GetAmmoTypeForWeapon(weaponName)
     local price = (Config.AmmoPrices[ammoType] or 50) * amount
 
@@ -50,6 +77,13 @@ RegisterNetEvent('phantom_weapons:server:buyTint', function(weaponName, tintId)
     local src = source
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
+
+    weaponName = normalizeWeaponName(weaponName)
+    tintId = tonumber(tintId)
+    if not weaponName or tintId == nil then
+        notifyInvalidWeapon(src)
+        return
+    end
 
     local tint = Config.WeaponTints.colors[tintId + 1]
     if not tint then return end
@@ -72,7 +106,13 @@ RegisterNetEvent('phantom_weapons:server:buyAttachment', function(weaponName, at
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
-    local price = Config.Attachments.prices[attachment] or 500
+    weaponName = normalizeWeaponName(weaponName)
+    if not weaponName or type(attachment) ~= 'string' or not Config.Attachments.prices[attachment] then
+        notifyInvalidWeapon(src)
+        return
+    end
+
+    local price = Config.Attachments.prices[attachment]
 
     if Player.PlayerData.money.cash < price then
         TriggerClientEvent('ox_lib:notify', src, { title = 'Insufficient Funds', type = 'error' })
@@ -112,7 +152,18 @@ RegisterNetEvent('phantom_weapons:server:storeWeapon', function(weaponName)
     local Player = exports.qbx_core:GetPlayer(src)
     if not Player then return end
 
-    Player.Functions.RemoveItem(weaponName, 1)
+    weaponName = normalizeWeaponName(weaponName)
+    if not weaponName then
+        notifyInvalidWeapon(src)
+        return
+    end
+
+    local removed = Player.Functions.RemoveItem(weaponName, 1)
+    if removed == false then
+        TriggerClientEvent('ox_lib:notify', src, { title = 'Weapon Not Found', type = 'error' })
+        return
+    end
+
     -- Store in locker (would need locker DB table)
     MySQL.insert('INSERT INTO phantom_weapon_locker (citizenid, weapon_name, stored_at) VALUES (?, ?, ?)', {
         Player.PlayerData.citizenid, weaponName, os.time()
@@ -133,7 +184,9 @@ RegisterNetEvent('phantom_weapons:server:retrieveWeapons', function()
 
     if weapons and #weapons > 0 then
         for _, w in ipairs(weapons) do
-            Player.Functions.AddItem(w.weapon_name, 1)
+            if normalizeWeaponName(w.weapon_name) then
+                Player.Functions.AddItem(w.weapon_name, 1)
+            end
         end
         MySQL.update('DELETE FROM phantom_weapon_locker WHERE citizenid = ?', { Player.PlayerData.citizenid })
         TriggerClientEvent('ox_lib:notify', src, { title = 'Weapons Retrieved', description = #weapons .. ' weapons', type = 'success' })
