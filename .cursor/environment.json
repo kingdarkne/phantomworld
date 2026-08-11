@@ -1,0 +1,4 @@
+{
+  "name": "Phantom World",
+  "install": "cd discord-bot && npm ci"
+}
