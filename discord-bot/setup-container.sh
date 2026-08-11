@@ -18,7 +18,13 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 echo "Node: $(node -v)"
-npm install --omit=dev
+if command -v yarn >/dev/null 2>&1; then
+  echo "Installing deps with yarn…"
+  yarn install --production
+else
+  echo "Installing deps with npm…"
+  npm install --omit=dev
+fi
 mkdir -p logs
 
 # Stop old instance if running
