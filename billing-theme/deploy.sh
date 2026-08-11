@@ -30,6 +30,7 @@ upload "$ROOT/resources/views/layouts/store/nav.blade.php" "/var/www/billing/res
 upload "$ROOT/resources/views/layouts/styles.blade.php" "/var/www/billing/resources/views/layouts/styles.blade.php"
 upload "$ROOT/resources/views/layouts/store.blade.php" "/var/www/billing/resources/views/layouts/store.blade.php"
 upload "$ROOT/resources/views/layouts/preloader.blade.php" "/var/www/billing/resources/views/layouts/preloader.blade.php"
+upload "$ROOT/app/Http/Middleware/Store/SetDefaultSession.php" "/var/www/billing/app/Http/Middleware/Store/SetDefaultSession.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
 
@@ -53,7 +54,8 @@ chown www-data:www-data \
   resources/views/layouts/store/nav.blade.php \
   resources/views/layouts/styles.blade.php \
   resources/views/layouts/store.blade.php \
-  resources/views/layouts/preloader.blade.php
+  resources/views/layouts/preloader.blade.php \
+  app/Http/Middleware/Store/SetDefaultSession.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
 chmod +x /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-currency.sh
