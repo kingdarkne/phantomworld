@@ -18,6 +18,18 @@ export const slashCommands = [
       o.setName('force').setDescription('Ignore cooldown and send again'),
     ),
   new SlashCommandBuilder()
+    .setName('dm-invite')
+    .setDescription('DM the FiveM invite to friends by Discord user ID (Manage Server)')
+    .addStringOption((o) =>
+      o
+        .setName('ids')
+        .setDescription('One or more Discord user IDs (space or comma separated)')
+        .setRequired(false),
+    )
+    .addUserOption((o) =>
+      o.setName('user').setDescription('Or pick a user from the server').setRequired(false),
+    ),
+  new SlashCommandBuilder()
     .setName('ask')
     .setDescription('AI support — ask about the server')
     .addStringOption((o) => o.setName('question').setDescription('Your question').setRequired(true)),

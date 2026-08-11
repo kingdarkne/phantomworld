@@ -115,6 +115,58 @@ export async function broadcastServerInviteDms(client, guildId, { onProgress } =
   return { sent, failed, bots, serverName: displayServerName(status), link: joinUrl() };
 }
 
+/**
+ * DM the FiveM invite embed to specific Discord user IDs (or snowflake mentions).
+ * Users must share a server with the bot and allow DMs from server members.
+ */
+export async function dmInviteToUserIds(client, rawIds = []) {
+  const ids = [
+    ...new Set(
+      rawIds
+        .flatMap((v) => String(v || '').split(/[\s,]+/))
+        .map((v) => v.replace(/[<@!>]/g, '').trim())
+        .filter((v) => /^\d{15,20}$/.test(v)),
+    ),
+  ];
+
+  if (!ids.length) {
+    return { sent: 0, failed: 0, invalid: 0, details: [], link: joinUrl() };
+  }
+
+  const status = await getStatus();
+  const payload = buildInviteEmbed(status);
+  const details = [];
+  let sent = 0;
+  let failed = 0;
+
+  for (const id of ids) {
+    try {
+      const user = await client.users.fetch(id);
+      if (user.bot) {
+        details.push({ id, tag: user.tag, ok: false, reason: 'bot' });
+        failed += 1;
+        continue;
+      }
+      await user.send(payload);
+      details.push({ id, tag: user.tag, ok: true });
+      sent += 1;
+      await sleep(Number(process.env.SERVER_INVITE_DM_DELAY_MS || 800));
+    } catch (err) {
+      details.push({ id, tag: null, ok: false, reason: err?.message || 'failed' });
+      failed += 1;
+    }
+  }
+
+  return {
+    sent,
+    failed,
+    invalid: 0,
+    details,
+    link: joinUrl(),
+    serverName: displayServerName(status),
+  };
+}
+
 export async function maybeAutoInviteBroadcast(client) {
   if (process.env.SERVER_INVITE_DM_ON_START !== '1') return null;
 

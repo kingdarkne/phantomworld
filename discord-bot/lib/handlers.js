@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { getStatus, getPlayers, buildStatusEmbed } from './fivem.js';
 import { setupLiveStatusInChannel } from './liveStatusChannel.js';
-import { broadcastServerInviteDms } from './serverInvite.js';
+import { broadcastServerInviteDms, dmInviteToUserIds } from './serverInvite.js';
 import { fetchJoke, fetchGifUrl, eightBallAnswer } from './fun.js';
 import { playInChannel, skipTrack, stopMusic, getQueue } from './music.js';
 import { coinFlip, rollDice, pickChoice, buildAvatarEmbed, buildPoll } from './more.js';
@@ -17,14 +17,21 @@ export function helpEmbed() {
     .setDescription(
       [
         '**FiveM:** `/status` `$status` · `/players` `$players` · `/alert` `$alert`',
+        '**Invites:** `/dm-invite` `$dm-invite <userId>` · `/server-invite` (all members)',
         '**AI support:** `/ask` `$ask` · `/say` `$say` (voice TTS — join VC first)',
         '**Music:** `/play` `$play` · Lavalink on VPS · `$skip` `$stop` `$queue`',
         '**Fun:** `$gif` `$joke` `$8ball` `$coinflip` `$roll` `$choose` `$poll`',
         '',
-        `Prefix commands use **${p}** (e.g. \`${p}play song name\`). AI uses Ollama on the VPS.`,
-        'Music uses **Lavalink** (password `phantomworld` on port 2333).',
+        `Prefix commands use **${p}** (e.g. \`${p}dm-invite 702712064778436668\`).`,
+        'Music uses **Lavalink** on the VPS. AI uses Ollama locally.',
       ].join('\n'),
     );
+}
+
+function canManageInvites(c) {
+  if (c.hasManageGuild()) return true;
+  const ownerId = process.env.DISCORD_OWNER_USER_ID || '';
+  return Boolean(ownerId && c.user?.id === ownerId);
 }
 
 export async function runCommand(name, c) {
@@ -63,11 +70,11 @@ export async function runCommand(name, c) {
       break;
     }
     case 'server-invite': {
-      if (!c.hasManageGuild()) {
-        await c.reply('You need Manage Server permission.');
+      if (!canManageInvites(c)) {
+        await c.reply('You need Manage Server permission (or be the bot owner).');
         return;
       }
-      if (c.getBoolean('force') || c.rest[0] === 'force') {
+      if (c.getBoolean('force') || c.rest?.[0] === 'force') {
         process.env.FORCE_SERVER_INVITE_DM = '1';
       }
       if (c.type === 'slash') await c.defer(true);
@@ -80,6 +87,55 @@ export async function runCommand(name, c) {
       await c.reply(
         `Done! **${result.sent}** DMs sent, **${result.failed}** blocked, **${result.bots}** bots skipped.` +
           (result.link ? `\nLink: ${result.link}` : ''),
+      );
+      break;
+    }
+    case 'dm-invite':
+    case 'dminvite':
+    case 'invite-dm': {
+      if (!canManageInvites(c)) {
+        await c.reply('You need Manage Server permission (or be the bot owner).');
+        return;
+      }
+
+      const ids = [];
+      const picked = c.getUser?.('user');
+      if (picked?.id) ids.push(picked.id);
+
+      const fromOption = c.type === 'slash' ? c.getString('ids') : null;
+      const fromRest = c.type === 'prefix' ? c.rest : [];
+      if (fromOption) ids.push(fromOption);
+      if (fromRest?.length) ids.push(...fromRest);
+
+      if (!ids.length) {
+        await c.reply(
+          'Usage: `/dm-invite ids:702712064778436668` or `$dm-invite 702712064778436668`\n' +
+            'You can pass several IDs separated by spaces or commas.',
+        );
+        return;
+      }
+
+      if (c.type === 'slash') await c.defer(true);
+      const result = await dmInviteToUserIds(c.client, ids);
+      if (!result.sent && !result.failed) {
+        await c.reply('No valid Discord user IDs found. Use numeric IDs (Developer Mode → Copy User ID).');
+        return;
+      }
+
+      const lines = result.details.map((d) =>
+        d.ok
+          ? `✅ ${d.tag || d.id}`
+          : `❌ ${d.tag || d.id} — ${d.reason || 'could not DM (privacy / not shared server)'}`,
+      );
+      await c.reply(
+        [
+          `Invite DMs: **${result.sent}** sent, **${result.failed}** failed.`,
+          result.link ? `Link: ${result.link}` : null,
+          '',
+          ...lines.slice(0, 20),
+        ]
+          .filter((x) => x !== null)
+          .join('\n'),
       );
       break;
     }

@@ -8,6 +8,9 @@ const ALIASES = {
   q: 'queue',
   h: 'help',
   '?': '8ball',
+  dminvite: 'dm-invite',
+  'invite-dm': 'dm-invite',
+  invite: 'dm-invite',
 };
 
 export function startPrefixCommands(client, ctx) {
