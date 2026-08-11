@@ -12,8 +12,16 @@ end)
 LoadResource = function()
 	print('[Multicharacter] LoadResource started...')
 
-	-- Wait for NC loading screen to fully render before closing it
-	Wait(60000)
+	-- Close NC loading screen once the session is ready (do not hard-wait 60s)
+	local waited = 0
+	while waited < 5000 do
+		Wait(250)
+		waited = waited + 250
+		-- Give the loadscreen a short moment to paint, then hand off to multichar
+		if waited >= 1500 then
+			break
+		end
+	end
 
 	ShutdownLoadingScreen()
 	ShutdownLoadingScreenNui()

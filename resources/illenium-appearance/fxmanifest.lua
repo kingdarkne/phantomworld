@@ -94,3 +94,7 @@ files {
 }
 
 ui_page "web/dist/index.html"
+
+-- Compatibility for scripts that still depend on fivem-appearance / qb-clothing
+provide 'fivem-appearance'
+provide 'qb-clothing'

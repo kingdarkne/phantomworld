@@ -180,6 +180,7 @@ if Config.framework == 'qbx' then
             local ped = PlayerPedId()
             FreezeEntityPosition(ped, false)
             SetEntityCollision(ped, true, true)
+            if ReleasePlayerControl then ReleasePlayerControl() end
             
             -- Trigger player loaded events
             TriggerServerEvent('QBCore:Server:OnPlayerLoaded')
@@ -197,6 +198,7 @@ if Config.framework == 'qbx' then
             -- Now trigger location and weather sync
             LastLocation()
             EnableWeatherSync()
+            if ReleasePlayerControl then ReleasePlayerControl() end
             
             print('^2[Multicharacter]^7 Player spawned and ready - car spawning now allowed')
         end
@@ -224,6 +226,7 @@ if Config.framework == 'qbx' then
         else
             FreezeEntityPosition(PlayerPedId(), false)
             SetEntityVisible(PlayerPedId(), true)
+            if ReleasePlayerControl then ReleasePlayerControl() end
             local resp = NewCharacterAnimation()
 
             Wait(1000)
@@ -237,4 +240,13 @@ if Config.framework == 'qbx' then
             TriggerServerEvent('Update:RoutingBucket', Config.Routingbucket)
         end
     end
+
+    -- After first-time / shop appearance closes, always restore movement
+    RegisterNetEvent('illenium-appearance:client:characterCreated', function()
+        CreateThread(function()
+            Wait(500)
+            if ReleasePlayerControl then ReleasePlayerControl() end
+            DoScreenFadeIn(500)
+        end)
+    end)
 end

@@ -27,19 +27,19 @@ end
 local function createMapBlips()
     if #blips > 0 then return end -- already created
 
-    -- ========== BANKS (Fleeca – heist only, NOT for normal banking) ==========
-    addBlip(vector3(310.93, -284.44, 54.16), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
-    addBlip(vector3(146.61, -1046.02, 29.37), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
-    addBlip(vector3(-1211.07, -336.68, 37.78), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
-    addBlip(vector3(-2956.68, 481.34, 15.70), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
-    addBlip(vector3(-354.15, -55.11, 49.04), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
-    addBlip(vector3(1176.40, 2712.75, 38.09), "Fleeca (Heist Only – Use Phone for Bank)", 108, 2)
+    -- ========== BANKS (omes_banking — walk-in ATMs / tellers) ==========
+    addBlip(vector3(310.93, -284.44, 54.16), "Fleeca Bank", 108, 2)
+    addBlip(vector3(146.61, -1046.02, 29.37), "Fleeca Bank", 108, 2)
+    addBlip(vector3(-1211.07, -336.68, 37.78), "Fleeca Bank", 108, 2)
+    addBlip(vector3(-2956.68, 481.34, 15.70), "Fleeca Bank", 108, 2)
+    addBlip(vector3(-354.15, -55.11, 49.04), "Fleeca Bank", 108, 2)
+    addBlip(vector3(1176.40, 2712.75, 38.09), "Fleeca Bank", 108, 2)
     
     -- ========== PACIFIC BANK ==========
-    addBlip(vector3(253.41, 225.21, 106.29), "Pacific Bank (Heist)", 108, 2)
+    addBlip(vector3(253.41, 225.21, 106.29), "Pacific Standard Bank", 108, 2)
     
     -- ========== PALETO BANK ==========
-    addBlip(vector3(-104.38, 6477.57, 31.63), "Paleto Bank (Heist)", 108, 2)
+    addBlip(vector3(-104.38, 6477.57, 31.63), "Paleto Bank", 108, 2)
     
     -- ========== POWER STATIONS (Bank Heist Targets) ==========
     addBlip(vector3(2835.24, 1505.68, 24.72), "Power Station (Heist Target)", 68, 1)
@@ -176,7 +176,7 @@ local function createMapBlips()
 
     -- ========== HOSPITALS ==========
     addBlip(vector3(311.15, -590.48, 43.28), "Pillbox Hospital", 61, 1)
-    addBlip(vector3(-449.67, -340.83, 34.50), "Sandy Shores Medical", 61, 1)
+    addBlip(vector3(-449.67, -340.83, 34.50), "Mount Zonah Medical", 61, 1)
     addBlip(vector3(1839.74, 3672.98, 34.28), "Sandy Shores Hospital", 61, 1)
     addBlip(vector3(-247.76, 6331.23, 32.43), "Paleto Medical", 61, 1)
 
@@ -336,11 +336,28 @@ local function createMapBlips()
     -- ========== SECURITY JOB (qb-securityjob) ==========
     addBlip(vector3(-6.49, -662.16, 33.48), "Security Job", 526, 2)
 
+    -- ========== BURGER SHOT ==========
+    addBlip(vector3(-1194.48, -897.34, 13.89), "Burger Shot", 106, 1)
+
+    -- ========== RECYCLING (jim-recycle) ==========
+    addBlip(vector3(744.68, -1401.77, 26.55), "Recycling Center", 365, 2)
+
+    -- ========== HUNTING / FISHING ==========
+    addBlip(vector3(-679.14, 5834.32, 17.33), "Hunting Cabin", 141, 25)
+    addBlip(vector3(-1820.19, -1220.47, 13.02), "Fishing Spot / Pier", 68, 3)
+
     print("^2[dr-mapblips]^7 Added " .. #blips .. " blips to the map.")
 end
 
--- Run when player is loaded
+-- Run when player is loaded (QB / Qbox)
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    CreateThread(function()
+        Wait(1000)
+        createMapBlips()
+    end)
+end)
+
+RegisterNetEvent('qbx_core:client:playerLoggedIn', function()
     CreateThread(function()
         Wait(1000)
         createMapBlips()
@@ -353,6 +370,15 @@ CreateThread(function()
     if LocalPlayer.state.isLoggedIn then
         createMapBlips()
     end
+end)
+
+-- Fallback: once session is active, create POI blips even if login event was missed
+CreateThread(function()
+    while not NetworkIsSessionStarted() do
+        Wait(200)
+    end
+    Wait(8000)
+    createMapBlips()
 end)
 
 -- If QBCore load event fires before this resource starts, isLoggedIn still triggers blips
