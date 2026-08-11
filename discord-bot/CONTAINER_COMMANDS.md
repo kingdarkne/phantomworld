@@ -19,11 +19,25 @@ Save: `Ctrl+O`, Enter, `Ctrl+X`
 
 ## 2) Install + start bot (stays running in background)
 
+Panel **Terminal** or SSH (not the FiveM / txAdmin game console):
+
 ```bash
 cd /home/container/discord-bot
 chmod +x setup-container.sh start-host-background.sh stop-host.sh
 ./setup-container.sh
 ```
+
+`setup-container.sh` uses **yarn** if it is on the PATH, otherwise **npm**.
+
+Manual install with yarn only:
+
+```bash
+cd /home/container/discord-bot
+yarn install --production
+node index.js
+```
+
+You still need **Node** (`node -v` should show 18+). Yarn installs packages; it does not replace Node.
 
 ## 3) Check it’s working
 

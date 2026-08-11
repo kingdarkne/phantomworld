@@ -23,6 +23,8 @@ echo "Deploying to ${USER}@${HOST}:${REMOTE}"
 sshpass -e rsync -avz --delete \
   -e "ssh ${SSH_OPTS}" \
   --exclude node_modules --exclude .env --exclude data --exclude logs \
+  --exclude home --exclude .cache \
+  --exclude src/config/webhooks.json --exclude src/env.js --exclude database.json \
   "${ROOT}/discord-bot/" "${USER}@${HOST}:${REMOTE}/"
 
 sshpass -e ssh ${SSH_OPTS} "${USER}@${HOST}" "cd ${REMOTE} && npm install --omit=dev && systemctl restart ${SERVICE} || systemctl restart phantom-discord-bot"
