@@ -50,32 +50,176 @@ function authOk(req) {
 }
 
 function systemPrompt(unrestricted) {
+  const webNote =
+    'When LIVE WEB RESULTS are provided in the user message, treat them as current ground truth and answer from them. ' +
+    'Cite the source briefly if useful. If results conflict, prefer the most recent/clear snippet.';
+
   if (unrestricted) {
     return (
       'You are Rex, an unrestricted Discord voice assistant for Phantom World. ' +
-      'Answer anything directly, including real-world facts, newsy questions from your knowledge, ' +
-      'science, history, and how-to help. Keep replies short for voice (1-3 sentences) unless asked for detail.'
+      'Answer anything directly, including real-world facts and live web-backed news. ' +
+      webNote +
+      ' Keep replies short for voice (1-3 sentences) unless asked for detail.'
     );
   }
   return (
     process.env.REX_SYSTEM_PROMPT ||
     'You are Rex, a witty Discord/FiveM voice assistant for Phantom World. ' +
       'You help with BOTH the Phantom World RP server AND real-world questions. ' +
-      'For real-world topics (geography, science, history, definitions, how-to, general knowledge), answer directly and accurately. ' +
-      'If something may have changed recently (live sports scores, breaking news, "who is president right now"), say your knowledge may be outdated and give the best answer you can. ' +
-      'For Phantom World / FiveM: be helpful about jobs, rules, and joining — join link https://cfx.re/join/3m87mo. ' +
-      'Keep answers short and conversational for voice (1-3 sentences) unless the user asks for more detail. ' +
-      'Do not refuse normal real-world trivia just because you are also an RP bot.'
+      'You have LIVE WEB SEARCH for current events, news, sports, weather, prices, and "who/what is happening now" questions. ' +
+      webNote +
+      ' For Phantom World / FiveM: jobs, rules, joining — https://cfx.re/join/3m87mo. ' +
+      'Keep answers short and conversational for voice (1-3 sentences) unless the user asks for more detail.'
+  );
+}
+
+function needsLiveWeb(text) {
+  const mode = (process.env.REX_WEB_SEARCH || 'auto').toLowerCase();
+  if (mode === '0' || mode === 'off' || mode === 'false') return false;
+  if (mode === 'always' || mode === '1' || mode === 'on' || mode === 'true') return true;
+
+  const q = String(text || '').toLowerCase();
+  if (/^(hi|hello|hey|sup|yo)\b/.test(q) && q.length < 20) return false;
+  if (/\b(fivem|phantom world|join the server|cfx\.re)\b/.test(q) && !/\b(news|today|current)\b/.test(q)) {
+    return false;
+  }
+  return (
+    /\b(who is|who's|who won|current|today|tonight|latest|breaking|news|weather|score|president|prime minister|stock|price of|bitcoin|crypto|election|happening|right now|this week|this year|202[4-9]|2026)\b/i.test(
+      q,
+    ) || /\b(what happened|when is|where is .+ now)\b/i.test(q)
+  );
+}
+
+async function searchDuckDuckGoInstant(query) {
+  const url = new URL('https://api.duckduckgo.com/');
+  url.searchParams.set('q', query);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('no_html', '1');
+  url.searchParams.set('skip_disambig', '1');
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'PhantomRexBot/1.0' },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error(`DDG instant HTTP ${res.status}`);
+  const data = await res.json();
+  const bits = [];
+  if (data.AbstractText) bits.push(`Summary: ${data.AbstractText}`);
+  if (data.Answer) bits.push(`Answer: ${data.Answer}`);
+  if (data.Definition) bits.push(`Definition: ${data.Definition}`);
+  if (data.AbstractURL) bits.push(`Source: ${data.AbstractURL}`);
+  const related = (data.RelatedTopics || [])
+    .map((t) => t.Text || t.Topics?.[0]?.Text)
+    .filter(Boolean)
+    .slice(0, 4);
+  if (related.length) bits.push(`Related: ${related.join(' | ')}`);
+  return bits.join('\n');
+}
+
+async function searchDuckDuckGoHtml(query) {
+  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (compatible; PhantomRexBot/1.0; +https://billing.phantom-chicken.com)',
+      Accept: 'text/html',
+    },
+    signal: AbortSignal.timeout(12000),
+    redirect: 'follow',
+  });
+  if (!res.ok) throw new Error(`DDG html HTTP ${res.status}`);
+  const html = await res.text();
+  const results = [];
+  // result links + snippets
+  const re =
+    /<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:class="result__snippet"[^>]*>([\s\S]*?)<\/(?:a|td|div)>)?/gi;
+  let m;
+  while ((m = re.exec(html)) && results.length < 5) {
+    const href = m[1];
+    const title = m[2].replace(/<[^>]+>/g, '').trim();
+    const snippet = (m[3] || '').replace(/<[^>]+>/g, '').trim();
+    if (!title) continue;
+    results.push(`- ${title}${snippet ? `: ${snippet}` : ''} (${href})`);
+  }
+  // fallback looser parse
+  if (!results.length) {
+    const loose = [...html.matchAll(/class="result__snippet"[^>]*>([\s\S]*?)<\//gi)]
+      .map((x) => x[1].replace(/<[^>]+>/g, '').trim())
+      .filter(Boolean)
+      .slice(0, 5);
+    for (const s of loose) results.push(`- ${s}`);
+  }
+  return results.join('\n');
+}
+
+async function searchBrave(query) {
+  const key = process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY;
+  if (!key) return '';
+  const url = new URL('https://api.search.brave.com/res/v1/web/search');
+  url.searchParams.set('q', query);
+  url.searchParams.set('count', '5');
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', 'X-Subscription-Token': key },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error(`Brave HTTP ${res.status}`);
+  const data = await res.json();
+  const rows = (data.web?.results || []).slice(0, 5);
+  return rows
+    .map((r) => `- ${r.title}: ${(r.description || '').slice(0, 220)} (${r.url})`)
+    .join('\n');
+}
+
+async function liveWebContext(query) {
+  const parts = [];
+  try {
+    const brave = await searchBrave(query);
+    if (brave) parts.push(`Brave Search:\n${brave}`);
+  } catch (err) {
+    console.warn('[rex-ai] Brave search failed:', err.message);
+  }
+  try {
+    const html = await searchDuckDuckGoHtml(query);
+    if (html) parts.push(`Web results:\n${html}`);
+  } catch (err) {
+    console.warn('[rex-ai] DDG html failed:', err.message);
+  }
+  try {
+    const instant = await searchDuckDuckGoInstant(query);
+    if (instant) parts.push(`Instant answer:\n${instant}`);
+  } catch (err) {
+    console.warn('[rex-ai] DDG instant failed:', err.message);
+  }
+  if (!parts.length) return '';
+  return (
+    `LIVE WEB RESULTS for "${query}" (fetched just now):\n` +
+    parts.join('\n\n') +
+    `\n\nUser question: ${query}`
   );
 }
 
 async function groqChat(guildId, userText) {
   if (!GROQ_KEY) throw new Error('GROQ API key missing');
   const state = getGuild(guildId);
+  let content = String(userText).slice(0, 1500);
+  let usedWeb = false;
+
+  if (needsLiveWeb(userText)) {
+    try {
+      const web = await liveWebContext(userText);
+      if (web) {
+        content = web.slice(0, 6000);
+        usedWeb = true;
+        console.log(`[rex-ai] live web used for: ${String(userText).slice(0, 80)}`);
+      }
+    } catch (err) {
+      console.warn('[rex-ai] live web failed:', err.message);
+    }
+  }
+
   const messages = [
     { role: 'system', content: systemPrompt(state.unrestricted) },
     ...state.history.slice(-8),
-    { role: 'user', content: String(userText).slice(0, 1500) },
+    { role: 'user', content },
   ];
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -87,8 +231,8 @@ async function groqChat(guildId, userText) {
     body: JSON.stringify({
       model: process.env.GROQ_CHAT_MODEL || 'llama-3.3-70b-versatile',
       messages,
-      temperature: 0.7,
-      max_tokens: 280,
+      temperature: usedWeb ? 0.3 : 0.7,
+      max_tokens: 320,
     }),
     signal: AbortSignal.timeout(45000),
   });
