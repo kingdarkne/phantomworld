@@ -11,6 +11,8 @@ import {
 import { slashCommands, handleCommand } from './lib/commands.js';
 import { getStatus } from './lib/fivem.js';
 import { startLivePresence } from './lib/presence.js';
+import { startLiveStatusChannel } from './lib/liveStatusChannel.js';
+import { maybeAutoInviteBroadcast } from './lib/serverInvite.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -55,7 +57,11 @@ function eventEmbed(entry) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
+  ],
 });
 
 async function dmOwner(contentOrPayload) {
@@ -129,7 +135,16 @@ client.once('ready', async () => {
     console.warn('Slash registration failed (invite bot first):', err?.message || err);
   }
 
-  startLivePresence(client);
+  const livePresence = process.env.FIVEM_LIVE_PRESENCE !== '0';
+  if (livePresence) {
+    startLivePresence(client);
+  }
+
+  startLiveStatusChannel(client);
+
+  maybeAutoInviteBroadcast(client).catch((err) =>
+    console.warn('Auto invite broadcast failed:', err.message),
+  );
 
   await dmOwner({
     embeds: [
