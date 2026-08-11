@@ -5,41 +5,51 @@ require('../env.loader');
 
 // Global error handling to prevent silent crashes
 process.on('unhandledRejection', (reason, p) => {
-    console.error('[FATAL] Unhandled Rejection at:', p, 'reason:', reason);
-    if (client.webhooks && client.webhooks.errorLogs) {
+    const msg =
+        reason?.errors
+            ? `${reason.message || 'Received one or more errors'}: ${reason.errors
+                  .map((e) => e?.message || String(e))
+                  .join(' | ')}`
+            : reason?.stack || reason?.message || String(reason);
+    console.error('[FATAL] Unhandled Rejection:', msg);
+    if (client?.webhooks?.errorLogs?.id && client.webhooks.errorLogs.token && client.webhooks.errorLogs.token !== 'REPLACE_ME') {
         const errorLogs = new (require('discord.js')).WebhookClient({
             id: client.webhooks.errorLogs.id,
             token: client.webhooks.errorLogs.token,
         });
-        errorLogs.send({
-            username: "Error Logs",
-            embeds: [
-                new (require('discord.js')).EmbedBuilder()
-                    .setTitle(`❌ Unhandled Rejection`)
-                    .setDescription(`**Promise:** ${p}\n**Reason:** ${reason}`)
-                    .setColor("#ED4245")
-                    .setTimestamp()
-            ],
-        }).catch(() => {});
+        errorLogs
+            .send({
+                username: 'Error Logs',
+                embeds: [
+                    new (require('discord.js')).EmbedBuilder()
+                        .setTitle(`❌ Unhandled Rejection`)
+                        .setDescription(String(msg).slice(0, 4000))
+                        .setColor('#ED4245')
+                        .setTimestamp(),
+                ],
+            })
+            .catch(() => {});
     }
 });
 process.on('uncaughtException', (err) => {
     console.error('[FATAL] Uncaught Exception:', err);
-    if (client.webhooks && client.webhooks.errorLogs) {
+    if (client?.webhooks?.errorLogs?.id && client.webhooks.errorLogs.token && client.webhooks.errorLogs.token !== 'REPLACE_ME') {
         const errorLogs = new (require('discord.js')).WebhookClient({
             id: client.webhooks.errorLogs.id,
             token: client.webhooks.errorLogs.token,
         });
-        errorLogs.send({
-            username: "Error Logs",
-            embeds: [
-                new (require('discord.js')).EmbedBuilder()
-                    .setTitle(`❌ Uncaught Exception`)
-                    .setDescription(`**Error:** ${err.message}\n**Stack:** ${err.stack}`)
-                    .setColor("#ED4245")
-                    .setTimestamp()
-            ],
-        }).catch(() => {});
+        errorLogs
+            .send({
+                username: 'Error Logs',
+                embeds: [
+                    new (require('discord.js')).EmbedBuilder()
+                        .setTitle(`❌ Uncaught Exception`)
+                        .setDescription(`**Error:** ${err.message}\n**Stack:** ${String(err.stack || '').slice(0, 3500)}`)
+                        .setColor('#ED4245')
+                        .setTimestamp(),
+                ],
+            })
+            .catch(() => {});
     }
 });
 
@@ -74,21 +84,34 @@ try {
     console.error("ERROR CONNECTING TO DATABASE:", err);
 }
 
-// Load function handlers
+// Load handlers (functions, components, security, games, linkspanel)
 try {
     const fs = require('fs');
     const path = require('path');
-    const functionsPath = path.join(__dirname, 'handlers', 'functions');
-    if (fs.existsSync(functionsPath)) {
-        fs.readdirSync(functionsPath).forEach(file => {
-            if (file.endsWith('.js')) {
-                require(path.join(functionsPath, file))(client);
+    const handlerRoots = ['functions', 'components', 'security', 'games', 'linkspanel'];
+    for (const dir of handlerRoots) {
+        const handlersPath = path.join(__dirname, 'handlers', dir);
+        if (!fs.existsSync(handlersPath)) continue;
+        for (const file of fs.readdirSync(handlersPath).filter((f) => f.endsWith('.js'))) {
+            try {
+                const mod = require(path.join(handlersPath, file));
+                if (typeof mod === 'function') mod(client);
+                console.log(`[handlers/${dir}] loaded ${file}`);
+            } catch (err) {
+                console.error(`[handlers/${dir}] failed ${file}:`, err.message);
             }
-        });
-        console.log("FUNCTIONS LOADED");
+        }
     }
+    // Safety: ensure log-channel helper always exists even if customEvents failed
+    if (typeof client.getLogs !== 'function') {
+        client.getLogs = async function () {
+            return false;
+        };
+        console.warn('[handlers] client.getLogs fallback installed');
+    }
+    console.log('HANDLERS LOADED');
 } catch (err) {
-    console.error("ERROR LOADING FUNCTIONS:", err);
+    console.error('ERROR LOADING HANDLERS:', err);
 }
 
 // Load slash command loader
