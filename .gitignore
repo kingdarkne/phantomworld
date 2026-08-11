@@ -23,6 +23,9 @@ Desktop.ini
 .idea/
 .replxx_history
 
+# CFX Developer Tools — cloned by .cursor/environment.json install
+CFX-Developer-Tools/
+
 # Dev deps (tracked web/dist bundles are fine)
 **/node_modules/
 discord-bot/logs/
