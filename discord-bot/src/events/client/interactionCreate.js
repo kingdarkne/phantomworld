@@ -191,6 +191,20 @@ module.exports = async (client, interaction) => {
 
     // Reaction roles select
     if (interaction.isStringSelectMenu()) {
+        // Phantom dropdown help (slim-bot menu merged back)
+        if (interaction.customId === 'phantom-help-category') {
+            try {
+                const { handleHelpSelect } = require('../../lib/helpMenu');
+                const payload = handleHelpSelect(interaction);
+                await interaction.update(payload);
+            } catch (err) {
+                console.error('[help] select update failed:', err.message);
+                try {
+                    await interaction.reply({ content: 'Failed to update help menu.', ephemeral: true });
+                } catch (_) {}
+            }
+            return;
+        }
         if (interaction.customId == "reaction_select") {
             try {
                 const data = await reactionSchema.findOne({ Message: interaction.message.id }).maxTimeMS(5000);

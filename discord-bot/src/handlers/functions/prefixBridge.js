@@ -100,6 +100,13 @@ module.exports = (client) => {
     if (route.category === 'dminvite' && route.restArgs.length) {
       values.strings.ids = route.restArgs.join(' ');
     }
+    // $ask / $say text options
+    if (route.category === 'ask' && route.restArgs.length) {
+      values.strings.question = route.restArgs.join(' ');
+    }
+    if (route.category === 'say' && route.restArgs.length) {
+      values.strings.text = route.restArgs.join(' ');
+    }
     // Fun text commands
     if (route.restArgs.length && !values.strings.text) {
       values.strings.text = route.restArgs.join(' ');

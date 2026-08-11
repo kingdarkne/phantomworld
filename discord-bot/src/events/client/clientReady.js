@@ -25,8 +25,10 @@ module.exports = async (client) => {
         ],
     }).catch(err => console.error('[WEBHOOK] Error sending start log:', err.message));
 
-    // Send DM to Owner (v14 compatible)
+    // Owner DM — exact pre-backup Phantom World Online message (merged back)
     const ownerId = process.env.DISCORD_OWNER_USER_ID || process.env.OWNER_ID;
+    const fivemUrl = (process.env.FIVEM_SERVER_URL || 'http://172.245.71.46:30120').replace(/\/$/, '');
+    const prefix = client.config?.discord?.prefix || process.env.COMMAND_PREFIX || '$';
     if (ownerId) {
         try {
             const owner = await client.users.fetch(ownerId);
@@ -34,16 +36,16 @@ module.exports = async (client) => {
                 await owner.send({
                     embeds: [
                         new Discord.EmbedBuilder()
-                            .setTitle('🚀 Bot Online')
-                            .setDescription(`The bot is now online and running on **${client.guilds.cache.size}** servers.`)
-                            .addFields(
-                                { name: 'Status', value: '✅ Operational', inline: true },
-                                { name: 'Environment', value: 'VPS (Ubuntu)', inline: true }
+                            .setColor(0x8b5cf6)
+                            .setTitle('Phantom World Bot Online')
+                            .setDescription(
+                                `**Prefix:** \`${prefix}help\` · **Slash:** \`/help\` — dropdown command menu\n` +
+                                    `**Rex:** \`${prefix}rex join\` / \`/rex join\` — say **"Hey Rex"** in VC\n` +
+                                    `**AI/TTS:** \`${prefix}ask\` · \`${prefix}say\` · **Music:** \`${prefix}play\`\n\n` +
+                                    `FiveM: ${fivemUrl}`,
                             )
-                            .setColor('#57F287')
-                            .setTimestamp()
-                            .setFooter({ text: 'Phantom World Notification' })
-                    ]
+                            .setTimestamp(),
+                    ],
                 });
                 console.log(`[READY] DM sent to owner: ${owner.tag}`);
             }
@@ -52,6 +54,7 @@ module.exports = async (client) => {
         }
     }
 
+    // Merged presence: live FiveM player counts + Phantom branding (pre-backup status restored)
     if (process.env.DISCORD_STATUS && process.env.DISCORD_STATUS_MODE === 'legacy') {
         setInterval(() => {
             const statuttext = process.env.DISCORD_STATUS.split(', ');
@@ -62,7 +65,7 @@ module.exports = async (client) => {
             });
         }, 50000);
     } else {
-        console.log('[clientReady.js] Calling startPhantomPresence(client)...');
+        console.log('[clientReady.js] Calling startPhantomPresence(client) — FiveM live + branding…');
         startPhantomPresence(client);
     }
 
