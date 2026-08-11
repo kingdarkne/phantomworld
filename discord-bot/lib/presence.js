@@ -1,11 +1,9 @@
 import { ActivityType } from 'discord.js';
 import { getStatus } from './fivem.js';
+import { displayServerName, joinUrl, cfxJoinId } from './branding.js';
 
 const pollSeconds = Number(process.env.PRESENCE_POLL_SECONDS || 60);
 const rotateSeconds = Number(process.env.PRESENCE_ROTATE_SECONDS || 25);
-function cfxJoinId() {
-  return process.env.CFX_SERVER_ID || '';
-}
 
 function formatUptime(seconds) {
   if (!seconds || seconds < 0) return null;
@@ -29,23 +27,23 @@ function buildActivities(status) {
   const players = status.playerCount ?? 0;
   const max = status.maxPlayers ?? 48;
   const pct = max > 0 ? Math.round((players / max) * 100) : 0;
+  const serverName = displayServerName(status);
 
   activities.push({
     name: trimActivity(`${players}/${max} online (${pct}% full)`),
     type: ActivityType.Watching,
   });
 
-  if (status.mapName) {
-    activities.push({
-      name: trimActivity(status.mapName),
-      type: ActivityType.Playing,
-    });
-  }
+  activities.push({
+    name: trimActivity(serverName),
+    type: ActivityType.Playing,
+  });
 
-  if (status.gameType) {
+  const link = joinUrl();
+  if (link) {
     activities.push({
-      name: trimActivity(status.gameType),
-      type: ActivityType.Competing,
+      name: trimActivity(`Join → cfx.re/join/${cfxJoinId()}`),
+      type: ActivityType.Watching,
     });
   }
 
@@ -53,14 +51,6 @@ function buildActivities(status) {
   if (uptime) {
     activities.push({
       name: trimActivity(uptime),
-      type: ActivityType.Watching,
-    });
-  }
-
-  const joinId = cfxJoinId();
-  if (joinId) {
-    activities.push({
-      name: trimActivity(`cfx.re/join/${joinId}`),
       type: ActivityType.Watching,
     });
   }

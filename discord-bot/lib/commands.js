@@ -1,12 +1,30 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { getStatus, getPlayers, buildStatusEmbed } from './fivem.js';
-import { fetchJoke, fetchGifUrl, eightBallAnswer } from './fun.js';
-import { playInChannel, skipTrack, stopMusic, getQueue } from './music.js';
-import { coinFlip, rollDice, pickChoice, buildAvatarEmbed, buildPoll } from './more.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { createSlashContext } from './context.js';
+import { runCommand } from './handlers.js';
 
 export const slashCommands = [
   new SlashCommandBuilder().setName('status').setDescription('Phantom World server status'),
-  new SlashCommandBuilder().setName('players').setDescription('List online players'),
+  new SlashCommandBuilder().setName('players').setDescription('List online FiveM players'),
+  new SlashCommandBuilder()
+    .setName('status-live')
+    .setDescription('Manage the live-updating server status embed')
+    .addSubcommand((s) =>
+      s.setName('setup').setDescription('Post or refresh the live status message in this channel'),
+    ),
+  new SlashCommandBuilder()
+    .setName('server-invite')
+    .setDescription('DM all members with the FiveM server link (Manage Server)')
+    .addBooleanOption((o) =>
+      o.setName('force').setDescription('Ignore cooldown and send again'),
+    ),
+  new SlashCommandBuilder()
+    .setName('ask')
+    .setDescription('AI support — ask about the server')
+    .addStringOption((o) => o.setName('question').setDescription('Your question').setRequired(true)),
+  new SlashCommandBuilder()
+    .setName('say')
+    .setDescription('Speak text in your voice channel (TTS)')
+    .addStringOption((o) => o.setName('text').setDescription('What to say').setRequired(true)),
   new SlashCommandBuilder()
     .setName('alert')
     .setDescription('Send a host alert (Manage Server)')
@@ -49,167 +67,6 @@ export const slashCommands = [
 ].map((c) => c.toJSON());
 
 export async function handleCommand(interaction, ctx) {
-  const { notifyOwnerEvent, eventEmbed, statusChannelId } = ctx;
-
-  switch (interaction.commandName) {
-    case 'status': {
-      await interaction.deferReply();
-      const status = await getStatus();
-      await interaction.editReply({ embeds: [buildStatusEmbed(status)] });
-      break;
-    }
-    case 'players': {
-      await interaction.deferReply();
-      const [status, players] = await Promise.all([getStatus(), getPlayers()]);
-      const lines =
-        players.length > 0
-          ? players.map((p) => `• **${p.name}** (ID ${p.id})`).join('\n')
-          : '_No players online or list unavailable._';
-      const embed = buildStatusEmbed(status).setDescription(lines.slice(0, 4000));
-      await interaction.editReply({ embeds: [embed] });
-      break;
-    }
-    case 'alert': {
-      if (!interaction.memberPermissions?.has('ManageGuild')) {
-        await interaction.reply({ content: 'You need Manage Server permission.', ephemeral: true });
-        return;
-      }
-      const message = interaction.options.getString('message', true);
-      const entry = {
-        category: 'slash',
-        title: 'Dashboard Alert',
-        description: message,
-        color: 0xf59e0b,
-        time: new Date().toISOString(),
-      };
-      const embed = eventEmbed(entry);
-
-      await notifyOwnerEvent(entry);
-
-      const targetIds = new Set();
-      if (interaction.channelId) targetIds.add(interaction.channelId);
-      if (statusChannelId) targetIds.add(statusChannelId);
-
-      const postedTo = [];
-      const failures = [];
-
-      for (const channelId of targetIds) {
-        try {
-          const channel = await interaction.client.channels.fetch(channelId);
-          if (!channel?.isTextBased()) continue;
-
-          const perms = channel.permissionsFor(interaction.client.user);
-          if (!perms?.has('ViewChannel') || !perms.has('SendMessages')) {
-            failures.push(`#${'name' in channel ? channel.name : channelId}: missing Send Messages`);
-            continue;
-          }
-
-          await channel.send({ embeds: [embed] });
-          postedTo.push('name' in channel ? `#${channel.name}` : channelId);
-        } catch (err) {
-          failures.push(`${channelId}: ${err?.message || 'send failed'}`);
-        }
-      }
-
-      if (postedTo.length === 0) {
-        await interaction.reply({
-          content:
-            'Could not post the alert. Add the bot to this channel with **View Channel**, **Send Messages**, and **Embed Links**, or run `/alert` in a channel the bot can post in.\n' +
-            (failures.length ? `\nDetails: ${failures.join('; ')}` : ''),
-          ephemeral: true,
-        });
-        return;
-      }
-
-      const note =
-        failures.length > 0 ? `\n(Some targets failed: ${failures.join('; ')})` : '';
-      await interaction.reply({
-        content: `Alert posted to ${postedTo.join(', ')}.${note}`,
-        ephemeral: true,
-      });
-      break;
-    }
-    case 'gif': {
-      await interaction.deferReply();
-      const search = interaction.options.getString('search') || '';
-      const url = await fetchGifUrl(search);
-      await interaction.editReply({ content: url });
-      break;
-    }
-    case 'joke': {
-      await interaction.deferReply();
-      const joke = await fetchJoke();
-      await interaction.editReply(joke);
-      break;
-    }
-    case '8ball': {
-      const question = interaction.options.getString('question');
-      await interaction.reply(eightBallAnswer(question));
-      break;
-    }
-    case 'play': {
-      await interaction.deferReply();
-      const query = interaction.options.getString('query', true);
-      const title = await playInChannel(interaction, query);
-      await interaction.editReply(`▶️ Queued: **${title}**`);
-      break;
-    }
-    case 'skip': {
-      const ok = skipTrack(interaction.guildId);
-      await interaction.reply(ok ? '⏭️ Skipped.' : 'Nothing playing.');
-      break;
-    }
-    case 'stop': {
-      const ok = stopMusic(interaction.guildId);
-      await interaction.reply(ok ? '⏹️ Stopped and left voice.' : 'Not in voice.');
-      break;
-    }
-    case 'queue': {
-      const q = getQueue(interaction.guildId);
-      await interaction.reply(
-        q.length ? q.map((t, i) => `${i + 1}. ${t}`).join('\n') : '_Queue is empty._',
-      );
-      break;
-    }
-    case 'phantomhelp': {
-      const embed = new EmbedBuilder()
-        .setColor(0x8b5cf6)
-        .setTitle('Phantom World Multipurpose Bot')
-        .setDescription(
-          '**FiveM host:** `/status` `/players` `/alert` + auto DMs on server events\n' +
-            '**Fun:** `/gif` `/joke` `/8ball` `/coinflip` `/roll` `/choose` `/poll` `/avatar`\n' +
-            '**Music:** `/play` `/skip` `/stop` `/queue` (join voice first)\n\n' +
-            'Run this bot **on the game server host** — not your gaming PC.',
-        );
-      await interaction.reply({ embeds: [embed] });
-      break;
-    }
-    case 'coinflip': {
-      await interaction.reply(coinFlip());
-      break;
-    }
-    case 'roll': {
-      const max = interaction.options.getInteger('max') || 6;
-      await interaction.reply(rollDice(max));
-      break;
-    }
-    case 'choose': {
-      const options = interaction.options.getString('options', true);
-      await interaction.reply(pickChoice(options));
-      break;
-    }
-    case 'avatar': {
-      const target = interaction.options.getUser('user') || interaction.user;
-      await interaction.reply({ embeds: [await buildAvatarEmbed(target)] });
-      break;
-    }
-    case 'poll': {
-      const question = interaction.options.getString('question', true);
-      const options = interaction.options.getString('options', true);
-      await interaction.reply({ embeds: [buildPoll(question, options)] });
-      break;
-    }
-    default:
-      await interaction.reply({ content: 'Unknown command.', ephemeral: true });
-  }
+  const c = createSlashContext(interaction, ctx);
+  await runCommand(interaction.commandName, c);
 }
