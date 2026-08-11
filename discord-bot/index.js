@@ -4,6 +4,7 @@ import express from 'express';
 import {
   Client,
   GatewayIntentBits,
+  Partials,
   REST,
   Routes,
   EmbedBuilder,
@@ -11,6 +12,11 @@ import {
 import { slashCommands, handleCommand } from './lib/commands.js';
 import { getStatus } from './lib/fivem.js';
 import { startLivePresence } from './lib/presence.js';
+import { startLiveStatusChannel } from './lib/liveStatusChannel.js';
+import { maybeAutoInviteBroadcast } from './lib/serverInvite.js';
+import { initLavalink } from './lib/lavalink.js';
+import { startPrefixCommands } from './lib/prefix.js';
+import { probeAiServices } from './lib/ai.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -55,7 +61,14 @@ function eventEmbed(entry) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+  partials: [Partials.Channel],
 });
 
 async function dmOwner(contentOrPayload) {
@@ -122,6 +135,12 @@ client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`Invite: ${botInviteUrl(client.user.id)}`);
   startRelayServer();
+  initLavalink(client);
+  startPrefixCommands(client, commandCtx);
+
+  probeAiServices().then((status) => {
+    console.log('[ai] Provider:', status.provider, status.ollama ? `(Ollama OK: ${status.ollamaModels?.join(', ') || 'models'})` : '(Ollama not reachable)');
+  });
 
   try {
     await registerCommands(client.user.id);
@@ -129,7 +148,15 @@ client.once('ready', async () => {
     console.warn('Slash registration failed (invite bot first):', err?.message || err);
   }
 
-  startLivePresence(client);
+  if (process.env.FIVEM_LIVE_PRESENCE !== '0') {
+    startLivePresence(client);
+  }
+
+  startLiveStatusChannel(client);
+
+  maybeAutoInviteBroadcast(client).catch((err) =>
+    console.warn('Auto invite broadcast failed:', err.message),
+  );
 
   await dmOwner({
     embeds: [
@@ -137,8 +164,9 @@ client.once('ready', async () => {
         .setColor(0x8b5cf6)
         .setTitle('Phantom World Bot Online')
         .setDescription(
-          '**Host alerts** → your DMs when FXServer posts events.\n' +
-            '**Commands:** `/phantomhelp` for music, GIFs, jokes, status.\n\n' +
+          '**Prefix:** `$help` · **Slash:** `/phantomhelp`\n' +
+            '**AI:** `$ask` / `/ask` (Ollama on VPS) · **Voice:** `$say` (TTS)\n' +
+            '**Music:** Lavalink on VPS · **Prefix:** `$help`\n\n' +
             `FiveM: ${fivemUrl}`,
         )
         .setTimestamp(),
@@ -189,7 +217,7 @@ client.on('guildCreate', async (guild) => {
         new EmbedBuilder()
           .setColor(0x8b5cf6)
           .setTitle('Bot joined your server')
-          .setDescription('Alerts + `/phantomhelp` for commands.')
+          .setDescription('Use `$help` or `/phantomhelp` for commands.')
           .setTimestamp(),
       ],
     });

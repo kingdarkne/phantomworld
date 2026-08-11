@@ -1,0 +1,70 @@
+name: Deploy Discord bot to VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'discord-bot/**'
+      - '.github/workflows/deploy-discord-bot.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-discord-bot
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+          VPS_BOT_PATH: ${{ secrets.VPS_BOT_PATH }}
+        run: |
+          set -euo pipefail
+          : "${VPS_HOST:?Set VPS_HOST secret (e.g. 172.245.71.46)}"
+          : "${VPS_USER:?Set VPS_USER secret (e.g. root)}"
+          : "${VPS_PASSWORD:?Set VPS_PASSWORD secret}"
+
+          PORT="${VPS_PORT:-22}"
+          REMOTE="${VPS_BOT_PATH:-/home/phantom_bot}"
+          SERVICE="${VPS_BOT_SERVICE:-phantom-bot}"
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass rsync
+
+          SSH_OPTS="-o StrictHostKeyChecking=no -p ${PORT}"
+          export SSHPASS="$VPS_PASSWORD"
+
+          echo "Syncing discord-bot to ${VPS_USER}@${VPS_HOST}:${REMOTE} …"
+          sshpass -e rsync -avz --delete \
+            -e "ssh ${SSH_OPTS}" \
+            --exclude node_modules \
+            --exclude .env \
+            --exclude data \
+            --exclude logs \
+            --exclude bot.pid \
+            discord-bot/ "${VPS_USER}@${VPS_HOST}:${REMOTE}/"
+
+          echo "Installing deps and restarting ${SERVICE} …"
+          sshpass -e ssh ${SSH_OPTS} "${VPS_USER}@${VPS_HOST}" bash -s <<REMOTE_SCRIPT
+          set -euo pipefail
+          cd "${REMOTE}"
+          npm install --omit=dev
+          if systemctl is-active --quiet "${SERVICE}"; then
+            systemctl restart "${SERVICE}"
+          elif systemctl is-active --quiet phantom-discord-bot; then
+            systemctl restart phantom-discord-bot
+          else
+            echo "No systemd service found — start manually: cd ${REMOTE} && node index.js"
+          fi
+          sleep 2
+          curl -sf http://127.0.0.1:3099/health || echo "Health check pending"
+          systemctl is-active "${SERVICE}" 2>/dev/null || systemctl is-active phantom-discord-bot 2>/dev/null || true
+          REMOTE_SCRIPT

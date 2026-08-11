@@ -8,8 +8,15 @@ import {
   NoSubscriberBehavior,
 } from '@discordjs/voice';
 import play from 'play-dl';
+import {
+  isLavalinkReady,
+  lavalinkPlay,
+  lavalinkSkip,
+  lavalinkStop,
+  lavalinkQueueTitles,
+} from './lavalink.js';
 
-/** Per-guild simple music queue */
+/** Per-guild simple music queue (play-dl fallback) */
 const sessions = new Map();
 
 function getSession(guildId) {
@@ -19,14 +26,22 @@ function getSession(guildId) {
   return sessions.get(guildId);
 }
 
-export async function playInChannel(interaction, query) {
-  const member = interaction.member;
+export async function playInChannel({ guildId, member, guild, shardId }, query) {
   const voiceChannel = member?.voice?.channel;
   if (!voiceChannel) {
     throw new Error('Join a voice channel first.');
   }
 
-  const session = getSession(interaction.guildId);
+  if (isLavalinkReady()) {
+    return lavalinkPlay({
+      guildId,
+      channelId: voiceChannel.id,
+      shardId,
+      query,
+    });
+  }
+
+  const session = getSession(guildId);
   let url = query;
   if (!/^https?:\/\//i.test(query)) {
     const searched = await play.search(query, { limit: 1, source: { youtube: 'video' } });
@@ -41,20 +56,20 @@ export async function playInChannel(interaction, query) {
   if (!session.connection) {
     session.connection = joinVoiceChannel({
       channelId: voiceChannel.id,
-      guildId: interaction.guildId,
-      adapterCreator: interaction.guild.voiceAdapterCreator,
+      guildId,
+      adapterCreator: guild.voiceAdapterCreator,
       selfDeaf: true,
     });
     session.player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } });
     session.connection.subscribe(session.player);
 
     session.player.on(AudioPlayerStatus.Idle, () => {
-      playNext(interaction.guildId);
+      playNext(guildId);
     });
   }
 
   if (!session.playing) {
-    await playNext(interaction.guildId);
+    await playNext(guildId);
   }
 
   return title;
@@ -63,7 +78,7 @@ export async function playInChannel(interaction, query) {
 async function playNext(guildId) {
   const session = sessions.get(guildId);
   if (!session || !session.queue.length) {
-    session.playing = false;
+    if (session) session.playing = false;
     return null;
   }
 
@@ -84,6 +99,7 @@ async function playNext(guildId) {
 }
 
 export function skipTrack(guildId) {
+  if (isLavalinkReady()) return lavalinkSkip(guildId);
   const session = sessions.get(guildId);
   if (!session?.player) return false;
   session.player.stop();
@@ -91,6 +107,7 @@ export function skipTrack(guildId) {
 }
 
 export function stopMusic(guildId) {
+  if (isLavalinkReady()) return lavalinkStop(guildId);
   const session = sessions.get(guildId);
   if (!session) return false;
   session.queue = [];
@@ -105,6 +122,7 @@ export function stopMusic(guildId) {
 }
 
 export function getQueue(guildId) {
+  if (isLavalinkReady()) return lavalinkQueueTitles(guildId);
   const session = sessions.get(guildId);
   if (!session) return [];
   return session.queue.map((t) => t.title);

@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { displayServerName, joinUrl } from './branding.js';
 
 function fivemBaseUrl() {
   return (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
@@ -157,7 +158,10 @@ export async function getStatus() {
     }
   }
 
-  if (merged) return merged;
+  if (merged) {
+    merged.serverName = displayServerName(merged);
+    return merged;
+  }
   throw new Error('No status source (FiveM and CFX listing both failed)');
 }
 
@@ -179,21 +183,18 @@ function formatUptimeEmbed(seconds) {
 }
 
 export function buildStatusEmbed(status) {
+  const name = displayServerName(status);
+  const link = joinUrl();
   const embed = new EmbedBuilder()
     .setColor(0x8b5cf6)
-    .setTitle('Phantom World — Server Status')
+    .setTitle(`${name} — Server Status`)
+    .setDescription(link ? `[Join FiveM](${link})` : null)
     .addFields(
-      { name: 'Server', value: status.serverName || 'Unknown', inline: true },
+      { name: 'Server', value: name, inline: true },
       { name: 'Players', value: `${status.playerCount ?? '?'}/${status.maxPlayers ?? '?'}`, inline: true },
       { name: 'Time', value: status.serverTime || '—', inline: true },
     );
 
-  if (status.mapName) {
-    embed.addFields({ name: 'Map', value: status.mapName, inline: true });
-  }
-  if (status.gameType) {
-    embed.addFields({ name: 'Mode', value: status.gameType, inline: true });
-  }
   if (status.uptimeSeconds) {
     embed.addFields({ name: 'Uptime', value: formatUptimeEmbed(status.uptimeSeconds), inline: true });
   }
