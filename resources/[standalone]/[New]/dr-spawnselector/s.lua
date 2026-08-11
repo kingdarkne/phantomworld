@@ -1,1 +1,0 @@
--- Stub server script for dr-spawnselector (manifest expected s.lua; add real logic from full pack if needed)

@@ -43,6 +43,9 @@ resources/core
 resources/y_burgershot-main/core
 **/qb-core-legacy/core
 
+# Archived duplicate resources (outside FiveM scan path)
+/_archive_resources/
+
 # Duplicate / backup trees
 **/*__duplicate_backup/
 **/*_backup/
