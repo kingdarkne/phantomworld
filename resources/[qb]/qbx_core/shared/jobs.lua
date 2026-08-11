@@ -349,6 +349,99 @@ return {
             },
         },
     },
+    ['burgershot'] = {
+        label = 'Burger Shot',
+        defaultDuty = true,
+        offDutyPay = false,
+        grades = {
+            [0] = {
+                name = 'Trainee',
+                payment = 50
+            },
+            [1] = {
+                name = 'Cook',
+                payment = 75
+            },
+            [2] = {
+                name = 'Shift Lead',
+                payment = 100
+            },
+            [3] = {
+                name = 'Manager',
+                isboss = true,
+                bankAuth = true,
+                payment = 125
+            },
+        },
+    },
+    ['security'] = {
+        label = 'Security',
+        defaultDuty = true,
+        offDutyPay = false,
+        grades = {
+            [0] = {
+                name = 'Guard',
+                payment = 50
+            },
+            [1] = {
+                name = 'Supervisor',
+                isboss = true,
+                payment = 75
+            },
+        },
+    },
+    ['lsfd'] = {
+        label = 'LSFD',
+        type = 'ems',
+        defaultDuty = true,
+        offDutyPay = false,
+        grades = {
+            [0] = {
+                name = 'Recruit',
+                payment = 50
+            },
+            [1] = {
+                name = 'Firefighter',
+                payment = 75
+            },
+            [2] = {
+                name = 'Lieutenant',
+                payment = 100
+            },
+            [3] = {
+                name = 'Chief',
+                isboss = true,
+                bankAuth = true,
+                payment = 150
+            },
+        },
+    },
+    ['ems'] = {
+        label = 'EMS',
+        type = 'ems',
+        defaultDuty = true,
+        offDutyPay = false,
+        grades = {
+            [0] = {
+                name = 'Recruit',
+                payment = 50
+            },
+            [1] = {
+                name = 'Paramedic',
+                payment = 75
+            },
+            [2] = {
+                name = 'Doctor',
+                payment = 100
+            },
+            [3] = {
+                name = 'Chief',
+                isboss = true,
+                bankAuth = true,
+                payment = 150
+            },
+        },
+    },
     ['duty'] = {
         label = 'Admin Duty',
         defaultDuty = true,

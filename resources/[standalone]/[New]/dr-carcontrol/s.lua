@@ -1,1 +1,0 @@
--- Stub server script for dr-carcontrol (manifest expected s.lua; add real logic if needed)

@@ -1,0 +1,6 @@
+{
+  "name": "phantomworld-vps",
+  "install": "if [ ! -d CFX-Developer-Tools ]; then git clone https://github.com/TMHSDigital/CFX-Developer-Tools.git; fi && pip install -r CFX-Developer-Tools/mcp-server/requirements.txt --quiet && apt-get update -qq && apt-get install -y -qq openssh-client sshpass tmux && chmod +x tools/vps/*.sh",
+  "start": "echo 'Phantom World VPS deploy ready. Run: bash tools/vps/deploy-from-agent.sh'",
+  "terminals": []
+}
