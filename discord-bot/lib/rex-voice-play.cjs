@@ -144,17 +144,19 @@ async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, titl
  * - If Rex is listening (@discordjs/voice): play on that connection (file + ffmpeg)
  * - Otherwise: Lavalink (after stopping radio)
  */
-async function playRexAudio(client, { guildId, voiceChannelId, audioUrl, title }) {
+async function playRexAudio(client, { guildId, voiceChannelId, audioUrl, title, forceDirect = false }) {
   const guild = client.guilds.cache.get(guildId);
   if (!guild || !audioUrl) return false;
 
   const state = global.rexState?.[guildId];
-  const alreadyListening = Boolean(state?.active && (state?.connection || getVoiceConnection(guildId)));
+  const alreadyListening = Boolean(
+    forceDirect || (state?.active && (state?.connection || getVoiceConnection(guildId))),
+  );
 
   let tmp = null;
   try {
     if (alreadyListening) {
-      console.log('[Rex] Listening mode — direct discord.js playback');
+      console.log('[Rex] Listening mode — direct discord.js playback (keep receiver alive)');
       tmp = await downloadToTemp(audioUrl);
       await playFileDirect(guild, voiceChannelId, tmp);
       return true;
@@ -167,7 +169,6 @@ async function playRexAudio(client, { guildId, voiceChannelId, audioUrl, title }
       console.warn('[Rex] Lavalink playback failed, trying direct:', e.message);
     }
 
-    // Direct fallback: leave shoukaku then use discord.js voice
     await stopShoukakuGuild(client, guildId);
     await new Promise((r) => setTimeout(r, 400));
     tmp = await downloadToTemp(audioUrl);

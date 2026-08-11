@@ -108,20 +108,28 @@ module.exports = async (client) => {
         }
     }
 
-    // Standardized Radio auto-start (if enabled in DB)
-    try {
-        const RadioSchema = require('../../database/models/music');
-        const allData = await RadioSchema.find({ Channel: { $ne: null } });
-        for (const data of allData) {
-            if (client.guilds.cache.has(data.Guild)) {
-                console.log(`[RADIO] Auto-starting radio for guild: ${data.Guild}`);
-                const defaultStream = "http://icecast.radiofrance.fr/fip-midfi.mp3";
-                client.radio.startRadio(client, data.Guild, data.Channel, defaultStream).catch(e => {
-                    console.error(`[RADIO] Auto-start failed for ${data.Guild}:`, e.message);
-                });
+    // Radio auto-start (off by default — fights Rex VC listening). Set RADIO_AUTO_START=1 to enable.
+    if (process.env.RADIO_AUTO_START === '1') {
+        try {
+            const RadioSchema = require('../../database/models/music');
+            const allData = await RadioSchema.find({ Channel: { $ne: null } });
+            for (const data of allData) {
+                if (client.guilds.cache.has(data.Guild)) {
+                    if (global.rexState?.[data.Guild]?.active) {
+                        console.log(`[RADIO] Skip auto-start — Rex listening in ${data.Guild}`);
+                        continue;
+                    }
+                    console.log(`[RADIO] Auto-starting radio for guild: ${data.Guild}`);
+                    const defaultStream = "http://icecast.radiofrance.fr/fip-midfi.mp3";
+                    client.radio.startRadio(client, data.Guild, data.Channel, defaultStream).catch(e => {
+                        console.error(`[RADIO] Auto-start failed for ${data.Guild}:`, e.message);
+                    });
+                }
             }
+        } catch (err) {
+            console.error("[RADIO] Auto-start manager error:", err.message);
         }
-    } catch (err) {
-        console.error("[RADIO] Auto-start manager error:", err.message);
+    } else {
+        console.log('[RADIO] Auto-start disabled (set RADIO_AUTO_START=1 to enable)');
     }
 }
