@@ -16,6 +16,11 @@ const ALIASES = {
   cmds: 'help',
   commands: 'help',
   menu: 'help',
+  vol: 'volume',
+  np: 'nowplaying',
+  mute: 'timeout',
+  unmute: 'untimeout',
+  purge: 'clear',
 };
 
 export function startPrefixCommands(client, ctx) {

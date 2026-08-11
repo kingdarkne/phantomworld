@@ -3,11 +3,21 @@ import { getStatus, getPlayers, buildStatusEmbed } from './fivem.js';
 import { setupLiveStatusInChannel } from './liveStatusChannel.js';
 import { broadcastServerInviteDms, dmInviteToUserIds } from './serverInvite.js';
 import { fetchJoke, fetchGifUrl, eightBallAnswer } from './fun.js';
-import { playInChannel, skipTrack, stopMusic, getQueue } from './music.js';
+import {
+  playInChannel,
+  skipTrack,
+  stopMusic,
+  getQueue,
+  pauseMusic,
+  resumeMusic,
+  setVolume,
+  loopMusic,
+  nowPlaying,
+} from './music.js';
 import { coinFlip, rollDice, pickChoice, buildAvatarEmbed, buildPoll } from './more.js';
 import { askAi } from './ai.js';
 import { speakInChannel } from './voiceTts.js';
-import { commandPrefix } from './context.js';
+import { commandPrefix, resolveUserFromContext } from './context.js';
 import {
   rexJoin,
   rexLeave,
@@ -17,8 +27,56 @@ import {
   rexSetMode,
 } from './rex.js';
 import { buildHelpMessage, helpEmbed } from './helpMenu.js';
+import {
+  modBan,
+  modUnban,
+  modKick,
+  modTimeout,
+  modClearTimeout,
+  modWarn,
+  modWarnings,
+  modClear,
+  modLock,
+} from './moderation.js';
+import {
+  ticketSetup,
+  ticketCreate,
+  ticketClose,
+  ticketAdd,
+  ticketRemove,
+  ticketPanelPayload,
+} from './tickets.js';
+import {
+  funHug,
+  funKiss,
+  funPat,
+  funSlap,
+  funMeme,
+  funHowGay,
+  funLoveMeter,
+  funFact,
+  funDog,
+  funCat,
+  funRoast,
+  funAscii,
+} from './funExtra.js';
 
 export { helpEmbed };
+
+function reasonFromRest(c, skip = 1) {
+  if (c.type === 'slash') return c.getString('reason') || 'No reason provided';
+  const parts = c.rest.slice(skip).filter((t) => !/^<@!?\d+>$/.test(t));
+  return parts.join(' ').trim() || 'No reason provided';
+}
+
+async function replyFunImage(c, result) {
+  const embed = new EmbedBuilder().setColor(0x2ee6c5).setImage(result.image);
+  const desc = result.content || result.title;
+  if (desc) embed.setDescription(desc);
+  if (result.url) embed.setURL(result.url);
+  if (result.footer) embed.setFooter({ text: result.footer });
+  await c.reply({ embeds: [embed] });
+}
 
 function canManageInvites(c) {
   if (c.hasManageGuild()) return true;
@@ -366,6 +424,434 @@ export async function runCommand(name, c) {
       await c.reply(q.length ? q.map((t, i) => `${i + 1}. ${t}`).join('\n') : '_Queue is empty._');
       break;
     }
+    case 'pause': {
+      const ok = pauseMusic(c.guildId);
+      await c.reply(ok ? '⏸️ Paused.' : 'Nothing playing.');
+      break;
+    }
+    case 'resume': {
+      const ok = resumeMusic(c.guildId);
+      await c.reply(ok ? '▶️ Resumed.' : 'Nothing paused.');
+      break;
+    }
+    case 'volume':
+    case 'vol': {
+      const level = c.getInteger('level') || Number(c.rest[0]);
+      if (!Number.isFinite(level)) {
+        await c.reply('Usage: `$volume 50` (1-200)');
+        return;
+      }
+      try {
+        const vol = setVolume(c.guildId, level);
+        if (vol === false || vol == null) {
+          await c.reply('Nothing playing.');
+          return;
+        }
+        await c.reply(`🔊 Volume set to **${vol}%**.`);
+      } catch (err) {
+        await c.reply(err?.message || 'Volume failed.');
+      }
+      break;
+    }
+    case 'loop': {
+      const mode = (c.getString('mode') || c.rest[0] || 'toggle').toLowerCase();
+      try {
+        const next = loopMusic(c.guildId, mode);
+        if (!next) {
+          await c.reply('Nothing playing.');
+          return;
+        }
+        await c.reply(next === 'track' ? '🔁 Track loop **on**.' : '➡️ Loop **off**.');
+      } catch (err) {
+        await c.reply(err?.message || 'Loop failed.');
+      }
+      break;
+    }
+    case 'nowplaying':
+    case 'np': {
+      const np = nowPlaying(c.guildId);
+      if (!np) {
+        await c.reply('Nothing playing.');
+        return;
+      }
+      await c.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x2ee6c5)
+            .setTitle('Now playing')
+            .setDescription(
+              [
+                `**${np.title}**`,
+                np.author ? `by ${np.author}` : null,
+                np.uri ? np.uri : null,
+                `Loop: \`${np.loop}\``,
+              ]
+                .filter(Boolean)
+                .join('\n'),
+            ),
+        ],
+      });
+      break;
+    }
+    case 'mod':
+    case 'ban':
+    case 'unban':
+    case 'kick':
+    case 'timeout':
+    case 'untimeout':
+    case 'warn':
+    case 'warnings':
+    case 'clear':
+    case 'lock':
+    case 'unlock': {
+      const sub =
+        name === 'mod'
+          ? c.getSubcommand() || ''
+          : name;
+      if (!sub) {
+        await c.reply(
+          'Usage: `$mod ban|kick|timeout|warn|clear|lock|unlock …` or `/mod`',
+        );
+        return;
+      }
+      if (c.type === 'slash') await c.defer();
+      try {
+        if (sub === 'ban') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          if (!target) {
+            await c.reply('Mention a user or pass their ID.');
+            return;
+          }
+          const days = c.getInteger('days') || Number(c.rest[name === 'mod' ? 2 : 1]) || 0;
+          const embed = await modBan({
+            guild: c.guild,
+            moderator: c.member,
+            targetUser: target,
+            reason: reasonFromRest(c, name === 'mod' ? 2 : 1),
+            deleteDays: Number.isFinite(days) ? days : 0,
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'unban') {
+          const userId =
+            (c.type === 'slash' ? c.getString('userid') : null) ||
+            String(c.rest[name === 'mod' ? 1 : 0] || '').replace(/\D/g, '');
+          if (!userId) {
+            await c.reply('Usage: `$mod unban <userId>`');
+            return;
+          }
+          const embed = await modUnban({
+            guild: c.guild,
+            moderator: c.member,
+            userId,
+            reason: reasonFromRest(c, name === 'mod' ? 2 : 1),
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'kick') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          if (!target) {
+            await c.reply('Mention a user or pass their ID.');
+            return;
+          }
+          const embed = await modKick({
+            guild: c.guild,
+            moderator: c.member,
+            targetUser: target,
+            reason: reasonFromRest(c, name === 'mod' ? 2 : 1),
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'timeout') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          const minutes =
+            c.getInteger('minutes') ||
+            Number(c.rest[name === 'mod' ? 2 : 1]);
+          if (!target || !minutes) {
+            await c.reply('Usage: `$mod timeout @user <minutes> [reason]`');
+            return;
+          }
+          const embed = await modTimeout({
+            guild: c.guild,
+            moderator: c.member,
+            targetUser: target,
+            minutes,
+            reason: reasonFromRest(c, name === 'mod' ? 3 : 2),
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'untimeout') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          if (!target) {
+            await c.reply('Mention a user or pass their ID.');
+            return;
+          }
+          const embed = await modClearTimeout({
+            guild: c.guild,
+            moderator: c.member,
+            targetUser: target,
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'warn') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          if (!target) {
+            await c.reply('Mention a user or pass their ID.');
+            return;
+          }
+          const embed = await modWarn({
+            guildId: c.guildId,
+            moderator: c.member,
+            targetUser: target,
+            reason: reasonFromRest(c, name === 'mod' ? 2 : 1),
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'warnings') {
+          const target = await resolveUserFromContext(c, { restIndex: name === 'mod' ? 1 : 0 });
+          if (!target) {
+            await c.reply('Mention a user or pass their ID.');
+            return;
+          }
+          await c.reply({ embeds: [modWarnings({ guildId: c.guildId, targetUser: target })] });
+          break;
+        }
+        if (sub === 'clear') {
+          const amount =
+            c.getInteger('amount') ||
+            Number(c.rest[name === 'mod' ? 1 : 0]);
+          const target = await resolveUserFromContext(c, {
+            restIndex: name === 'mod' ? 2 : 1,
+          });
+          const channel =
+            c.type === 'slash' ? c.interaction.channel : c.message.channel;
+          const embed = await modClear({
+            channel,
+            moderator: c.member,
+            amount,
+            targetUser: target,
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'lock' || sub === 'unlock') {
+          const channel =
+            c.type === 'slash' ? c.interaction.channel : c.message.channel;
+          const embed = await modLock({
+            channel,
+            moderator: c.member,
+            lock: sub === 'lock',
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        await c.reply(`Unknown mod action \`${sub}\`.`);
+      } catch (err) {
+        await c.reply(err?.message || 'Moderation command failed.');
+      }
+      break;
+    }
+    case 'ticket': {
+      const sub = c.getSubcommand() || '';
+      if (!sub) {
+        await c.reply('Usage: `$ticket setup|create|close|add|remove|panel`');
+        return;
+      }
+      if (c.type === 'slash') await c.defer();
+      try {
+        if (sub === 'setup') {
+          if (!c.hasManageGuild()) {
+            await c.reply('You need Manage Server permission.');
+            return;
+          }
+          let categoryId;
+          let roleId;
+          let logId = null;
+          if (c.type === 'slash') {
+            categoryId = c.getChannel('category')?.id;
+            roleId = c.getRole('role')?.id;
+            logId = c.getChannel('logs')?.id || null;
+          } else {
+            categoryId = String(c.rest[1] || '').replace(/\D/g, '');
+            roleId = String(c.rest[2] || '').replace(/\D/g, '');
+            logId = c.rest[3] ? String(c.rest[3]).replace(/\D/g, '') : null;
+          }
+          if (!categoryId || !roleId) {
+            await c.reply(
+              'Usage: `/ticket setup` (pick category + role) or `$ticket setup <categoryId> <roleId> [logChannelId]`',
+            );
+            return;
+          }
+          const embed = ticketSetup({ guildId: c.guildId, categoryId, roleId, logId });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'panel') {
+          if (!c.hasManageGuild()) {
+            await c.reply('You need Manage Server permission.');
+            return;
+          }
+          await c.reply(ticketPanelPayload());
+          break;
+        }
+        if (sub === 'create') {
+          const reason =
+            (c.type === 'slash' ? c.getString('reason') : null) ||
+            c.rest.slice(1).join(' ') ||
+            'No reason provided';
+          const { channel, embed } = await ticketCreate({
+            guild: c.guild,
+            member: c.member,
+            reason,
+            client: c.client,
+          });
+          await c.reply({ embeds: [embed.setDescription(`Ticket created: ${channel}`)] });
+          break;
+        }
+        if (sub === 'close') {
+          const channel =
+            c.type === 'slash' ? c.interaction.channel : c.message.channel;
+          await ticketClose({
+            guild: c.guild,
+            channel,
+            closer: c.member,
+            client: c.client,
+          });
+          await c.reply('Closing ticket…');
+          break;
+        }
+        if (sub === 'add' || sub === 'remove') {
+          const target = await resolveUserFromContext(c, { restIndex: 1 });
+          if (!target) {
+            await c.reply(`Usage: \`$ticket ${sub} @user\``);
+            return;
+          }
+          const channel =
+            c.type === 'slash' ? c.interaction.channel : c.message.channel;
+          const fn = sub === 'add' ? ticketAdd : ticketRemove;
+          const embed = await fn({
+            guild: c.guild,
+            channel,
+            moderator: c.member,
+            targetUser: target,
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        await c.reply(`Unknown ticket subcommand \`${sub}\`.`);
+      } catch (err) {
+        await c.reply(err?.message || 'Ticket command failed.');
+      }
+      break;
+    }
+    case 'hug':
+    case 'kiss':
+    case 'pat':
+    case 'slap': {
+      if (c.type === 'slash') await c.defer();
+      const target = await resolveUserFromContext(c, { restIndex: 0 });
+      if (!target) {
+        await c.reply(`Usage: \`$${name} @user\``);
+        return;
+      }
+      const fn = { hug: funHug, kiss: funKiss, pat: funPat, slap: funSlap }[name];
+      try {
+        await replyFunImage(c, await fn(target.toString()));
+      } catch (err) {
+        await c.reply(err?.message || 'Could not fetch reaction GIF.');
+      }
+      break;
+    }
+    case 'meme': {
+      if (c.type === 'slash') await c.defer();
+      try {
+        await replyFunImage(c, await funMeme());
+      } catch (err) {
+        await c.reply(err?.message || 'Meme API failed.');
+      }
+      break;
+    }
+    case 'howgay': {
+      const target = (await resolveUserFromContext(c, { restIndex: 0 })) || c.user;
+      await c.reply(funHowGay(target.toString()));
+      break;
+    }
+    case 'ship': {
+      let a;
+      let b;
+      if (c.type === 'slash') {
+        a = c.getUser('user1');
+        b = c.getUser('user2');
+      } else {
+        const mentions = [...(c.message?.mentions?.users?.values?.() || [])];
+        a = mentions[0];
+        b = mentions[1];
+        if (!a) {
+          const id1 = String(c.rest[0] || '').replace(/\D/g, '');
+          const id2 = String(c.rest[1] || '').replace(/\D/g, '');
+          if (id1) a = await c.client.users.fetch(id1).catch(() => null);
+          if (id2) b = await c.client.users.fetch(id2).catch(() => null);
+        }
+      }
+      if (!a || !b) {
+        await c.reply('Usage: `$ship @user1 @user2`');
+        return;
+      }
+      await c.reply(funLoveMeter(a.toString(), b.toString()));
+      break;
+    }
+    case 'fact': {
+      if (c.type === 'slash') await c.defer();
+      try {
+        await c.reply(await funFact());
+      } catch (err) {
+        await c.reply(err?.message || 'Fact API failed.');
+      }
+      break;
+    }
+    case 'dog':
+    case 'cat': {
+      if (c.type === 'slash') await c.defer();
+      try {
+        const url = name === 'dog' ? await funDog() : await funCat();
+        if (!url) {
+          await c.reply('No image found.');
+          return;
+        }
+        await c.reply({
+          embeds: [new EmbedBuilder().setColor(0x2ee6c5).setImage(url)],
+        });
+      } catch (err) {
+        await c.reply(err?.message || 'Image API failed.');
+      }
+      break;
+    }
+    case 'roast': {
+      const target = (await resolveUserFromContext(c, { restIndex: 0 })) || c.user;
+      await c.reply(funRoast(target.toString()));
+      break;
+    }
+    case 'ascii': {
+      const text = (c.type === 'slash' ? c.getString('text') : null) || c.rest.join(' ');
+      if (!text) {
+        await c.reply('Usage: `$ascii hello`');
+        return;
+      }
+      if (c.type === 'slash') await c.defer();
+      try {
+        const art = await funAscii(text);
+        await c.reply('```\n' + art.slice(0, 1900) + '\n```');
+      } catch (err) {
+        await c.reply(err?.message || 'ASCII failed (is figlet installed?).');
+      }
+      break;
+    }
     case 'phantomhelp':
     case 'help':
     case 'commands':
@@ -389,7 +875,7 @@ export async function runCommand(name, c) {
       break;
     }
     case 'avatar': {
-      const target = c.getUser('user') || c.user;
+      const target = (await resolveUserFromContext(c, { restIndex: 0 })) || c.user;
       await c.reply({ embeds: [await buildAvatarEmbed(target)] });
       break;
     }
@@ -404,6 +890,6 @@ export async function runCommand(name, c) {
       break;
     }
     default:
-      await c.reply(`Unknown command. Try \`${commandPrefix()}help\` or \`/phantomhelp\`.`);
+      await c.reply(`Unknown command. Try \`${commandPrefix()}help\` or \`/help\`.`);
   }
 }

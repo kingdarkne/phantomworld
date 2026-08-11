@@ -103,6 +103,8 @@ export async function lavalinkPlay({ guildId, channelId, shardId, query }) {
     await player.move(channelId);
   }
 
+  lastEncoded.set(guildId, track.encoded);
+  hookPlayerLoop(player);
   await player.playTrack({ track: track.encoded });
   return track.info?.title || query;
 }
@@ -125,11 +127,77 @@ export function lavalinkQueueTitles(guildId) {
   const player = shoukaku?.players.get(guildId);
   if (!player) return [];
   const titles = [];
-  if (player.track?.info?.title) titles.push(player.track.info.title);
+  if (player.track?.info?.title) titles.push(`▶️ ${player.track.info.title}`);
   if (Array.isArray(player.queue)) {
     for (const t of player.queue) {
       if (t?.info?.title) titles.push(t.info.title);
     }
   }
   return titles;
+}
+
+export function lavalinkPause(guildId, paused = true) {
+  const player = shoukaku?.players.get(guildId);
+  if (!player) return false;
+  player.setPaused(paused);
+  return true;
+}
+
+export function lavalinkVolume(guildId, volume) {
+  const player = shoukaku?.players.get(guildId);
+  if (!player) return false;
+  const vol = Math.min(Math.max(Number(volume) || 100, 1), 200);
+  player.setGlobalVolume(vol);
+  return vol;
+}
+
+const loopModes = new Map(); // guildId -> 'none' | 'track'
+const lastEncoded = new Map(); // guildId -> encoded track string
+
+export function lavalinkLoop(guildId, mode) {
+  const player = shoukaku?.players.get(guildId);
+  if (!player) return null;
+  const next =
+    mode === 'track' || mode === 'one'
+      ? 'track'
+      : mode === 'toggle'
+        ? loopModes.get(guildId) === 'track'
+          ? 'none'
+          : 'track'
+        : 'none';
+  loopModes.set(guildId, next);
+  return next;
+}
+
+export function lavalinkNowPlaying(guildId) {
+  const player = shoukaku?.players.get(guildId);
+  if (!player?.track?.info) return null;
+  return {
+    title: player.track.info.title,
+    author: player.track.info.author,
+    uri: player.track.info.uri,
+    loop: loopModes.get(guildId) || 'none',
+  };
+}
+
+export function getLavalinkPlayer(guildId) {
+  return shoukaku?.players.get(guildId) || null;
+}
+
+function hookPlayerLoop(player) {
+  if (!player || player.__loopHooked) return;
+  player.__loopHooked = true;
+  player.on('end', async (data) => {
+    try {
+      const reason = data?.reason || data?.type;
+      if (reason && reason !== 'finished') return;
+      const guildId = player.guildId;
+      if (loopModes.get(guildId) !== 'track') return;
+      const encoded = lastEncoded.get(guildId) || player.track?.encoded;
+      if (!encoded) return;
+      await player.playTrack({ track: encoded });
+    } catch (err) {
+      console.warn('[lavalink] loop replay failed:', err.message);
+    }
+  });
 }

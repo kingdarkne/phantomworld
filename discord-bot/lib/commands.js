@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { createSlashContext } from './context.js';
 import { runCommand } from './handlers.js';
+import { restoredSlashCommands } from './restoredCommands.js';
 
 export const slashCommands = [
   new SlashCommandBuilder().setName('status').setDescription('Phantom World server status'),
@@ -125,11 +126,16 @@ export const slashCommands = [
     .setDescription('Quick poll embed')
     .addStringOption((o) => o.setName('question').setDescription('Poll question').setRequired(true))
     .addStringOption((o) => o.setName('options').setDescription('Comma-separated options').setRequired(true)),
-].map((c) => c.toJSON());
+]
+  .map((c) => c.toJSON())
+  .concat(restoredSlashCommands);
+
+
 
 export async function handleCommand(interaction, ctx) {
   const c = createSlashContext(interaction, ctx);
   let name = interaction.commandName;
   if (name === 'commands' || name === 'phantomhelp') name = 'help';
+  if (name === 'np') name = 'nowplaying';
   await runCommand(name, c);
 }

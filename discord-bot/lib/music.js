@@ -14,6 +14,10 @@ import {
   lavalinkSkip,
   lavalinkStop,
   lavalinkQueueTitles,
+  lavalinkPause,
+  lavalinkVolume,
+  lavalinkLoop,
+  lavalinkNowPlaying,
 } from './lavalink.js';
 
 /** Per-guild simple music queue (play-dl fallback) */
@@ -126,4 +130,37 @@ export function getQueue(guildId) {
   const session = sessions.get(guildId);
   if (!session) return [];
   return session.queue.map((t) => t.title);
+}
+
+export function pauseMusic(guildId) {
+  if (isLavalinkReady()) return lavalinkPause(guildId, true);
+  const session = sessions.get(guildId);
+  if (!session?.player) return false;
+  session.player.pause(true);
+  return true;
+}
+
+export function resumeMusic(guildId) {
+  if (isLavalinkReady()) return lavalinkPause(guildId, false);
+  const session = sessions.get(guildId);
+  if (!session?.player) return false;
+  session.player.unpause();
+  return true;
+}
+
+export function setVolume(guildId, volume) {
+  if (isLavalinkReady()) return lavalinkVolume(guildId, volume);
+  throw new Error('Volume control requires Lavalink on the VPS.');
+}
+
+export function loopMusic(guildId, mode = 'toggle') {
+  if (isLavalinkReady()) return lavalinkLoop(guildId, mode);
+  throw new Error('Loop requires Lavalink on the VPS.');
+}
+
+export function nowPlaying(guildId) {
+  if (isLavalinkReady()) return lavalinkNowPlaying(guildId);
+  const session = sessions.get(guildId);
+  if (!session?.playing) return null;
+  return { title: 'Playing (play-dl)', author: null, uri: null, loop: 'none' };
 }

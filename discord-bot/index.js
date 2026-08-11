@@ -224,6 +224,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+    if (interaction.isButton() && interaction.customId?.startsWith('ticket:')) {
+      const { handleTicketButton } = await import('./lib/tickets.js');
+      const handled = await handleTicketButton(interaction);
+      if (handled) return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
     await handleCommand(interaction, commandCtx);
   } catch (err) {

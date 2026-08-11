@@ -30,11 +30,20 @@ export function createSlashContext(interaction, ctx) {
     getUser(name) {
       return interaction.options.getUser(name);
     },
+    getChannel(name) {
+      return interaction.options.getChannel(name);
+    },
+    getRole(name) {
+      return interaction.options.getRole(name);
+    },
     getSubcommand() {
       return interaction.options.getSubcommand(false);
     },
     hasManageGuild() {
       return interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false;
+    },
+    hasPermission(flag) {
+      return interaction.memberPermissions?.has(flag) ?? false;
     },
     async defer(ephemeral = false) {
       if (!state.deferred && !state.replied) {
@@ -91,13 +100,22 @@ export function createPrefixContext(message, args, ctx) {
       return false;
     },
     getUser() {
-      return null;
+      return message.mentions.users.first() || null;
+    },
+    getChannel() {
+      return message.mentions.channels.first() || null;
+    },
+    getRole() {
+      return message.mentions.roles.first() || null;
     },
     getSubcommand() {
       return args[1]?.toLowerCase();
     },
     hasManageGuild() {
       return message.member?.permissions?.has(PermissionFlagsBits.ManageGuild) ?? false;
+    },
+    hasPermission(flag) {
+      return message.member?.permissions?.has(flag) ?? false;
     },
     async defer() {},
     async reply(payload) {
@@ -113,4 +131,20 @@ export function createPrefixContext(message, args, ctx) {
       return false;
     },
   };
+}
+
+/** Resolve a Discord user from slash option, mention, or raw snowflake in rest tokens. */
+export async function resolveUserFromContext(c, { option = 'user', restIndex = 0 } = {}) {
+  if (c.type === 'slash') {
+    return c.getUser(option) || null;
+  }
+  const mentioned = c.message?.mentions?.users?.first?.();
+  if (mentioned) return mentioned;
+  const token = String(c.rest?.[restIndex] || '')
+    .replace(/[<@!>]/g, '')
+    .trim();
+  if (/^\d{15,22}$/.test(token)) {
+    return c.client.users.fetch(token).catch(() => null);
+  }
+  return null;
 }
