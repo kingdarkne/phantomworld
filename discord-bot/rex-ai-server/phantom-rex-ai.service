@@ -1,0 +1,24 @@
+[Unit]
+Description=Phantom Rex AI (Groq + TTS local API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/phantom_bot
+Environment=NODE_ENV=production
+Environment=REX_LOCAL_PORT=5600
+Environment=REX_LOCAL_BIND=127.0.0.1
+Environment=REX_PUBLIC_BASE=http://127.0.0.1:5600
+# Load Discord bot .env (GROQ, REX_API_KEY, EDGE_TTS_VOICE)
+EnvironmentFile=-/home/phantom_bot/.env
+ExecStart=/usr/bin/node /home/phantom_bot/rex-ai-server/server.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/phantom-rex-ai.log
+StandardError=append:/var/log/phantom-rex-ai.log
+
+[Install]
+WantedBy=multi-user.target
