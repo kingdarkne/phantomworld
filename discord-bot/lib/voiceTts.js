@@ -4,12 +4,12 @@ import path from 'path';
 import {
   joinVoiceChannel,
   createAudioPlayer,
-  createAudioResource,
   AudioPlayerStatus,
   entersState,
   NoSubscriberBehavior,
 } from '@discordjs/voice';
 import { synthesizeSpeech } from './ai.js';
+import { createFfmpegAudioResource } from './ffmpeg.js';
 
 const ttsSessions = new Map();
 
@@ -48,7 +48,7 @@ export async function speakInChannel({ guild, guildId, member, text }) {
     session.connection.subscribe(session.player);
   }
 
-  const resource = createAudioResource(tmpFile);
+  const resource = createFfmpegAudioResource(tmpFile);
   session.player.play(resource);
   await entersState(session.player, AudioPlayerStatus.Playing, 20000);
   await entersState(session.player, AudioPlayerStatus.Idle, 120000);

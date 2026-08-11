@@ -19,6 +19,7 @@ import { startPrefixCommands } from './lib/prefix.js';
 import { probeAiServices } from './lib/ai.js';
 import { generateDependencyReport } from '@discordjs/voice';
 import { createRequire } from 'module';
+import { assertFfmpegAvailable } from './lib/ffmpeg.js';
 
 const require = createRequire(import.meta.url);
 
@@ -28,6 +29,11 @@ async function bootstrapVoice() {
     await sodium.ready;
   } catch (err) {
     console.warn('[voice] libsodium-wrappers:', err.message);
+  }
+  try {
+    assertFfmpegAvailable();
+  } catch (err) {
+    console.error('[voice]', err.message);
   }
   try {
     console.log('[voice] deps:\n' + generateDependencyReport());

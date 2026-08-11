@@ -6,7 +6,6 @@ import {
   joinVoiceChannel,
   getVoiceConnection,
   createAudioPlayer,
-  createAudioResource,
   entersState,
   VoiceConnectionStatus,
   AudioPlayerStatus,
@@ -14,6 +13,7 @@ import {
   NoSubscriberBehavior,
 } from '@discordjs/voice';
 import { synthesizeSpeech, askAi } from './ai.js';
+import { createFfmpegAudioResource } from './ffmpeg.js';
 
 const WAKE_WORD = (process.env.REX_WAKE_WORD || 'hey rex').toLowerCase();
 const rexState = new Map();
@@ -177,7 +177,7 @@ async function playAudioBuffer(guild, voiceChannelId, audioBuffer) {
   await fs.promises.writeFile(tmp, audioBuffer);
   const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } });
   connection.subscribe(player);
-  player.play(createAudioResource(tmp));
+  player.play(createFfmpegAudioResource(tmp));
   await entersState(player, AudioPlayerStatus.Playing, 20000).catch(() => {});
   await entersState(player, AudioPlayerStatus.Idle, 120000).catch(() => {});
   fs.promises.unlink(tmp).catch(() => {});
@@ -197,7 +197,7 @@ async function playAudioUrl(guild, voiceChannelId, url) {
   await entersState(connection, VoiceConnectionStatus.Ready, 15000);
   const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } });
   connection.subscribe(player);
-  player.play(createAudioResource(url));
+  player.play(createFfmpegAudioResource(url));
   await entersState(player, AudioPlayerStatus.Playing, 20000).catch(() => {});
   await entersState(player, AudioPlayerStatus.Idle, 120000).catch(() => {});
 }
