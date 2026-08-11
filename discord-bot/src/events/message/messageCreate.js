@@ -445,7 +445,7 @@ module.exports = async (client, message) => {
     Name: command,
   });
   if (cmd) {
-    return message.channel.send({ content: cmdx.Responce });
+    return message.channel.send({ content: cmd.Responce || cmdx?.Responce });
   }
 
   const cmdx = await CommandsSchema.findOne({
@@ -471,6 +471,16 @@ module.exports = async (client, message) => {
           message.channel
         );
       });
+    }
+  }
+
+  // Full slash command surface via `$` prefix (merged Phantom bridge)
+  if (typeof client.runPrefixCommand === 'function') {
+    try {
+      const handled = await client.runPrefixCommand(message, command, args);
+      if (handled) return;
+    } catch (err) {
+      console.error('[messageCreate] prefix bridge failed:', err.message);
     }
   }
 };
