@@ -32,6 +32,21 @@ set -euo pipefail
 cd /home/phantom_bot
 npm install --omit=dev
 
+# Discord now requires DAVE/E2EE-capable voice clients in regular voice channels.
+# Lavalink 4.2.0 is the first DAVE-capable Lavalink release.
+LAVALINK_VERSION="${LAVALINK_VERSION:-4.2.0}"
+LAVALINK_DIR="${LAVALINK_DIR:-/opt/lavalink}"
+LAVALINK_JAR="${LAVALINK_DIR}/Lavalink.jar"
+if [ -f "${LAVALINK_JAR}" ]; then
+  CURRENT_LAVALINK_VERSION="$(java -jar "${LAVALINK_JAR}" --version 2>/dev/null | awk '/Version:/ { print $2; exit }' || true)"
+  if [ "${CURRENT_LAVALINK_VERSION}" != "${LAVALINK_VERSION}" ]; then
+    echo "Updating Lavalink ${CURRENT_LAVALINK_VERSION:-unknown} -> ${LAVALINK_VERSION}"
+    curl -fL "https://github.com/lavalink-devs/Lavalink/releases/download/${LAVALINK_VERSION}/Lavalink.jar" -o /tmp/Lavalink.jar
+    install -m 644 /tmp/Lavalink.jar "${LAVALINK_JAR}"
+    systemctl restart lavalink
+  fi
+fi
+
 # Point Rex + TTS at local Groq-backed API (remote 23.238 host is offline)
 if grep -q '^REX_API_URL=' .env; then
   sed -i 's|^REX_API_URL=.*|REX_API_URL=http://127.0.0.1:5600|' .env
