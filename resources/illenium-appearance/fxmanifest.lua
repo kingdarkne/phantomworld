@@ -95,6 +95,6 @@ files {
 
 ui_page "web/dist/index.html"
 
--- Compatibility for scripts that still depend on fivem-appearance / qb-clothing
+-- Compatibility for leftover ND/shop scripts that still depend on fivem-appearance.
+-- Do NOT provide qb-clothing — `stop qb-clothing` in server.cfg would stop this resource.
 provide 'fivem-appearance'
-provide 'qb-clothing'
