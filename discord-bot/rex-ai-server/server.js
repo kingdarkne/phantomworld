@@ -84,9 +84,9 @@ function needsLiveWeb(text) {
     return false;
   }
   return (
-    /\b(who is|who's|who won|current|today|tonight|latest|breaking|news|weather|score|president|prime minister|stock|price of|bitcoin|crypto|election|happening|right now|this week|this year|202[4-9]|2026)\b/i.test(
+    /\b(who is|who's|who was|who won|what's|whats|what is|current|today|tonight|latest|breaking|news|weather|score|president|prime minister|stock|price of|bitcoin|crypto|election|happening|right now|this week|this year|202[4-9]|2026)\b/i.test(
       q,
-    ) || /\b(what happened|when is|where is .+ now)\b/i.test(q)
+    ) || /\b(what happened|when is|where is .+ now|look up|search for|google)\b/i.test(q)
   );
 }
 
@@ -115,12 +115,23 @@ async function searchDuckDuckGoInstant(query) {
   return bits.join('\n');
 }
 
+function stripHtml(s) {
+  return String(s || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function searchDuckDuckGoHtml(query) {
   const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
   const res = await fetch(url, {
     headers: {
       'User-Agent':
-        'Mozilla/5.0 (compatible; PhantomRexBot/1.0; +https://billing.phantom-chicken.com)',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       Accept: 'text/html',
     },
     signal: AbortSignal.timeout(12000),
@@ -129,24 +140,41 @@ async function searchDuckDuckGoHtml(query) {
   if (!res.ok) throw new Error(`DDG html HTTP ${res.status}`);
   const html = await res.text();
   const results = [];
-  // result links + snippets
-  const re =
-    /<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:class="result__snippet"[^>]*>([\s\S]*?)<\/(?:a|td|div)>)?/gi;
-  let m;
-  while ((m = re.exec(html)) && results.length < 5) {
-    const href = m[1];
-    const title = m[2].replace(/<[^>]+>/g, '').trim();
-    const snippet = (m[3] || '').replace(/<[^>]+>/g, '').trim();
-    if (!title) continue;
-    results.push(`- ${title}${snippet ? `: ${snippet}` : ''} (${href})`);
+
+  // class may be "links_main links_deep result__body" — match substring
+  const blocks = html.split(/class="[^"]*result__body[^"]*"/i).slice(1);
+  for (const block of blocks) {
+    if (results.length >= 5) break;
+    const titleM = block.match(/class="result__a"[^>]*>([\s\S]*?)<\/a>/i);
+    const snipM = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/(?:a|td|div|span)>/i);
+    const hrefM = block.match(/class="result__a"[^>]*href="([^"]+)"/i);
+    const title = stripHtml(titleM?.[1]);
+    const snippet = stripHtml(snipM?.[1]).slice(0, 280);
+    const href = hrefM?.[1] || '';
+    if (!title && !snippet) continue;
+    results.push(`- ${title || 'Result'}${snippet ? `: ${snippet}` : ''}${href ? ` (${href})` : ''}`);
   }
-  // fallback looser parse
+
   if (!results.length) {
-    const loose = [...html.matchAll(/class="result__snippet"[^>]*>([\s\S]*?)<\//gi)]
-      .map((x) => x[1].replace(/<[^>]+>/g, '').trim())
-      .filter(Boolean)
-      .slice(0, 5);
-    for (const s of loose) results.push(`- ${s}`);
+    try {
+      const liteRes = await fetch(`https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (liteRes.ok) {
+        const lite = await liteRes.text();
+        const snips = [...lite.matchAll(/class=['"]result-snippet['"][^>]*>([\s\S]*?)<\/td>/gi)]
+          .map((m) => stripHtml(m[1]))
+          .filter((s) => s.length > 20)
+          .slice(0, 5);
+        for (const s of snips) results.push(`- ${s}`);
+      }
+    } catch (_) {
+      /* ignore */
+    }
   }
   return results.join('\n');
 }
@@ -169,31 +197,125 @@ async function searchBrave(query) {
     .join('\n');
 }
 
+/** Rewrite casual questions into better search queries (Copilot-style). */
+function searchQueriesFor(text) {
+  const q = String(text || '').trim();
+  const lower = q.toLowerCase();
+  const queries = [q];
+
+  if (/\b(us|u\.s\.|united states|american)\b.*\bpresident\b|\bwho is (the )?president\b|\bcurrent president\b/i.test(lower)) {
+    queries.unshift('current President of the United States');
+  } else if (/\b(uk|britain|british)\b.*\b(prime minister|pm)\b|\bwho is (the )?prime minister\b/i.test(lower)) {
+    queries.unshift('current Prime Minister of the United Kingdom');
+  } else if (/\bbitcoin\b|\bbtc\b/i.test(lower) && /\b(price|worth|cost)\b/i.test(lower)) {
+    queries.unshift('bitcoin price USD');
+  } else if (/\bweather\b/i.test(lower)) {
+    queries.unshift(`${q} forecast`);
+  }
+
+  return [...new Set(queries)].slice(0, 2);
+}
+
+async function wikipediaIncumbent(title) {
+  const url = new URL('https://en.wikipedia.org/w/api.php');
+  url.searchParams.set('action', 'query');
+  url.searchParams.set('prop', 'revisions');
+  url.searchParams.set('rvprop', 'content');
+  url.searchParams.set('rvslots', 'main');
+  url.searchParams.set('titles', title);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('formatversion', '2');
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'PhantomRexBot/1.0 (Discord assistant; contact phantom)' },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) return '';
+  const data = await res.json();
+  const content = data?.query?.pages?.[0]?.revisions?.[0]?.slots?.main?.content || '';
+  if (!content) return '';
+  const incumbent = content.match(/\|\s*incumbent\s*=\s*\[\[([^\]|#]+)/i)?.[1]?.trim();
+  const since = content.match(/\|\s*incumbentsince\s*=\s*([^\n|{]+)/i)?.[1]?.trim();
+  if (!incumbent) return '';
+  return `Current/incumbent: ${incumbent}${since ? ` (since ${since})` : ''}`;
+}
+
+async function searchWikipedia(query) {
+  const ua = { 'User-Agent': 'PhantomRexBot/1.0 (Discord assistant; contact phantom)' };
+  const searchUrl = new URL('https://en.wikipedia.org/w/api.php');
+  searchUrl.searchParams.set('action', 'query');
+  searchUrl.searchParams.set('list', 'search');
+  searchUrl.searchParams.set('srsearch', query);
+  searchUrl.searchParams.set('format', 'json');
+  searchUrl.searchParams.set('utf8', '1');
+  const sRes = await fetch(searchUrl, { headers: ua, signal: AbortSignal.timeout(10000) });
+  if (!sRes.ok) throw new Error(`Wikipedia search HTTP ${sRes.status}`);
+  const sData = await sRes.json();
+  const hits = sData?.query?.search || [];
+  const title = hits[0]?.title;
+  if (!title) return '';
+
+  const bits = [];
+  try {
+    const incumb = await wikipediaIncumbent(title);
+    if (incumb) bits.push(incumb);
+  } catch (_) {
+    /* ignore */
+  }
+
+  const sumRes = await fetch(
+    `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
+    { headers: ua, signal: AbortSignal.timeout(10000) },
+  );
+  if (!sumRes.ok) {
+    return bits.length ? `Wikipedia (${title}): ${bits.join(' ')}` : `Wikipedia hit: ${title}`;
+  }
+  const sum = await sumRes.json();
+  const extract = (sum.extract || '').slice(0, 600);
+  const link = sum.content_urls?.desktop?.page || '';
+  if (extract) bits.push(extract);
+  return `Wikipedia (${title}): ${bits.join(' — ')}${link ? ` — ${link}` : ''}`;
+}
+
 async function liveWebContext(query) {
   const parts = [];
+  const queries = searchQueriesFor(query);
+  const primary = queries[0];
+
   try {
-    const brave = await searchBrave(query);
+    const brave = await searchBrave(primary);
     if (brave) parts.push(`Brave Search:\n${brave}`);
   } catch (err) {
     console.warn('[rex-ai] Brave search failed:', err.message);
   }
   try {
-    const html = await searchDuckDuckGoHtml(query);
-    if (html) parts.push(`Web results:\n${html}`);
+    const wiki = await searchWikipedia(primary);
+    if (wiki) parts.push(wiki);
   } catch (err) {
-    console.warn('[rex-ai] DDG html failed:', err.message);
+    console.warn('[rex-ai] Wikipedia failed:', err.message);
+  }
+  for (const q of queries) {
+    try {
+      const html = await searchDuckDuckGoHtml(q);
+      if (html) {
+        parts.push(`Web results (${q}):\n${html}`);
+        break;
+      }
+    } catch (err) {
+      console.warn('[rex-ai] DDG html failed:', err.message);
+    }
   }
   try {
-    const instant = await searchDuckDuckGoInstant(query);
+    const instant = await searchDuckDuckGoInstant(primary);
     if (instant) parts.push(`Instant answer:\n${instant}`);
   } catch (err) {
     console.warn('[rex-ai] DDG instant failed:', err.message);
   }
   if (!parts.length) return '';
+  console.log(`[rex-ai] web snippets chars=${parts.join('\n').length} queries=${queries.join(' | ')}`);
   return (
     `LIVE WEB RESULTS for "${query}" (fetched just now):\n` +
     parts.join('\n\n') +
-    `\n\nUser question: ${query}`
+    `\n\nAnswer the user question using these results when relevant. Prefer the newest clear fact. User question: ${query}`
   );
 }
 
@@ -375,6 +497,8 @@ app.get('/health', (_req, res) => {
     ok: true,
     service: 'phantom-rex-ai',
     groq: Boolean(GROQ_KEY),
+    webSearch: (process.env.REX_WEB_SEARCH || 'auto'),
+    brave: Boolean(process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY),
     port: PORT,
   });
 });
