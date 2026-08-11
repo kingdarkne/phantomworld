@@ -107,6 +107,18 @@ module.exports = (client) => {
     if (route.category === 'say' && route.restArgs.length) {
       values.strings.text = route.restArgs.join(' ');
     }
+    // $rex ask <question>
+    if (route.category === 'rex' && route.sub === 'ask' && route.restArgs.length) {
+      values.strings.question = route.restArgs.join(' ');
+    }
+    // $rex voice <pick>
+    if (route.category === 'rex' && route.sub === 'voice' && route.restArgs[0]) {
+      values.strings.pick = route.restArgs[0];
+    }
+    // $rex mode on|off
+    if (route.category === 'rex' && route.sub === 'mode' && route.restArgs[0]) {
+      values.strings.setting = route.restArgs[0];
+    }
     // Fun text commands
     if (route.restArgs.length && !values.strings.text) {
       values.strings.text = route.restArgs.join(' ');

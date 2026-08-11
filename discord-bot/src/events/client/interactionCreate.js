@@ -81,7 +81,11 @@ module.exports = async (client, interaction) => {
             }
         }
 
-        if (interaction.options._subcommand !== null && interaction.options.getSubcommand(false) == "help") {
+        if (
+            interaction.options &&
+            typeof interaction.options.getSubcommand === 'function' &&
+            interaction.options.getSubcommand(false) === 'help'
+        ) {
             const getMentions = (name) => {
                 if (typeof client.getSlashMentions !== 'function') return `Use \`/${name}\``;
                 try {
