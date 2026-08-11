@@ -130,15 +130,30 @@ end
 
 DeleteCamScene = function()
     ClearFocus()
-    SetCamActive(cam, false)
-    DestroyCam(cam, true)
+    if cam and DoesCamExist(cam) then
+        SetCamActive(cam, false)
+        DestroyCam(cam, true)
+    end
     RenderScriptCams(false, false, 1, true, true)
-    DeleteEntity(PlayerPedId())
+    -- Do NOT DeleteEntity(PlayerPedId()) — that breaks control / appearance / spawn.
 
     CreateThread(function()
         Wait(1000)
-        if DoesEntityExist(previewvehicle) then
+        if previewvehicle and DoesEntityExist(previewvehicle) then
             DeleteEntity(previewvehicle)
         end
     end)
+end
+
+--- Ensure the local player can walk / use controls after multichar / appearance.
+ReleasePlayerControl = function()
+    local ped = PlayerPedId()
+    if not DoesEntityExist(ped) then return end
+    FreezeEntityPosition(ped, false)
+    ClearPedTasksImmediately(ped)
+    SetEntityCollision(ped, true, true)
+    SetEntityVisible(ped, true, false)
+    SetPlayerControl(PlayerId(), true, 0)
+    SetNuiFocus(false, false)
+    DisplayRadar(true)
 end

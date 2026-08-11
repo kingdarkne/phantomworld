@@ -579,11 +579,16 @@ function client.exitPlayerCustomization(appearance)
     RenderScriptCams(false, false, 0, true, true)
     DestroyCam(cameraHandle, false)
     SetNuiFocus(false, false)
+    SetNuiFocusKeepInput(false)
 
     if Config.HideRadar then DisplayRadar(true) end
 
-    ClearPedTasksImmediately(cache.ped)
-    SetEntityInvincible(cache.ped, false)
+    local ped = cache.ped or PlayerPedId()
+    ClearPedTasksImmediately(ped)
+    FreezeEntityPosition(ped, false)
+    SetEntityCollision(ped, true, true)
+    SetEntityInvincible(ped, false)
+    SetPlayerControl(PlayerId(), true, 0)
 
     SendNuiMessage(json.encode({
         type = "appearance_hide",
@@ -597,6 +602,15 @@ function client.exitPlayerCustomization(appearance)
     end
 
     RestorePlayerStats()
+
+    -- Extra safety: TaskStandStill / freeze can linger across first-character create
+    CreateThread(function()
+        Wait(200)
+        local p = PlayerPedId()
+        ClearPedTasksImmediately(p)
+        FreezeEntityPosition(p, false)
+        SetPlayerControl(PlayerId(), true, 0)
+    end)
 
     if callback then
         callback(appearance)
