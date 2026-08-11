@@ -18,11 +18,11 @@ export function helpEmbed() {
       [
         '**FiveM:** `/status` `$status` · `/players` `$players` · `/alert` `$alert`',
         '**AI support:** `/ask` `$ask` · `/say` `$say` (voice TTS — join VC first)',
-        '**Music:** `/play` `$play` · `$skip` · `$stop` · `$queue`',
+        '**Music:** `/play` `$play` · Lavalink on VPS · `$skip` `$stop` `$queue`',
         '**Fun:** `$gif` `$joke` `$8ball` `$coinflip` `$roll` `$choose` `$poll`',
         '',
-        `Prefix commands use **${p}** (e.g. \`${p}play song name\`). Slash commands work too.`,
-        'Music uses **Lavalink** when configured; otherwise YouTube via play-dl.',
+        `Prefix commands use **${p}** (e.g. \`${p}play song name\`). AI uses Ollama on the VPS.`,
+        'Music uses **Lavalink** (password `phantomworld` on port 2333).',
       ].join('\n'),
     );
 }

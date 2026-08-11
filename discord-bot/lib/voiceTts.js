@@ -29,7 +29,7 @@ export async function speakInChannel({ guild, guildId, member, text }) {
   const audio = await synthesizeSpeech(text);
   if (!audio) {
     throw new Error(
-      'Voice TTS needs OPENAI_API_KEY in the bot .env. Text replies still work with `$ask`.',
+      'Voice TTS failed. Set TTS_API_URL to your VPS AI voice endpoint, OPENAI_API_KEY, or use Edge TTS (auto).',
     );
   }
 

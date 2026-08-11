@@ -3,8 +3,21 @@ import { Shoukaku, Connectors } from 'shoukaku';
 let shoukaku = null;
 let lavalinkReady = false;
 
+function lavalinkPassword() {
+  return (
+    process.env.LAVALINK_PASSWORD ||
+    process.env.LAVALINK_SERVER_PASSWORD ||
+    process.env.LAVALINK_AUTH ||
+    'youshallnotpass'
+  );
+}
+
 export function isLavalinkEnabled() {
-  return Boolean(process.env.LAVALINK_HOST || process.env.LAVALINK_URL);
+  return Boolean(
+    process.env.LAVALINK_HOST ||
+      process.env.LAVALINK_URL ||
+      process.env.LAVALINK_SERVER_HOST,
+  );
 }
 
 export function isLavalinkReady() {
@@ -21,9 +34,12 @@ export function initLavalink(client) {
     return null;
   }
 
-  const host = process.env.LAVALINK_HOST || '127.0.0.1';
-  const port = process.env.LAVALINK_PORT || '2333';
-  const password = process.env.LAVALINK_PASSWORD || 'youshallnotpass';
+  const host =
+    process.env.LAVALINK_HOST ||
+    process.env.LAVALINK_SERVER_HOST ||
+    '127.0.0.1';
+  const port = process.env.LAVALINK_PORT || process.env.LAVALINK_SERVER_PORT || '2333';
+  const password = lavalinkPassword();
   const secure = process.env.LAVALINK_SECURE === '1' || process.env.LAVALINK_SECURE === 'true';
   const name = process.env.LAVALINK_NAME || 'main';
 
@@ -38,7 +54,7 @@ export function initLavalink(client) {
 
   shoukaku.on('ready', (nodeName) => {
     lavalinkReady = true;
-    console.log(`[lavalink] Node ready: ${nodeName}`);
+    console.log(`[lavalink] Node ready: ${nodeName} (${host}:${port})`);
   });
 
   shoukaku.on('error', (nodeName, error) => {
@@ -51,6 +67,7 @@ export function initLavalink(client) {
     console.warn(`[lavalink] Node closed (${nodeName}):`, code, reason);
   });
 
+  console.log(`[lavalink] Connecting to ${host}:${port}…`);
   return shoukaku;
 }
 
@@ -63,7 +80,11 @@ function resolveQuery(query) {
 export async function lavalinkPlay({ guildId, channelId, shardId, query }) {
   if (!shoukaku) throw new Error('Lavalink is not configured.');
   const node = shoukaku.getIdealNode();
-  if (!node) throw new Error('Lavalink node is offline. Check LAVALINK_HOST / password and restart Lavalink.');
+  if (!node) {
+    throw new Error(
+      'Lavalink node is offline. Check LAVALINK_PASSWORD (VPS uses phantomworld) and that Lavalink is running.',
+    );
+  }
 
   const result = await node.rest.resolve(resolveQuery(query));
   const tracks = result?.tracks;

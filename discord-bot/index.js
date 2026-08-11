@@ -16,6 +16,7 @@ import { startLiveStatusChannel } from './lib/liveStatusChannel.js';
 import { maybeAutoInviteBroadcast } from './lib/serverInvite.js';
 import { initLavalink } from './lib/lavalink.js';
 import { startPrefixCommands } from './lib/prefix.js';
+import { probeAiServices } from './lib/ai.js';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -137,6 +138,10 @@ client.once('ready', async () => {
   initLavalink(client);
   startPrefixCommands(client, commandCtx);
 
+  probeAiServices().then((status) => {
+    console.log('[ai] Provider:', status.provider, status.ollama ? `(Ollama OK: ${status.ollamaModels?.join(', ') || 'models'})` : '(Ollama not reachable)');
+  });
+
   try {
     await registerCommands(client.user.id);
   } catch (err) {
@@ -160,8 +165,8 @@ client.once('ready', async () => {
         .setTitle('Phantom World Bot Online')
         .setDescription(
           '**Prefix:** `$help` · **Slash:** `/phantomhelp`\n' +
-            '**AI:** `$ask` / `/ask` · **Voice TTS:** `$say` (needs OPENAI_API_KEY)\n' +
-            '**Music:** Lavalink when configured, else YouTube fallback\n\n' +
+            '**AI:** `$ask` / `/ask` (Ollama on VPS) · **Voice:** `$say` (TTS)\n' +
+            '**Music:** Lavalink on VPS · **Prefix:** `$help`\n\n' +
             `FiveM: ${fivemUrl}`,
         )
         .setTimestamp(),
