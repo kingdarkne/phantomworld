@@ -49,11 +49,11 @@ module.exports = (client) => {
 
                 console.log(`[EVENT] Registering event: ${discordEvent} (original: ${eventName}) from ${file}`);
                 client.on(discordEvent, (...args) => {
-                    try {
-                        event(client, ...args);
-                    } catch (err) {
-                        console.error(`[EVENT ERROR] Error in event ${discordEvent}:`, err);
-                    }
+                    Promise.resolve()
+                        .then(() => event(client, ...args))
+                        .catch((err) => {
+                            console.error(`[EVENT ERROR] Error in event ${discordEvent}:`, err?.message || err);
+                        });
                 }).setMaxListeners(0);
             } catch (err) {
                 console.error(chalk.red(`[ERROR] Failed to load event ${file} in ${dirs}:`), err.message);

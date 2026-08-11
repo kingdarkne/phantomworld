@@ -98,38 +98,28 @@ module.exports = (client) => {
                                 newMessage.delete();
                                 let error = new Discord.EmbedBuilder()
                                     .setTitle(`${client.emotes.normal.error}・Moderator`)
-                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" } })
+                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" }) })
                                     .setDescription(`Discord links are not allowed in this server!`)
                                     .setColor(client.config.colors.error)
                                     .setFooter({ text: client.config.discord.footer })
                                     .setTimestamp();
-                                var msg = newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
-                                setTimeout(() => {
-                                    try{
-                                        msg.delete();
-                                    } catch (e) {
-                                        return;
-                                    }
-                                }, 5000)
+                                newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
+                                .then((msg) => setTimeout(() => msg.delete().catch(() => {}), 5000))
+                                .catch(() => {})
                             }
                             else {
                                 if (newMessage.member.permissions.has(Discord.PermissionsBitField.Flags.ManageMessages)) return;
                                 newMessage.delete();
                                 let error = new Discord.EmbedBuilder()
                                     .setTitle(`${client.emotes.normal.error}・Moderator`)
-                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" } })
+                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" }) })
                                     .setDescription(`Discord links are not allowed in this server!`)
                                     .setColor(client.config.colors.error)
                                     .setFooter({ text: client.config.discord.footer })
                                     .setTimestamp();
-                                var msg = newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
-                                setTimeout(() => {
-                                    try {
-                                        msg.delete();
-                                    } catch (e) {
-                                        return;
-                                    }
-                                }, 5000)
+                                newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
+                                .then((msg) => setTimeout(() => msg.delete().catch(() => {}), 5000))
+                                .catch(() => {})
                             }
                         })
                     }
@@ -147,38 +137,28 @@ module.exports = (client) => {
                                 newMessage.delete();
                                 var error = new Discord.EmbedBuilder()
                                     .setTitle(`${client.emotes.normal.error}・Moderator`)
-                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" } })
+                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" }) })
                                     .setDescription(`Links are not allowed in this server!`)
                                     .setColor(client.config.colors.error)
                                     .setFooter({ text: client.config.discord.footer })
                                     .setTimestamp();
-                                var msg = newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
-                                setTimeout(() => {
-                                    try {
-                                        msg.delete();
-                                    } catch (e) {
-                                        return;
-                                    }
-                                }, 5000)
+                                newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
+                                .then((msg) => setTimeout(() => msg.delete().catch(() => {}), 5000))
+                                .catch(() => {})
                             }
                             else {
                                 if (newMessage.member.permissions.has(Discord.PermissionsBitField.Flags.ManageMessages)) return;
                                 newMessage.delete();
                                 var error = new Discord.EmbedBuilder()
                                     .setTitle(`${client.emotes.normal.error}・Moderator`)
-                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" } })
+                                    .setAuthor({ name: client.user.username, iconURL: client.user.displayAvatarURL({ extension: "png" }) })
                                     .setDescription(`Links are not allowed in this server!`)
                                     .setColor(client.config.colors.error)
                                     .setFooter({ text: client.config.discord.footer })
                                     .setTimestamp();
-                                var msg = newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
-                                setTimeout(() => {
-                                    try {
-                                        msg.delete();
-                                    } catch (e) {
-                                        return;
-                                    }
-                                }, 5000)
+                                newMessage.channel.send({ content: `${newMessage.author}`, embeds: [error] })
+                                .then((msg) => setTimeout(() => msg.delete().catch(() => {}), 5000))
+                                .catch(() => {})
                             }
                         })
                     }
