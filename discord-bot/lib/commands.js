@@ -34,6 +34,49 @@ export const slashCommands = [
     .setDescription('AI support — ask about the server')
     .addStringOption((o) => o.setName('question').setDescription('Your question').setRequired(true)),
   new SlashCommandBuilder()
+    .setName('rex')
+    .setDescription('Rex AI voice assistant — join VC and listen for "Hey Rex"')
+    .addSubcommand((s) => s.setName('join').setDescription('Rex joins your voice channel and listens'))
+    .addSubcommand((s) => s.setName('leave').setDescription('Rex leaves the voice channel'))
+    .addSubcommand((s) =>
+      s
+        .setName('ask')
+        .setDescription('Ask Rex something (text; speaks if you are in VC)')
+        .addStringOption((o) => o.setName('question').setDescription('Your question').setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('voice')
+        .setDescription("Change Rex's speaking voice")
+        .addStringOption((o) =>
+          o
+            .setName('pick')
+            .setDescription('Voice')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Adam (US Male)', value: 'am_adam' },
+              { name: 'Michael (US Male)', value: 'am_michael' },
+              { name: 'George (British Male)', value: 'bm_george' },
+              { name: 'Heart (US Female)', value: 'af_heart' },
+              { name: 'Bella (US Female)', value: 'af_bella' },
+              { name: 'Emma (British Female)', value: 'bf_emma' },
+            ),
+        ),
+    )
+    .addSubcommand((s) => s.setName('reset').setDescription("Clear Rex's conversation memory"))
+    .addSubcommand((s) =>
+      s
+        .setName('mode')
+        .setDescription('[Admin] Toggle unrestricted mode on Rex AI server')
+        .addStringOption((o) =>
+          o
+            .setName('setting')
+            .setDescription('on or off')
+            .setRequired(true)
+            .addChoices({ name: 'Enable', value: 'on' }, { name: 'Disable', value: 'off' }),
+        ),
+    ),
+  new SlashCommandBuilder()
     .setName('say')
     .setDescription('Speak text in your voice channel (TTS)')
     .addStringOption((o) => o.setName('text').setDescription('What to say').setRequired(true)),

@@ -8,6 +8,15 @@ import { coinFlip, rollDice, pickChoice, buildAvatarEmbed, buildPoll } from './m
 import { askAi } from './ai.js';
 import { speakInChannel } from './voiceTts.js';
 import { commandPrefix } from './context.js';
+import {
+  rexJoin,
+  rexLeave,
+  rexAsk,
+  rexSetVoice,
+  rexReset,
+  rexSetMode,
+} from './rex.js';
+import { PermissionFlagsBits } from 'discord.js';
 
 export function helpEmbed() {
   const p = commandPrefix();
@@ -17,13 +26,13 @@ export function helpEmbed() {
     .setDescription(
       [
         '**FiveM:** `/status` `$status` · `/players` `$players` · `/alert` `$alert`',
+        '**Rex AI:** `/rex join` `$rex join` · `/rex ask` · `/rex leave` (say **"Hey Rex"** in VC)',
         '**Invites:** `/dm-invite` `$dm-invite <userId>` · `/server-invite` (all members)',
-        '**AI support:** `/ask` `$ask` · `/say` `$say` (voice TTS — join VC first)',
-        '**Music:** `/play` `$play` · Lavalink on VPS · `$skip` `$stop` `$queue`',
+        '**AI/TTS:** `/ask` `$ask` · `/say` `$say` / `$tts`',
+        '**Music:** `/play` `$play` · `$skip` `$stop` `$queue`',
         '**Fun:** `$gif` `$joke` `$8ball` `$coinflip` `$roll` `$choose` `$poll`',
         '',
-        `Prefix commands use **${p}** (e.g. \`${p}dm-invite 702712064778436668\`).`,
-        'Music uses **Lavalink** on the VPS. AI uses Ollama locally.',
+        `Prefix: **${p}** — e.g. \`${p}rex join\` then say "Hey Rex, how do I join?"`,
       ].join('\n'),
     );
 }
@@ -207,8 +216,7 @@ export async function runCommand(name, c) {
     }
     case 'say':
     case 'speak':
-    case 'tts':
-    case 'voice': {
+    case 'tts': {
       const text = c.getString('text') || c.rest.join(' ');
       if (!text) {
         await c.reply('Usage: `$say hello everyone` (join a voice channel first)');
@@ -226,6 +234,100 @@ export async function runCommand(name, c) {
       } catch (err) {
         const msg = err?.message || 'TTS failed';
         await c.reply(`${msg}\n\n_Text reply:_ ${await askAi(text)}`);
+      }
+      break;
+    }
+    case 'rex': {
+      const sub =
+        c.getSubcommand?.() ||
+        (c.type === 'prefix' ? c.rest[0]?.toLowerCase() : null) ||
+        '';
+      if (!sub) {
+        await c.reply('Usage: `$rex join` · `$rex leave` · `$rex ask <question>` · `$rex voice adam`');
+        return;
+      }
+
+      if (c.type === 'slash') await c.defer();
+
+      try {
+        if (sub === 'join') {
+          const result = await rexJoin({
+            client: c.client,
+            guild: c.guild,
+            member: c.member,
+            textChannelId: c.channelId,
+          });
+          await c.reply({ embeds: [result.embed] });
+          break;
+        }
+        if (sub === 'leave') {
+          await rexLeave(c.guildId);
+          await c.reply('Rex left the voice channel. Later.');
+          break;
+        }
+        if (sub === 'ask') {
+          const question =
+            c.getString('question') ||
+            (c.type === 'prefix' ? c.rest.slice(1).join(' ') : '') ||
+            c.rest.join(' ');
+          const embed = await rexAsk({
+            client: c.client,
+            guild: c.guild,
+            member: c.member,
+            question,
+          });
+          await c.reply({ embeds: [embed] });
+          break;
+        }
+        if (sub === 'voice') {
+          const pick =
+            c.getString('pick') ||
+            (c.type === 'prefix' ? c.rest[1] : null) ||
+            '';
+          const map = {
+            adam: 'am_adam',
+            michael: 'am_michael',
+            george: 'bm_george',
+            heart: 'af_heart',
+            bella: 'af_bella',
+            emma: 'bf_emma',
+          };
+          const voice = map[pick?.toLowerCase()] || pick;
+          if (!voice) {
+            await c.reply('Pick a voice: adam, michael, george, heart, bella, emma');
+            break;
+          }
+          const label = rexSetVoice(c.guildId, voice);
+          await c.reply(`Rex will now speak as **${label}**.`);
+          break;
+        }
+        if (sub === 'reset') {
+          await rexReset(c.guildId);
+          await c.reply("Rex memory cleared for this server. Fresh start.");
+          break;
+        }
+        if (sub === 'mode') {
+          const isAdmin = c.member?.permissions?.has?.(PermissionFlagsBits.Administrator);
+          if (!isAdmin && !canManageInvites(c)) {
+            await c.reply('Admin only.');
+            break;
+          }
+          const setting =
+            c.getString('setting') ||
+            (c.type === 'prefix' ? c.rest[1] : null) ||
+            '';
+          const enable = setting === 'on' || setting === 'enable';
+          if (!['on', 'off', 'enable', 'disable'].includes(String(setting).toLowerCase())) {
+            await c.reply('Usage: `$rex mode on` or `$rex mode off`');
+            break;
+          }
+          const enabled = await rexSetMode(c.guildId, enable);
+          await c.reply(enabled ? '🔓 Rex unrestricted mode **enabled**.' : '🔒 Rex normal mode restored.');
+          break;
+        }
+        await c.reply(`Unknown rex subcommand \`${sub}\`. Try join / leave / ask / voice / reset.`);
+      } catch (err) {
+        await c.reply(err?.message || 'Rex command failed.');
       }
       break;
     }

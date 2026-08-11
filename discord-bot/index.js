@@ -17,6 +17,24 @@ import { maybeAutoInviteBroadcast } from './lib/serverInvite.js';
 import { initLavalink } from './lib/lavalink.js';
 import { startPrefixCommands } from './lib/prefix.js';
 import { probeAiServices } from './lib/ai.js';
+import { generateDependencyReport } from '@discordjs/voice';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
+async function bootstrapVoice() {
+  try {
+    const sodium = require('libsodium-wrappers');
+    await sodium.ready;
+  } catch (err) {
+    console.warn('[voice] libsodium-wrappers:', err.message);
+  }
+  try {
+    console.log('[voice] deps:\n' + generateDependencyReport());
+  } catch {
+    // ignore
+  }
+}
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
@@ -134,6 +152,7 @@ const commandCtx = {
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`Invite: ${botInviteUrl(client.user.id)}`);
+  await bootstrapVoice();
   startRelayServer();
   initLavalink(client);
   startPrefixCommands(client, commandCtx);
@@ -165,8 +184,8 @@ client.once('ready', async () => {
         .setTitle('Phantom World Bot Online')
         .setDescription(
           '**Prefix:** `$help` · **Slash:** `/phantomhelp`\n' +
-            '**AI:** `$ask` / `/ask` (Ollama on VPS) · **Voice:** `$say` (TTS)\n' +
-            '**Music:** Lavalink on VPS · **Prefix:** `$help`\n\n' +
+            '**Rex:** `$rex join` / `/rex join` — say **"Hey Rex"** in VC\n' +
+            '**AI/TTS:** `$ask` · `$say` · **Music:** `$play`\n\n' +
             `FiveM: ${fivemUrl}`,
         )
         .setTimestamp(),

@@ -12,7 +12,6 @@ const ALIASES = {
   'invite-dm': 'dm-invite',
   invite: 'dm-invite',
   tts: 'say',
-  voice: 'say',
   speak: 'say',
 };
 
