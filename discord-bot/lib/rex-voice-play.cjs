@@ -12,19 +12,6 @@ const {
   NoSubscriberBehavior,
 } = require('@discordjs/voice');
 
-// #region agent log
-function agentLog(hypothesisId, location, message, data = {}) {
-  const payload = { hypothesisId, location, message, data, timestamp: Date.now() };
-  try {
-    fs.mkdirSync('/opt/cursor/logs', { recursive: true });
-    fs.appendFileSync('/opt/cursor/logs/debug.log', `${JSON.stringify(payload)}\n`);
-  } catch (_) {}
-  try {
-    console.log('[agent-log]', JSON.stringify(payload));
-  } catch (_) {}
-}
-// #endregion
-
 function lavalinkOnline(client) {
   if (client?.shoukaku?.nodes) {
     for (const node of client.shoukaku.nodes.values()) {
@@ -117,13 +104,6 @@ async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, titl
       existing.destroy();
     } catch (_) {}
   }
-  agentLog('D', 'lib/rex-voice-play.cjs:107', 'after voice cleanup before shoukaku join', {
-    guildId,
-    voiceChannelId,
-    hadDiscordConnection: Boolean(existing),
-    hasShoukakuPlayer: Boolean(client.shoukaku.players?.get?.(guildId)),
-    shoukakuPlayers: client.shoukaku.players?.size,
-  });
 
   await new Promise((r) => setTimeout(r, 400));
 
@@ -132,40 +112,6 @@ async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, titl
     channelId: voiceChannelId,
     shardId: guild.shardId || 0,
     deaf: false,
-  });
-  if (!player.__agentRexEventLogAttached) {
-    player.__agentRexEventLogAttached = true;
-    const eventData = (data) => ({
-      guildId,
-      voiceChannelId,
-      playerTrackPresent: Boolean(player.track),
-      reason: data?.reason,
-      severity: data?.exception?.severity,
-      cause: data?.exception?.cause,
-      code: data?.code,
-    });
-    player.on('start', (data) =>
-      agentLog('C', 'lib/rex-voice-play.cjs:124', 'shoukaku player start event', eventData(data)),
-    );
-    player.on('end', (data) =>
-      agentLog('C', 'lib/rex-voice-play.cjs:127', 'shoukaku player end event', eventData(data)),
-    );
-    player.on('exception', (data) =>
-      agentLog('C', 'lib/rex-voice-play.cjs:130', 'shoukaku player exception event', eventData(data)),
-    );
-    player.on('stuck', (data) =>
-      agentLog('C', 'lib/rex-voice-play.cjs:133', 'shoukaku player stuck event', eventData(data)),
-    );
-    player.on('closed', (data) =>
-      agentLog('F', 'lib/rex-voice-play.cjs:136', 'shoukaku player closed event', eventData(data)),
-    );
-  }
-  agentLog('D,F', 'lib/rex-voice-play.cjs:139', 'shoukaku join returned', {
-    guildId,
-    voiceChannelId,
-    playerTrackPresent: Boolean(player.track),
-    playerNode: player.node?.name,
-    connectionState: client.shoukaku.connections?.get?.(guildId)?.state,
   });
 
   const node = client.shoukaku.getIdealNode();
@@ -180,17 +126,6 @@ async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, titl
 
   const encoded = track.encoded || track.track;
   if (!encoded) throw new Error('No encoded track from Lavalink');
-  agentLog('A,C', 'lib/rex-voice-play.cjs:159', 'lavalink resolve selected track', {
-    guildId,
-    loadType: res?.loadType,
-    type: res?.type,
-    dataIsArray: Array.isArray(res?.data),
-    trackHasEncoded: Boolean(track.encoded),
-    trackHasTrack: Boolean(track.track),
-    encodedLength: encoded.length,
-    title: track.info?.title,
-    length: track.info?.length,
-  });
 
   if (title) {
     try {
@@ -200,14 +135,6 @@ async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, titl
   }
 
   await player.playTrack({ track: { encoded } });
-  agentLog('A,C,F', 'lib/rex-voice-play.cjs:177', 'playTrack accepted by shoukaku', {
-    guildId,
-    voiceChannelId,
-    playerTrackPresent: Boolean(player.track),
-    playerPaused: player.paused,
-    playerPosition: player.position,
-    playerVolume: player.volume,
-  });
   console.log('[Rex] Lavalink playback started');
   return true;
 }
@@ -223,24 +150,6 @@ async function playRexAudio(client, { guildId, voiceChannelId, audioUrl, title }
 
   const state = global.rexState?.[guildId];
   const alreadyListening = Boolean(state?.active && (state?.connection || getVoiceConnection(guildId)));
-  const botVoice = guild.members.me?.voice;
-  agentLog('B,D', 'lib/rex-voice-play.cjs:198', 'playRexAudio entry', {
-    guildId,
-    voiceChannelId,
-    audioUrlHost: (() => {
-      try {
-        return new URL(audioUrl).host;
-      } catch (_) {
-        return 'invalid';
-      }
-    })(),
-    alreadyListening,
-    stateActive: Boolean(state?.active),
-    botChannelId: botVoice?.channelId,
-    selfMute: botVoice?.selfMute,
-    serverMute: botVoice?.serverMute,
-    suppress: botVoice?.suppress,
-  });
 
   let tmp = null;
   try {
