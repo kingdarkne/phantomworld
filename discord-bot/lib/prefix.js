@@ -13,6 +13,9 @@ const ALIASES = {
   invite: 'dm-invite',
   tts: 'say',
   speak: 'say',
+  cmds: 'help',
+  commands: 'help',
+  menu: 'help',
 };
 
 export function startPrefixCommands(client, ctx) {

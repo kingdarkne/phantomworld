@@ -100,7 +100,13 @@ export const slashCommands = [
   new SlashCommandBuilder().setName('skip').setDescription('Skip current song'),
   new SlashCommandBuilder().setName('stop').setDescription('Stop music and leave voice'),
   new SlashCommandBuilder().setName('queue').setDescription('Show music queue'),
-  new SlashCommandBuilder().setName('phantomhelp').setDescription('List Phantom bot commands'),
+  new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Command menu — dropdown of slash & prefix commands'),
+  new SlashCommandBuilder()
+    .setName('commands')
+    .setDescription('Browse all bot commands (slash + prefix)'),
+  new SlashCommandBuilder().setName('phantomhelp').setDescription('Command menu (alias of /help)'),
   new SlashCommandBuilder().setName('coinflip').setDescription('Flip a coin'),
   new SlashCommandBuilder()
     .setName('roll')
@@ -123,5 +129,7 @@ export const slashCommands = [
 
 export async function handleCommand(interaction, ctx) {
   const c = createSlashContext(interaction, ctx);
-  await runCommand(interaction.commandName, c);
+  let name = interaction.commandName;
+  if (name === 'commands' || name === 'phantomhelp') name = 'help';
+  await runCommand(name, c);
 }

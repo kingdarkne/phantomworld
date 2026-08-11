@@ -189,7 +189,7 @@ client.once('ready', async () => {
         .setColor(0x8b5cf6)
         .setTitle('Phantom World Bot Online')
         .setDescription(
-          '**Prefix:** `$help` · **Slash:** `/phantomhelp`\n' +
+          '**Prefix:** `$help` · **Slash:** `/help` — dropdown command menu\n' +
             '**Rex:** `$rex join` / `/rex join` — say **"Hey Rex"** in VC\n' +
             '**AI/TTS:** `$ask` · `$say` · **Music:** `$play`\n\n' +
             `FiveM: ${fivemUrl}`,
@@ -216,15 +216,27 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
   try {
+    if (interaction.isStringSelectMenu() && interaction.customId === 'phantom-help-category') {
+      const { handleHelpSelect } = await import('./lib/helpMenu.js');
+      const payload = handleHelpSelect(interaction);
+      await interaction.update(payload);
+      return;
+    }
+
+    if (!interaction.isChatInputCommand()) return;
     await handleCommand(interaction, commandCtx);
   } catch (err) {
     const msg = err?.message || 'Unknown error';
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply({ content: `Failed: ${msg}` });
-    } else {
-      await interaction.reply({ content: `Failed: ${msg}`, ephemeral: true });
+    console.warn('[interaction]', msg);
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ content: `Failed: ${msg}` });
+      } else if (interaction.isRepliable?.()) {
+        await interaction.reply({ content: `Failed: ${msg}`, ephemeral: true });
+      }
+    } catch {
+      // ignore
     }
   }
 });
@@ -242,7 +254,7 @@ client.on('guildCreate', async (guild) => {
         new EmbedBuilder()
           .setColor(0x8b5cf6)
           .setTitle('Bot joined your server')
-          .setDescription('Use `$help` or `/phantomhelp` for commands.')
+          .setDescription('Use `$help` or `/help` — dropdown command menu.')
           .setTimestamp(),
       ],
     });

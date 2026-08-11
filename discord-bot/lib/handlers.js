@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { getStatus, getPlayers, buildStatusEmbed } from './fivem.js';
 import { setupLiveStatusInChannel } from './liveStatusChannel.js';
 import { broadcastServerInviteDms, dmInviteToUserIds } from './serverInvite.js';
@@ -16,26 +16,9 @@ import {
   rexReset,
   rexSetMode,
 } from './rex.js';
-import { PermissionFlagsBits } from 'discord.js';
+import { buildHelpMessage, helpEmbed } from './helpMenu.js';
 
-export function helpEmbed() {
-  const p = commandPrefix();
-  return new EmbedBuilder()
-    .setColor(0x8b5cf6)
-    .setTitle('Phantom World Multipurpose Bot')
-    .setDescription(
-      [
-        '**FiveM:** `/status` `$status` · `/players` `$players` · `/alert` `$alert`',
-        '**Rex AI:** `/rex join` `$rex join` · `/rex ask` · `/rex leave` (say **"Hey Rex"** in VC)',
-        '**Invites:** `/dm-invite` `$dm-invite <userId>` · `/server-invite` (all members)',
-        '**AI/TTS:** `/ask` `$ask` · `/say` `$say` / `$tts`',
-        '**Music:** `/play` `$play` · `$skip` `$stop` `$queue`',
-        '**Fun:** `$gif` `$joke` `$8ball` `$coinflip` `$roll` `$choose` `$poll`',
-        '',
-        `Prefix: **${p}** — e.g. \`${p}rex join\` then say "Hey Rex, how do I join?"`,
-      ].join('\n'),
-    );
-}
+export { helpEmbed };
 
 function canManageInvites(c) {
   if (c.hasManageGuild()) return true;
@@ -384,8 +367,11 @@ export async function runCommand(name, c) {
       break;
     }
     case 'phantomhelp':
-    case 'help': {
-      await c.reply({ embeds: [helpEmbed()] });
+    case 'help':
+    case 'commands':
+    case 'cmds': {
+      const payload = buildHelpMessage('overview');
+      await c.reply(payload);
       break;
     }
     case 'coinflip': {
