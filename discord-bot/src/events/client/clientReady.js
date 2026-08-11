@@ -66,18 +66,20 @@ module.exports = async (client) => {
         startPhantomPresence(client);
     }
 
-    // Ensure primary guild uses $ prefix (merged from slim bot)
+    // Sync EVERY guild to COMMAND_PREFIX / `$` (merged Phantom slim-bot behavior)
     try {
         const Functions = require('../../database/models/functions');
-        const gid = process.env.DISCORD_GUILD_ID;
-        if (gid) {
+        const prefix = client.config.discord.prefix || process.env.COMMAND_PREFIX || '$';
+        const result = await Functions.updateMany({}, { $set: { Prefix: prefix } });
+        console.log(`[READY] Synced ${result.modifiedCount || 0} guild prefix(es) to ${prefix}`);
+        for (const guild of client.guilds.cache.values()) {
             await Functions.findOneAndUpdate(
-                { Guild: gid },
-                { $set: { Prefix: client.config.discord.prefix || '$' } },
+                { Guild: guild.id },
+                { $set: { Prefix: prefix } },
                 { upsert: true },
             );
-            console.log(`[READY] Guild ${gid} prefix set to ${client.config.discord.prefix || '$'}`);
         }
+        console.log(`[READY] Ensured prefix ${prefix} for ${client.guilds.cache.size} joined guild(s)`);
     } catch (err) {
         console.warn('[READY] prefix upsert failed:', err.message);
     }

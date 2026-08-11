@@ -6,11 +6,17 @@ const path = require('path');
  * commands can reuse the same handlers as slash commands.
  */
 function createMessageInteraction(message, { commandName, subcommand = null, group = null, values = {} }) {
-  const state = { deferred: false, replied: false };
-
   const resolveUser = (name) => {
     if (values.users?.[name]) return values.users[name];
     return message.mentions.users.first() || null;
+  };
+
+  const toPayload = (payload) => {
+    if (typeof payload === 'string') return { content: payload };
+    if (!payload || typeof payload !== 'object') return { content: '\u200b' };
+    // Prefix replies cannot be ephemeral — strip the flag
+    const { ephemeral, flags, ...rest } = payload;
+    return rest;
   };
 
   const interaction = {
@@ -25,21 +31,25 @@ function createMessageInteraction(message, { commandName, subcommand = null, gro
     createdTimestamp: message.createdTimestamp,
     id: message.id,
     token: `prefix-${message.id}`,
+    applicationId: message.client.application?.id || message.client.user?.id,
     deferred: false,
     replied: false,
+    ephemeral: false,
     isChatInputCommand: () => true,
     isRepliable: () => true,
     isButton: () => false,
     isStringSelectMenu: () => false,
+    isUserContextMenuCommand: () => false,
+    isMessageContextMenuCommand: () => false,
     inGuild: () => Boolean(message.guild),
     memberPermissions: message.member?.permissions,
     options: {
-      getSubcommand: () => subcommand,
-      getSubcommandGroup: () => group,
+      getSubcommand: (_required = true) => subcommand,
+      getSubcommandGroup: (_required = false) => group,
       getUser: (name) => resolveUser(name),
       getMember: (name) => {
         const u = resolveUser(name);
-        return u ? message.guild.members.cache.get(u.id) || null : null;
+        return u ? message.guild?.members?.cache?.get(u.id) || null : null;
       },
       getString: (name, required = false) => {
         const v = values.strings?.[name];
@@ -62,25 +72,37 @@ function createMessageInteraction(message, { commandName, subcommand = null, gro
       getAttachment: () => message.attachments.first() || null,
       getMentionable: (name) => resolveUser(name) || message.mentions.roles.first() || null,
     },
-    async deferReply() {
-      state.deferred = true;
+    async deferReply(_opts = {}) {
+      if (interaction.deferred || interaction.replied) return;
       interaction.deferred = true;
+      // Visible placeholder so later editReply has a real message to edit
+      interaction._reply = await message.reply({ content: '⏳…' }).catch(() => null);
+      if (!interaction._reply) {
+        interaction._reply = await message.channel.send({ content: '⏳…' }).catch(() => null);
+      }
+      interaction.replied = Boolean(interaction._reply);
     },
     async reply(payload) {
-      state.replied = true;
+      const body = toPayload(payload);
+      if (interaction._reply && interaction.deferred) {
+        interaction.replied = true;
+        return interaction._reply.edit(body);
+      }
       interaction.replied = true;
-      const msg = await message.reply(typeof payload === 'string' ? { content: payload } : payload);
+      const msg = await message.reply(body);
       interaction._reply = msg;
       return msg;
     },
     async editReply(payload) {
+      const body = toPayload(payload);
       if (interaction._reply) {
-        return interaction._reply.edit(typeof payload === 'string' ? { content: payload } : payload);
+        interaction.replied = true;
+        return interaction._reply.edit(body);
       }
-      return interaction.reply(payload);
+      return interaction.reply(body);
     },
     async followUp(payload) {
-      return message.channel.send(typeof payload === 'string' ? { content: payload } : payload);
+      return message.channel.send(toPayload(payload));
     },
     async deleteReply() {
       if (interaction._reply) await interaction._reply.delete().catch(() => {});

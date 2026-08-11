@@ -111,14 +111,25 @@ module.exports = (client) => {
       values,
     });
 
+    console.log(
+      `[prefix] $${command} → /${route.category}${route.sub ? ` ${route.sub}` : ''} by ${message.author.tag}`,
+    );
+
     try {
       await slash.run(client, interaction, route.restArgs);
     } catch (err) {
       console.error(`[prefix] $${command} failed:`, err.message);
-      await message.reply(`Failed: ${err.message}`).catch(() => {});
+      const fail = `Failed: ${err.message}`.slice(0, 1800);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ content: fail }).catch(() =>
+          message.reply(fail).catch(() => {}),
+        );
+      } else {
+        await message.reply(fail).catch(() => {});
+      }
     }
     return true;
   };
 
-  console.log('[prefixBridge] Prefix command bridge ready');
+  console.log('[prefixBridge] Prefix command bridge ready ($ + slash surface)');
 };
