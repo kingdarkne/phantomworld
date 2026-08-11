@@ -1,0 +1,5 @@
+{
+  "name": "phantomworld",
+  "install": "if [ ! -d CFX-Developer-Tools ]; then git clone https://github.com/TMHSDigital/CFX-Developer-Tools.git; fi && pip install -r CFX-Developer-Tools/mcp-server/requirements.txt --quiet && ln -sfn CFX-Developer-Tools/.cursor-plugin .cursor-plugin && ln -sfn CFX-Developer-Tools/skills skills && ln -sfn CFX-Developer-Tools/rules rules",
+  "terminals": []
+}
