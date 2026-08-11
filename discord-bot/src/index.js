@@ -3,6 +3,24 @@
 // Load env
 require('../env.loader');
 
+// Voice libs — Node 22 often lacks @discordjs/opus prebuilds; opusscript is the JS fallback
+try {
+  require('opusscript');
+  console.log('[voice] opusscript loaded');
+} catch (err) {
+  console.warn('[voice] opusscript missing:', err.message);
+}
+try {
+  const sodium = require('libsodium-wrappers');
+  sodium.ready.then(() => console.log('[voice] libsodium ready')).catch(() => {});
+} catch (err) {
+  console.warn('[voice] libsodium-wrappers:', err.message);
+}
+try {
+  const { generateDependencyReport } = require('@discordjs/voice');
+  console.log('[voice] deps:\n' + generateDependencyReport());
+} catch (_) {}
+
 // Global error handling to prevent silent crashes
 process.on('unhandledRejection', (reason, p) => {
     const msg =

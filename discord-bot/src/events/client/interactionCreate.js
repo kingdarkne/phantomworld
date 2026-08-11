@@ -81,7 +81,11 @@ module.exports = async (client, interaction) => {
             }
         }
 
-        if (interaction.options._subcommand !== null && interaction.options.getSubcommand(false) == "help") {
+        if (
+            interaction.options &&
+            typeof interaction.options.getSubcommand === 'function' &&
+            interaction.options.getSubcommand(false) === 'help'
+        ) {
             const getMentions = (name) => {
                 if (typeof client.getSlashMentions !== 'function') return `Use \`/${name}\``;
                 try {
@@ -191,6 +195,20 @@ module.exports = async (client, interaction) => {
 
     // Reaction roles select
     if (interaction.isStringSelectMenu()) {
+        // Phantom dropdown help (slim-bot menu merged back)
+        if (interaction.customId === 'phantom-help-category') {
+            try {
+                const { handleHelpSelect } = require('../../lib/helpMenu');
+                const payload = handleHelpSelect(interaction);
+                await interaction.update(payload);
+            } catch (err) {
+                console.error('[help] select update failed:', err.message);
+                try {
+                    await interaction.reply({ content: 'Failed to update help menu.', ephemeral: true });
+                } catch (_) {}
+            }
+            return;
+        }
         if (interaction.customId == "reaction_select") {
             try {
                 const data = await reactionSchema.findOne({ Message: interaction.message.id }).maxTimeMS(5000);

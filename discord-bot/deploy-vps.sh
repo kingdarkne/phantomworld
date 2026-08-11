@@ -27,5 +27,51 @@ sshpass -e rsync -avz --delete \
   --exclude src/config/webhooks.json --exclude src/env.js --exclude database.json \
   "${ROOT}/discord-bot/" "${USER}@${HOST}:${REMOTE}/"
 
-sshpass -e ssh ${SSH_OPTS} "${USER}@${HOST}" "cd ${REMOTE} && npm install --omit=dev && systemctl restart ${SERVICE} || systemctl restart phantom-discord-bot"
-echo "Done. Health: curl http://${HOST}:3099/health"
+sshpass -e ssh ${SSH_OPTS} "${USER}@${HOST}" bash -s <<'REMOTE_SCRIPT'
+set -euo pipefail
+cd /home/phantom_bot
+npm install --omit=dev
+
+# Discord now requires DAVE/E2EE-capable voice clients in regular voice channels.
+# Lavalink 4.2.0 is the first DAVE-capable Lavalink release.
+LAVALINK_VERSION="${LAVALINK_VERSION:-4.2.0}"
+LAVALINK_DIR="${LAVALINK_DIR:-/opt/lavalink}"
+LAVALINK_JAR="${LAVALINK_DIR}/Lavalink.jar"
+if [ -f "${LAVALINK_JAR}" ]; then
+  CURRENT_LAVALINK_VERSION="$(java -jar "${LAVALINK_JAR}" --version 2>/dev/null | awk '/Version:/ { print $2; exit }' || true)"
+  if [ "${CURRENT_LAVALINK_VERSION}" != "${LAVALINK_VERSION}" ]; then
+    echo "Updating Lavalink ${CURRENT_LAVALINK_VERSION:-unknown} -> ${LAVALINK_VERSION}"
+    curl -fL "https://github.com/lavalink-devs/Lavalink/releases/download/${LAVALINK_VERSION}/Lavalink.jar" -o /tmp/Lavalink.jar
+    install -m 644 /tmp/Lavalink.jar "${LAVALINK_JAR}"
+    systemctl restart lavalink
+  fi
+fi
+
+# Point Rex + TTS at local Groq-backed API (remote 23.238 host is offline)
+if grep -q '^REX_API_URL=' .env; then
+  sed -i 's|^REX_API_URL=.*|REX_API_URL=http://127.0.0.1:5600|' .env
+else
+  echo 'REX_API_URL=http://127.0.0.1:5600' >> .env
+fi
+if grep -q '^TTS_API_URL=' .env; then
+  sed -i 's|^TTS_API_URL=.*|TTS_API_URL=http://127.0.0.1:5600/synthesize|' .env
+else
+  echo 'TTS_API_URL=http://127.0.0.1:5600/synthesize' >> .env
+fi
+grep -q '^REX_LOCAL_PORT=' .env || echo 'REX_LOCAL_PORT=5600' >> .env
+grep -q '^REX_PUBLIC_BASE=' .env || echo 'REX_PUBLIC_BASE=http://127.0.0.1:5600' >> .env
+
+install -m 644 /home/phantom_bot/rex-ai-server/phantom-rex-ai.service /etc/systemd/system/phantom-rex-ai.service
+systemctl daemon-reload
+systemctl enable phantom-rex-ai
+systemctl restart phantom-rex-ai
+systemctl restart phantom-bot || systemctl restart phantom-discord-bot
+sleep 2
+curl -s http://127.0.0.1:5600/health || true
+echo
+curl -s http://127.0.0.1:3099/health || true
+echo
+REMOTE_SCRIPT
+
+echo "Done. Bot health: curl http://${HOST}:3099/health  Rex: curl http://127.0.0.1:5600/health (on VPS)"
+
