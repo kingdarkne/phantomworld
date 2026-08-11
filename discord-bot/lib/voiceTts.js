@@ -29,7 +29,7 @@ export async function speakInChannel({ guild, guildId, member, text }) {
   const audio = await synthesizeSpeech(text);
   if (!audio) {
     throw new Error(
-      'Voice TTS failed. Set TTS_API_URL to your VPS AI voice endpoint, OPENAI_API_KEY, or use Edge TTS (auto).',
+      'Voice TTS failed after trying Kokoro URL, Edge, and Google fallbacks. Check TTS_API_URL or set EDGE_TTS_VOICE.',
     );
   }
 

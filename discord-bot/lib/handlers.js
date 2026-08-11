@@ -206,7 +206,9 @@ export async function runCommand(name, c) {
       break;
     }
     case 'say':
-    case 'speak': {
+    case 'speak':
+    case 'tts':
+    case 'voice': {
       const text = c.getString('text') || c.rest.join(' ');
       if (!text) {
         await c.reply('Usage: `$say hello everyone` (join a voice channel first)');

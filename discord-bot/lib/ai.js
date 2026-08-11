@@ -135,6 +135,10 @@ async function synthesizeFromUrl(text) {
   const url = (process.env.TTS_API_URL || '').replace(/\/$/, '');
   if (!url) return null;
 
+  const voice =
+    process.env.TTS_VOICE || process.env.TTS_DEFAULT_VOICE || process.env.EDGE_TTS_VOICE || 'af_heart';
+  const timeoutMs = Number(process.env.TTS_URL_TIMEOUT_MS || 8000);
+
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -146,9 +150,9 @@ async function synthesizeFromUrl(text) {
     body: JSON.stringify({
       text,
       input: text,
-      voice: process.env.TTS_VOICE || 'nova',
+      voice,
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   if (!res.ok) {
@@ -159,7 +163,7 @@ async function synthesizeFromUrl(text) {
   if (type.includes('json')) {
     const data = await res.json();
     if (data.url) {
-      const audioRes = await fetch(data.url, { signal: AbortSignal.timeout(60000) });
+      const audioRes = await fetch(data.url, { signal: AbortSignal.timeout(30000) });
       return Buffer.from(await audioRes.arrayBuffer());
     }
     if (data.audio) {
@@ -186,33 +190,75 @@ async function synthesizeOpenAi(text) {
       voice: process.env.OPENAI_TTS_VOICE || process.env.TTS_VOICE || 'nova',
       input: text,
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(45000),
   });
 
   if (!res.ok) return null;
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Free Edge TTS fallback (no API key). */
+/** Microsoft Edge neural TTS (server-side). */
 async function synthesizeEdge(text) {
   const voice = process.env.EDGE_TTS_VOICE || 'en-US-JennyNeural';
-  const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><voice name="${voice}">${text.replace(/[<>&"']/g, '')}</voice></speak>`;
+  const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts');
+  const tts = new MsEdgeTTS();
+  await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+  const { audioStream } = tts.toStream(text.slice(0, 500));
 
-  const res = await fetch(
-    'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+  const chunks = [];
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Edge TTS timeout')), 45000);
+    audioStream.on('data', (d) => chunks.push(d));
+    audioStream.on('close', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    audioStream.on('end', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    audioStream.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+
+  const buf = Buffer.concat(chunks);
+  return buf.length > 500 ? buf : null;
+}
+
+/** Google Translate TTS fallback (no key). Chunks long text. */
+async function synthesizeGoogle(text) {
+  const chunks = [];
+  const parts = text.match(/.{1,180}(\s|$)/g) || [text.slice(0, 180)];
+  for (const part of parts.slice(0, 4)) {
+    const q = encodeURIComponent(part.trim());
+    if (!q) continue;
+    const res = await fetch(
+      `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=${q}&tl=en`,
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(15000),
       },
-      body: ssml,
-      signal: AbortSignal.timeout(60000),
-    },
-  );
+    );
+    if (!res.ok) throw new Error(`Google TTS HTTP ${res.status}`);
+    chunks.push(Buffer.from(await res.arrayBuffer()));
+  }
+  const buf = Buffer.concat(chunks);
+  return buf.length > 200 ? buf : null;
+}
 
-  if (!res.ok) return null;
-  return Buffer.from(await res.arrayBuffer());
+async function tryProvider(name, fn) {
+  try {
+    const audio = await fn();
+    if (audio?.length) {
+      console.log(`[ai] TTS via ${name} (${audio.length} bytes)`);
+      return audio;
+    }
+  } catch (err) {
+    console.warn(`[ai] TTS ${name} failed:`, err.message);
+  }
+  return null;
 }
 
 export async function synthesizeSpeech(text) {
@@ -220,22 +266,30 @@ export async function synthesizeSpeech(text) {
   if (!trimmed) return null;
 
   const provider = (process.env.TTS_PROVIDER || 'auto').toLowerCase();
+  const wantsUrl = provider === 'url' || provider === 'auto' || Boolean(process.env.TTS_API_URL);
+  const wantsOpenAi = provider === 'openai' || provider === 'auto';
+  const wantsEdge = provider === 'edge' || provider === 'auto';
+  const wantsGoogle = provider === 'google' || provider === 'auto';
 
-  try {
-    if (provider === 'url' || process.env.TTS_API_URL) {
-      const audio = await synthesizeFromUrl(trimmed);
-      if (audio) return audio;
-    }
-    if (provider === 'openai' || provider === 'auto') {
-      const audio = await synthesizeOpenAi(trimmed);
-      if (audio) return audio;
-    }
-    if (provider === 'edge' || provider === 'auto') {
-      const audio = await synthesizeEdge(trimmed);
-      if (audio) return audio;
-    }
-  } catch (err) {
-    console.warn('[ai] TTS failed:', err.message);
+  if (provider === 'url' || (wantsUrl && process.env.TTS_API_URL)) {
+    const audio = await tryProvider('url', () => synthesizeFromUrl(trimmed));
+    if (audio) return audio;
+    if (provider === 'url') return null;
+  }
+
+  if (wantsOpenAi) {
+    const audio = await tryProvider('openai', () => synthesizeOpenAi(trimmed));
+    if (audio) return audio;
+  }
+
+  if (wantsEdge) {
+    const audio = await tryProvider('edge', () => synthesizeEdge(trimmed));
+    if (audio) return audio;
+  }
+
+  if (wantsGoogle) {
+    const audio = await tryProvider('google', () => synthesizeGoogle(trimmed));
+    if (audio) return audio;
   }
 
   return null;

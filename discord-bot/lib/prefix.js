@@ -11,6 +11,9 @@ const ALIASES = {
   dminvite: 'dm-invite',
   'invite-dm': 'dm-invite',
   invite: 'dm-invite',
+  tts: 'say',
+  voice: 'say',
+  speak: 'say',
 };
 
 export function startPrefixCommands(client, ctx) {
