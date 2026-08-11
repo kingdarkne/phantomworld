@@ -29,12 +29,15 @@ async function synthesizeFromUrl(text) {
   const voice =
     process.env.TTS_VOICE || process.env.TTS_DEFAULT_VOICE || process.env.EDGE_TTS_VOICE || 'af_heart';
   const timeoutMs = Number(process.env.TTS_URL_TIMEOUT_MS || 8000);
+  const headers = { 'Content-Type': 'application/json' };
+  const key = process.env.TTS_API_KEY || process.env.REX_API_KEY || '';
+  if (key) {
+    headers.Authorization = `Bearer ${key}`;
+    headers['X-API-Key'] = key;
+  }
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(process.env.TTS_API_KEY ? { Authorization: `Bearer ${process.env.TTS_API_KEY}` } : {}),
-    },
+    headers,
     body: JSON.stringify({ text, input: text, voice }),
     signal: AbortSignal.timeout(timeoutMs),
   });

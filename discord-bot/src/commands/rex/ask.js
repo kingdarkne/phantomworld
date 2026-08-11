@@ -1,12 +1,8 @@
 const axios = require('axios');
-const { playRexAudio } = require('../../../lib/rex-voice-play.cjs');
+const { playRexAudio } = require('../../lib/rex-voice-play.cjs');
 const { askAi } = require('../../lib/phantom-ai');
-const { synthesizeSpeech } = require('../../lib/phantom-say');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 
-const REX_API_URL = process.env.REX_API_URL || 'http://23.238.64.91:5600';
+const REX_API_URL = (process.env.REX_API_URL || 'http://127.0.0.1:5600').replace(/\/$/, '');
 const REX_API_KEY = process.env.REX_API_KEY || '';
 
 module.exports = async (client, interaction, args = []) => {
@@ -41,70 +37,54 @@ module.exports = async (client, interaction, args = []) => {
   try {
     const resp = await axios.post(
       `${REX_API_URL}/chat`,
-      {
-        guild_id: guildId,
-        user_text: question,
-        voice,
-      },
+      { guild_id: guildId, user_text: question, voice },
       {
         headers: { 'X-API-Key': REX_API_KEY, 'Content-Type': 'application/json' },
-        timeout: 20000,
+        timeout: 45000,
       },
     );
     reply_text = resp.data.reply_text;
     audio_url = resp.data.audio_url || resp.data.audio_file;
   } catch (err) {
-    console.warn('[Rex ask] API failed, falling back to Groq/local AI:', err.message);
+    console.warn('[Rex ask] API failed, falling back to Groq:', err.message);
     via = 'groq-fallback';
     try {
       reply_text = await askAi(question);
     } catch (aiErr) {
-      console.error('[Rex ask] fallback AI failed:', aiErr.message);
       return client.errNormal(
-        {
-          error: `Rex is having a moment (AI Connection Error). Try again in a sec.`,
-          type: 'editreply',
-        },
+        { error: `Rex is having a moment (${aiErr.message}).`, type: 'editreply' },
         interaction,
       );
     }
   }
 
-  // Prefer Rex API audio; otherwise synthesize locally if user is in VC
-  const voiceChannel = interaction.member?.voice?.channel;
-  if (voiceChannel) {
+  // Ensure we have a playable URL (Lavalink-friendly)
+  if (!audio_url && reply_text) {
     try {
-      if (audio_url) {
-        await playRexAudio(client, {
-          guildId,
-          voiceChannelId: voiceChannel.id,
-          audioUrl: audio_url,
-          title: `🤖 Rex: ${(reply_text || '').slice(0, 50)}`,
-        });
-      } else if (reply_text) {
-        const audio = await synthesizeSpeech(reply_text);
-        if (audio) {
-          const tmpFile = path.join(os.tmpdir(), `rex-ask-${guildId}-${Date.now()}.mp3`);
-          await fs.promises.writeFile(tmpFile, audio);
-          const { createAudioResource, StreamType, createAudioPlayer, joinVoiceChannel, getVoiceConnection, NoSubscriberBehavior } =
-            require('@discordjs/voice');
-          let connection = getVoiceConnection(guildId);
-          if (!connection) {
-            connection = joinVoiceChannel({
-              channelId: voiceChannel.id,
-              guildId,
-              adapterCreator: interaction.guild.voiceAdapterCreator,
-              selfDeaf: false,
-            });
-          }
-          const player = createAudioPlayer({
-            behaviors: { noSubscriber: NoSubscriberBehavior.Play },
-          });
-          connection.subscribe(player);
-          player.play(createAudioResource(tmpFile, { inputType: StreamType.Arbitrary }));
-          fs.promises.unlink(tmpFile).catch(() => {});
-        }
-      }
+      const tts = await axios.post(
+        `${REX_API_URL}/tts`,
+        { text: reply_text, voice },
+        {
+          headers: { 'X-API-Key': REX_API_KEY, 'Content-Type': 'application/json' },
+          timeout: 30000,
+        },
+      );
+      audio_url = tts.data.url || tts.data.audio_url;
+    } catch (ttsErr) {
+      console.warn('[Rex ask] /tts failed:', ttsErr.message);
+    }
+  }
+
+  const voiceChannel = interaction.member?.voice?.channel;
+  let played = false;
+  if (voiceChannel && audio_url) {
+    try {
+      played = await playRexAudio(client, {
+        guildId,
+        voiceChannelId: voiceChannel.id,
+        audioUrl: audio_url,
+        title: `🤖 Rex: ${(reply_text || '').slice(0, 50)}`,
+      });
     } catch (audioErr) {
       console.warn('[Rex ask] Audio playback failed:', audioErr.message);
     }
@@ -116,8 +96,17 @@ module.exports = async (client, interaction, args = []) => {
       desc: reply_text || "I'm here, but I have nothing to say.",
       fields: [
         { name: 'You asked', value: `\`${question.slice(0, 900)}\``, inline: false },
+        {
+          name: 'Voice',
+          value: voiceChannel
+            ? played
+              ? `Playing in <#${voiceChannel.id}>`
+              : `In VC but playback failed — try again`
+            : 'Join a voice channel to hear Rex',
+          inline: true,
+        },
         ...(via === 'groq-fallback'
-          ? [{ name: 'Mode', value: 'Local AI fallback (Rex API unreachable)', inline: true }]
+          ? [{ name: 'Mode', value: 'Local AI fallback', inline: true }]
           : []),
       ],
       type: 'editreply',

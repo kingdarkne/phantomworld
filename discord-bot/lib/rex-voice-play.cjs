@@ -1,3 +1,6 @@
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const {
   joinVoiceChannel,
   createAudioPlayer,
@@ -5,23 +8,49 @@ const {
   getVoiceConnection,
   entersState,
   VoiceConnectionStatus,
+  AudioPlayerStatus,
   NoSubscriberBehavior,
-  StreamType
 } = require('@discordjs/voice');
 
 function lavalinkOnline(client) {
   if (client?.shoukaku?.nodes) {
     for (const node of client.shoukaku.nodes.values()) {
-      if (node.state === 1) return true; // 1 = CONNECTED
+      if (node.state === 1) return true;
     }
   }
   return false;
 }
 
-async function playUrlDirect(guild, voiceChannelId, url) {
+async function stopShoukakuGuild(client, guildId) {
+  if (!client?.shoukaku) return;
+  try {
+    if (typeof client.radio?.stopRadio === 'function') {
+      await client.radio.stopRadio(client, guildId).catch(() => {});
+    }
+  } catch (_) {}
+  try {
+    await client.shoukaku.leaveVoiceChannel(guildId);
+  } catch (_) {}
+  try {
+    client.shoukaku.players?.delete?.(guildId);
+  } catch (_) {}
+}
+
+async function downloadToTemp(url) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+  if (!res.ok) throw new Error(`Audio download HTTP ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length < 200) throw new Error('Audio download empty');
+  const tmp = path.join(os.tmpdir(), `rex-play-${Date.now()}-${Math.random().toString(16).slice(2)}.mp3`);
+  await fs.promises.writeFile(tmp, buf);
+  return tmp;
+}
+
+/**
+ * Play on the existing @discordjs/voice connection (Rex listener mode).
+ */
+async function playFileDirect(guild, voiceChannelId, filePath) {
   let connection = getVoiceConnection(guild.id);
-  
-  // If no connection, or it's not in the right channel, join it
   if (!connection) {
     connection = joinVoiceChannel({
       channelId: voiceChannelId,
@@ -32,116 +61,129 @@ async function playUrlDirect(guild, voiceChannelId, url) {
     });
   }
 
-  try {
-    await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
-  } catch (err) {
-    console.error("[Rex] Connection failed to ready:", err.message);
-    throw err;
-  }
+  await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
 
   const player = createAudioPlayer({
     behaviors: { noSubscriber: NoSubscriberBehavior.Play },
   });
-  
-  // Use StreamType.Arbitrary for better compatibility with remote URLs
-  const resource = createAudioResource(url, { 
-    inlineVolume: true,
-    inputType: StreamType.Arbitrary 
-  });
-  
+  const resource = createAudioResource(filePath, { inlineVolume: true });
+  if (resource.volume) resource.volume.setVolume(1);
   connection.subscribe(player);
   player.play(resource);
 
-  return new Promise((resolve) => {
-    const finish = () => {
+  await entersState(player, AudioPlayerStatus.Playing, 10_000).catch(() => {});
+  await new Promise((resolve) => {
+    const done = () => {
       player.removeAllListeners();
       resolve();
     };
-    player.on('idle', finish);
-    player.on('error', (err) => {
+    player.once('idle', done);
+    player.once('error', (err) => {
       console.warn('[Rex] Direct voice playback error:', err.message);
-      finish();
+      done();
     });
+    setTimeout(done, 120_000);
   });
 }
 
 /**
- * Play Rex TTS audio — Lavalink when available, otherwise @discordjs/voice HTTP stream.
+ * Play TTS via Lavalink (reliable; radio/music must release the guild first).
+ */
+async function playViaLavalink(client, { guildId, voiceChannelId, audioUrl, title }) {
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) throw new Error('Guild missing');
+  if (!lavalinkOnline(client)) throw new Error('Lavalink offline');
+
+  // Always reclaim the voice channel from radio/music
+  await stopShoukakuGuild(client, guildId);
+
+  // Destroy any stale discord.js connection so Shoukaku can join
+  const existing = getVoiceConnection(guildId);
+  if (existing) {
+    try {
+      existing.destroy();
+    } catch (_) {}
+  }
+
+  await new Promise((r) => setTimeout(r, 400));
+
+  const player = await client.shoukaku.joinVoiceChannel({
+    guildId,
+    channelId: voiceChannelId,
+    shardId: guild.shardId || 0,
+    deaf: false,
+  });
+
+  const node = client.shoukaku.getIdealNode();
+  const res = await node.rest.resolve(audioUrl);
+  let track = null;
+  if (res?.loadType === 'track') track = res.data;
+  else if (res?.loadType === 'search' || Array.isArray(res?.data)) track = res.data?.[0];
+  else if (res?.data?.encoded) track = res.data;
+  else track = res?.tracks?.[0] || res?.data?.[0] || null;
+
+  if (!track) throw new Error('Lavalink could not resolve Rex audio URL');
+
+  const encoded = track.encoded || track.track;
+  if (!encoded) throw new Error('No encoded track from Lavalink');
+
+  if (title) {
+    try {
+      track.info = track.info || {};
+      track.info.title = title;
+    } catch (_) {}
+  }
+
+  await player.playTrack({ track: { encoded } });
+  console.log('[Rex] Lavalink playback started');
+  return true;
+}
+
+/**
+ * Play Rex TTS audio.
+ * - If Rex is listening (@discordjs/voice): play on that connection (file + ffmpeg)
+ * - Otherwise: Lavalink (after stopping radio)
  */
 async function playRexAudio(client, { guildId, voiceChannelId, audioUrl, title }) {
   const guild = client.guilds.cache.get(guildId);
   if (!guild || !audioUrl) return false;
 
-  // IMPORTANT: If we are already in the voice channel (listening), 
-  // we MUST use playUrlDirect to avoid conflicting with the receiver.
-  // Shoukaku/Lavalink creates its own connection which would kick us out.
   const state = global.rexState?.[guildId];
-  const alreadyListening = state?.active && state?.connection;
+  const alreadyListening = Boolean(state?.active && (state?.connection || getVoiceConnection(guildId)));
 
-  if (alreadyListening) {
-    console.log("[Rex] Already listening in VC, using direct voice playback to avoid conflict.");
+  let tmp = null;
+  try {
+    if (alreadyListening) {
+      console.log('[Rex] Listening mode — direct discord.js playback');
+      tmp = await downloadToTemp(audioUrl);
+      await playFileDirect(guild, voiceChannelId, tmp);
+      return true;
+    }
+
     try {
-      await playUrlDirect(guild, voiceChannelId, audioUrl);
+      await playViaLavalink(client, { guildId, voiceChannelId, audioUrl, title });
       return true;
     } catch (e) {
-      console.error('[Rex] Direct audio fail:', e.message);
-      return false;
+      console.warn('[Rex] Lavalink playback failed, trying direct:', e.message);
     }
-  }
 
-  // If not listening, try Lavalink
-  if (lavalinkOnline(client)) {
-    try {
-      let player = client.shoukaku.players.get(guildId);
-      if (!player) {
-        player = await client.shoukaku.joinVoiceChannel({
-          guildId: guildId,
-          channelId: voiceChannelId,
-          shardId: guild.shardId || 0,
-          deaf: false,
-        });
-        
-        if (!player.queue) {
-            player.queue = {
-                current: null,
-                tracks: [],
-                add: function(track) {
-                    if (Array.isArray(track)) this.tracks.push(...track);
-                    else this.tracks.push(track);
-                }
-            };
-        }
-      }
-      
-      const node = client.shoukaku.getIdealNode();
-      const res = await node.rest.resolve(audioUrl);
-      const tracks = res.data || res.tracks;
-      
-      if (tracks && (Array.isArray(tracks) ? tracks.length : true)) {
-        const track = Array.isArray(tracks) ? tracks[0] : tracks;
-        if (title) track.title = title;
-        
-        player.queue.add(track);
-        if (!player.track) {
-            const first = player.queue.tracks.shift();
-            player.queue.current = first;
-            await player.playTrack({ track: first.encoded || first.track || first });
-        }
-        return true;
-      }
-    } catch (e) {
-      console.warn('[Rex] Lavalink playback failed, using voice fallback:', e.message);
-    }
-  }
-
-  // Final fallback
-  try {
-    await playUrlDirect(guild, voiceChannelId, audioUrl);
+    // Direct fallback: leave shoukaku then use discord.js voice
+    await stopShoukakuGuild(client, guildId);
+    await new Promise((r) => setTimeout(r, 400));
+    tmp = await downloadToTemp(audioUrl);
+    await playFileDirect(guild, voiceChannelId, tmp);
     return true;
   } catch (e) {
-    console.error('[Rex] Final audio fallback fail:', e.message);
+    console.error('[Rex] playRexAudio failed:', e.message);
     return false;
+  } finally {
+    if (tmp) fs.promises.unlink(tmp).catch(() => {});
   }
 }
 
-module.exports = { playRexAudio, lavalinkOnline };
+module.exports = {
+  playRexAudio,
+  lavalinkOnline,
+  stopShoukakuGuild,
+  playViaLavalink,
+};
