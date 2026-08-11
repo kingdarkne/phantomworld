@@ -219,8 +219,9 @@ module.exports = async (client, message) => {
             message.channel
           )
           .then(async (m) => {
+            if (!m || typeof m.delete !== 'function') return;
             setTimeout(() => {
-              m.delete();
+              m.delete().catch(() => {});
             }, 5000);
           });
 
@@ -353,42 +354,35 @@ module.exports = async (client, message) => {
     );
   } catch { }
 
-  // Prefix
-  var guildSettings = await Functions.findOne({ Guild: message.guild.id });
+  // Prefix — always honor COMMAND_PREFIX / `$` plus any per-guild prefix
+  const configuredPrefix =
+    client.config?.discord?.prefix || process.env.COMMAND_PREFIX || '$';
+  let guildSettings = await Functions.findOne({ Guild: message.guild.id });
   if (!guildSettings) {
-    new Functions({
-      Guild: message.guild.id,
-      Prefix: client.config.discord.prefix,
-    }).save();
-
+    try {
+      await new Functions({
+        Guild: message.guild.id,
+        Prefix: configuredPrefix,
+      }).save();
+    } catch (_) {}
     guildSettings = await Functions.findOne({ Guild: message.guild.id });
   }
 
-  if (!guildSettings || !guildSettings.Prefix) {
-    Functions.findOne({ Guild: message.guild.id }, async (err, data) => {
-      data.Prefix = client.config.discord.prefix;
-      data.save();
-    });
-
-    guildSettings = await Functions.findOne({ Guild: message.guild.id });
-  }
-
-  if (!guildSettings || !guildSettings.Prefix) {
-    var prefix = client.config.Discord.prefix;
-  } else {
-    var prefix = guildSettings.Prefix;
-  }
-
-  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const guildPrefix = guildSettings?.Prefix || configuredPrefix;
+  const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Always accept `$` / COMMAND_PREFIX even if a guild still has a legacy prefix in Mongo
+  const prefixParts = [...new Set([configuredPrefix, guildPrefix, '$'].filter(Boolean))];
   const prefixRegex = new RegExp(
-    `^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`
+    `^(<@!?${client.user.id}>|${prefixParts.map(escapeRegex).join('|')})\\s*`,
+    'i',
   );
 
-  if (!prefixRegex.test(message.content.toLowerCase())) return;
-  const [, matchedPrefix] = message.content.toLowerCase().match(prefixRegex);
+  const matched = message.content.match(prefixRegex);
+  if (!matched) return;
+  const matchedPrefix = matched[0];
 
   const args = message.content.slice(matchedPrefix.length).trim().split(/ +/g);
-  const command = args.shift().toLowerCase();
+  const command = (args.shift() || '').toLowerCase();
 
   if (
     message.mentions.users.first() &&
@@ -413,7 +407,7 @@ module.exports = async (client, message) => {
       .embed(
         {
           title: "Hi, i'm Bot",
-          desc: `Use with commands via Discord ${client.emotes.normal.slash} commands`,
+          desc: `Prefix \`${configuredPrefix}\` · Slash \`/\` — try \`${configuredPrefix}help\` or \`/help\``,
           fields: [
             {
               name: "📨┆Invite me",
@@ -438,14 +432,17 @@ module.exports = async (client, message) => {
         message.channel
       )
       .catch(() => { });
+    return;
   }
+
+  if (!command) return;
 
   const cmd = await Commands.findOne({
     Guild: message.guild.id,
     Name: command,
   });
   if (cmd) {
-    return message.channel.send({ content: cmdx.Responce });
+    return message.channel.send({ content: cmd.Responce || cmdx?.Responce });
   }
 
   const cmdx = await CommandsSchema.findOne({
@@ -471,6 +468,16 @@ module.exports = async (client, message) => {
           message.channel
         );
       });
+    }
+  }
+
+  // Full slash command surface via `$` prefix (merged Phantom bridge)
+  if (typeof client.runPrefixCommand === 'function') {
+    try {
+      const handled = await client.runPrefixCommand(message, command, args);
+      if (handled) return;
+    } catch (err) {
+      console.error('[messageCreate] prefix bridge failed:', err.message);
     }
   }
 };
