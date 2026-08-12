@@ -481,6 +481,24 @@ select.form-control option {
 .preloader {
   background: var(--ph-ink) !important;
   transition: opacity 0.25s ease, visibility 0.25s ease;
+  /* Never trap clicks after fade-out begins */
+  pointer-events: none !important;
+}
+
+/* Keep page content stacked cleanly after full navigations */
+#page-content {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+
+#content-container {
+  position: relative;
+  min-height: 1px;
+}
+
+.ph-home-header {
+  display: none !important;
 }
 
 .breadcrumb {
@@ -517,11 +535,10 @@ select.form-control option {
   background: rgba(8, 12, 22, 0.75) !important;
 }
 
-/* Modal interaction fixes */
-.modal-backdrop { z-index: 1040 !important; pointer-events: none !important; }
-.modal { z-index: 1050 !important; pointer-events: auto !important; }
-.modal-dialog { z-index: 1060 !important; pointer-events: auto !important; }
-.modal-content { pointer-events: auto !important; }
+/* Modal stacking — keep normal backdrop hit-testing (leftovers cleared in JS) */
+.modal-backdrop { z-index: 1040 !important; }
+.modal { z-index: 1050 !important; }
+.modal-dialog { z-index: 1060 !important; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: rgba(6, 9, 18, 0.5); }

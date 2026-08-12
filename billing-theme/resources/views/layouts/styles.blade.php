@@ -10,7 +10,7 @@
 
 {{-- Critical theme CSS --}}
 <link rel="stylesheet" href="/dist/css/adminlte.min.css">
-<link rel="stylesheet" href="/dist/css/phantom-theme.css?v=20260811">
+<link rel="stylesheet" href="/dist/css/phantom-theme.css?v=20260812b">
 
 {{-- Defer heavy icon/toast CSS via JS (existing lazy loader) --}}
 <noscript>

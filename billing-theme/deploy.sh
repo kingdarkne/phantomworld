@@ -22,11 +22,13 @@ upload() {
 }
 
 upload "$ROOT/public/dist/css/phantom-theme.css" "/var/www/billing/public/dist/css/phantom-theme.css"
+upload "$ROOT/bootstrap/helpers.php" "/var/www/billing/bootstrap/helpers.php"
 upload "$ROOT/resources/views/store/pages.blade.php" "/var/www/billing/resources/views/store/pages.blade.php"
 upload "$ROOT/resources/views/store/checkout.blade.php" "/var/www/billing/resources/views/store/checkout.blade.php"
 upload "$ROOT/resources/views/layouts/store/header.blade.php" "/var/www/billing/resources/views/layouts/store/header.blade.php"
 upload "$ROOT/resources/views/layouts/store/footer.blade.php" "/var/www/billing/resources/views/layouts/store/footer.blade.php"
 upload "$ROOT/resources/views/layouts/store/nav.blade.php" "/var/www/billing/resources/views/layouts/store/nav.blade.php"
+upload "$ROOT/resources/views/layouts/store/scripts.blade.php" "/var/www/billing/resources/views/layouts/store/scripts.blade.php"
 upload "$ROOT/resources/views/layouts/styles.blade.php" "/var/www/billing/resources/views/layouts/styles.blade.php"
 upload "$ROOT/resources/views/layouts/store.blade.php" "/var/www/billing/resources/views/layouts/store.blade.php"
 upload "$ROOT/resources/views/layouts/preloader.blade.php" "/var/www/billing/resources/views/layouts/preloader.blade.php"
@@ -54,11 +56,13 @@ systemctl restart php8.3-fpm billing-worker
 cd /var/www/billing
 chown www-data:www-data \
   public/dist/css/phantom-theme.css \
+  bootstrap/helpers.php \
   resources/views/store/pages.blade.php \
   resources/views/store/checkout.blade.php \
   resources/views/layouts/store/header.blade.php \
   resources/views/layouts/store/footer.blade.php \
   resources/views/layouts/store/nav.blade.php \
+  resources/views/layouts/store/scripts.blade.php \
   resources/views/layouts/styles.blade.php \
   resources/views/layouts/store.blade.php \
   resources/views/layouts/preloader.blade.php \
@@ -68,6 +72,7 @@ chown www-data:www-data \
   app/Http/Controllers/Api/StoreController.php \
   app/Jobs/CreatePanelUser.php \
   app/Jobs/CreateServer.php
+sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
 chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh
 bash /tmp/fix-billing-currency.sh
