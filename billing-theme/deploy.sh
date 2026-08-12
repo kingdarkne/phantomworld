@@ -64,6 +64,11 @@ upload "$ROOT/panel-overrides/UserCreationService.php" "/tmp/panel-email-overrid
 upload "$ROOT/panel-overrides/phantom-notif.blade.php" "/tmp/panel-email-overrides/phantom-notif.blade.php"
 upload "$ROOT/panel-overrides/SendPasswordReset.php" "/tmp/panel-email-overrides/SendPasswordReset.php"
 upload "$ROOT/panel-overrides/ServerInstalled.php" "/tmp/panel-email-overrides/ServerInstalled.php"
+upload "$ROOT/panel-overrides/wrapper.blade.php" "/tmp/panel-email-overrides/wrapper.blade.php"
+upload "$ROOT/panel-overrides/admin.blade.php" "/tmp/panel-email-overrides/admin.blade.php"
+sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/panel-theme"
+upload "$ROOT/panel-theme/phantom-panel.css" "/tmp/panel-theme/phantom-panel.css"
+upload "$ROOT/scripts/install-panel-theme.sh" "/tmp/install-panel-theme.sh"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
@@ -129,7 +134,7 @@ chown www-data:www-data \
   app/Notifications/ResetPasswordNotification.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh /tmp/fix-admin-customer-link.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh /tmp/fix-admin-customer-link.sh /tmp/install-panel-theme.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
@@ -138,6 +143,7 @@ bash /tmp/attach-all-eggs-to-plans.sh || true
 bash /tmp/ensure-main-node-and-games.sh || true
 bash /tmp/fix-admin-customer-link.sh || true
 OVERRIDES=/tmp/panel-email-overrides bash /tmp/brand-billing-emails.sh || true
+OVERRIDES=/tmp/panel-email-overrides THEME_SRC=/tmp/panel-theme bash /tmp/install-panel-theme.sh || true
 # Ensure owner gets purchase alerts
 if ! grep -q '^OWNER_EMAIL=' /var/www/billing/.env; then
   echo 'OWNER_EMAIL=ericaxavier897@gmail.com' >> /var/www/billing/.env
