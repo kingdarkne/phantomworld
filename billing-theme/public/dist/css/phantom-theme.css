@@ -485,11 +485,10 @@ select.form-control option {
   pointer-events: none !important;
 }
 
-/* Keep page content stacked cleanly after full navigations */
+/* Keep page content stacked cleanly (do NOT isolate — traps modals under backdrop) */
 #page-content {
   position: relative;
   z-index: 1;
-  isolation: isolate;
 }
 
 #content-container {
@@ -535,10 +534,30 @@ select.form-control option {
   background: rgba(8, 12, 22, 0.75) !important;
 }
 
-/* Modal stacking — keep normal backdrop hit-testing (leftovers cleared in JS) */
-.modal-backdrop { z-index: 1040 !important; }
-.modal { z-index: 1050 !important; }
-.modal-dialog { z-index: 1060 !important; }
+/* Modal stacking — above navbar/page; dialog must receive clicks */
+.modal-backdrop {
+  z-index: 2000 !important;
+  background-color: rgba(6, 9, 18, 0.72) !important;
+  pointer-events: auto !important;
+}
+.modal {
+  z-index: 2010 !important;
+  pointer-events: none !important;
+}
+.modal.show {
+  display: block !important;
+}
+.modal-dialog {
+  z-index: 2020 !important;
+  pointer-events: auto !important;
+  position: relative;
+}
+.modal-content {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+  background: rgba(12, 18, 32, 0.98) !important;
+}
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: rgba(6, 9, 18, 0.5); }

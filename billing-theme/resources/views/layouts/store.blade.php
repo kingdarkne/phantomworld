@@ -20,13 +20,14 @@
                         @include('layouts.store.messages')
                         @yield('content')
                     </div>
-
-                    @include('layouts.store.modals')
                 </div>
             </div>
 
             @include('layouts.store.footer')
         </div>
+
+        {{-- Modals must be outside .wrapper/#page-content or backdrop covers inputs --}}
+        @include('layouts.store.modals')
 
         @include('layouts.scripts')
         @include('layouts.store.scripts')
