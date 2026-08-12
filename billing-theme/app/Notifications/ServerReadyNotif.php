@@ -8,7 +8,8 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\PlanCycle;
 use App\Models\Server;
-use App\Models\Setting;
+use App\Support\CustomerName;
+use App\Support\EmailGuide;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -32,10 +33,11 @@ class ServerReadyNotif extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
-        $panelUrl = rtrim((string) Setting::where('key', 'panel_url')->value('value'), '/') ?: 'https://panel.phantom-chicken.com';
+        $panelUrl = EmailGuide::panelUrl();
         $plan = Plan::find($this->server->plan_id);
         $planName = $plan->name ?? ('Plan #' . $this->server->plan_id);
         $due = $this->server->due_date ? (string) $this->server->due_date : 'N/A';
+        $serverLabel = $this->server->server_name ?: ('#' . $this->server->id);
 
         $invoice = Invoice::where('server_id', $this->server->id)->latest('id')->first();
         $amount = $invoice ? number_format((float) $invoice->total, 2) : null;
@@ -48,40 +50,43 @@ class ServerReadyNotif extends Notification implements ShouldQueue
         $cycle = PlanCycle::find($this->server->plan_cycle);
         $renewPrice = $cycle ? number_format((float) $cycle->renew_price, 2) : null;
 
-        $lines = [
-            'Your server "' . ($this->server->server_name ?: ('#' . $this->server->id)) . '" is ready.',
-            'Plan: ' . $planName,
-            'Panel server ID: ' . ($this->server->identifier ?: 'pending'),
-            'Renew / next due date: ' . $due,
-        ];
+        $client = Client::find($this->server->client_id);
+        $consoleUrl = $this->server->identifier
+            ? ($panelUrl . '/server/' . $this->server->identifier)
+            : $panelUrl;
 
+        $details = [
+            'Server' => $serverLabel,
+            'Plan' => $planName,
+            'Renew / due date' => $due,
+            'Game panel' => $panelUrl,
+        ];
         if ($amount !== null) {
-            $lines[] = 'Amount charged / due on this invoice: ' . $symbol . $amount . ' ' . $currencyName;
+            $details['Invoice amount'] = $symbol . $amount . ' ' . $currencyName;
         }
         if ($renewPrice !== null) {
-            $lines[] = 'Recurring renew price: ' . $symbol . $renewPrice . ' ' . $currencyName;
+            $details['Renew price'] = $symbol . $renewPrice . ' ' . $currencyName;
         }
-
-        $lines[] = '';
-        $lines[] = 'Log into the game panel with the account email you used at checkout:';
-        $lines[] = $panelUrl;
-        if ($this->server->identifier) {
-            $lines[] = 'Direct console (after login): ' . $panelUrl . '/server/' . $this->server->identifier;
-        }
-
-        $client = Client::find($this->server->client_id);
         if ($client) {
-            $lines[] = 'Panel / billing email: ' . $client->email;
+            $details['Login email'] = $client->email;
         }
 
         return (new MailMessage)->subject('Your server is ready — ' . $planName)->view('emails.notif', [
             'subject' => 'Your server is ready',
-            'greeting_name' => \App\Support\CustomerName::greetingFor($client ?? null),
-            'body_message' => implode("\n", $lines),
-            'body_action' => 'Manage renewals and invoices in the billing client area.',
+            'greeting_name' => CustomerName::greetingFor($client),
+            'body_message' => "\"{$serverLabel}\" finished provisioning and is ready on " . EmailGuide::brand() . '.',
+            'body_action' => 'Use billing for invoices/renewals, and the game panel for console & Start/Stop.',
+            'details' => $details,
+            'steps_title' => 'How to open your server',
+            'steps' => [
+                'Billing: open ' . EmailGuide::billingUrl() . ' → Login → open this server from your dashboard',
+                'Game panel: open ' . $panelUrl . ' → sign in with the same email',
+                'Click the server name (or open ' . $consoleUrl . ' after login)',
+                'Press Start if needed, then watch the Console while it boots',
+            ],
             'button_text' => 'View Server in Billing',
             'button_url' => url()->route('client.server.show', ['id' => $this->server->id]),
-            'notice' => 'You received this email because your Phantom Hosting server finished provisioning.',
+            'notice' => 'You received this because your ' . EmailGuide::brand() . ' server finished provisioning.',
         ]);
     }
 

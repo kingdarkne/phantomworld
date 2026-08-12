@@ -54,7 +54,18 @@ if (!\$cols->contains('last_name')) {
 if [[ -d "$OVERRIDES" ]]; then
   install -o www-data -g www-data -m 644 "$OVERRIDES/AccountCreated.php" "$PANEL_ROOT/app/Notifications/AccountCreated.php"
   mkdir -p "$PANEL_ROOT/resources/views/vendor/notifications"
+  mkdir -p "$PANEL_ROOT/resources/views/emails"
   install -o www-data -g www-data -m 644 "$OVERRIDES/email.blade.php" "$PANEL_ROOT/resources/views/vendor/notifications/email.blade.php"
+  if [[ -f "$OVERRIDES/phantom-notif.blade.php" ]]; then
+    install -o www-data -g www-data -m 644 "$OVERRIDES/phantom-notif.blade.php" "$PANEL_ROOT/resources/views/emails/phantom.blade.php"
+    echo "panel_phantom_email_template_installed"
+  fi
+  if [[ -f "$OVERRIDES/SendPasswordReset.php" ]]; then
+    install -o www-data -g www-data -m 644 "$OVERRIDES/SendPasswordReset.php" "$PANEL_ROOT/app/Notifications/SendPasswordReset.php"
+  fi
+  if [[ -f "$OVERRIDES/ServerInstalled.php" ]]; then
+    install -o www-data -g www-data -m 644 "$OVERRIDES/ServerInstalled.php" "$PANEL_ROOT/app/Notifications/ServerInstalled.php"
+  fi
   if [[ -f "$OVERRIDES/UserCreationService.php" ]]; then
     install -o www-data -g www-data -m 644 "$OVERRIDES/UserCreationService.php" "$PANEL_ROOT/app/Services/Users/UserCreationService.php"
     echo "panel_user_creation_service_installed"

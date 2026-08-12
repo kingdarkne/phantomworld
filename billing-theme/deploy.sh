@@ -44,6 +44,7 @@ upload "$ROOT/app/Providers/AuthServiceProvider.php" "/var/www/billing/app/Provi
 upload "$ROOT/app/Providers/EventServiceProvider.php" "/var/www/billing/app/Providers/EventServiceProvider.php"
 upload "$ROOT/routes/store.php" "/var/www/billing/routes/store.php"
 upload "$ROOT/app/Support/CustomerName.php" "/var/www/billing/app/Support/CustomerName.php"
+upload "$ROOT/app/Support/EmailGuide.php" "/var/www/billing/app/Support/EmailGuide.php"
 upload "$ROOT/app/Jobs/CreatePanelUser.php" "/var/www/billing/app/Jobs/CreatePanelUser.php"
 upload "$ROOT/app/Jobs/CreateServer.php" "/var/www/billing/app/Jobs/CreateServer.php"
 upload "$ROOT/app/Notifications/AccountWelcomeNotif.php" "/var/www/billing/app/Notifications/AccountWelcomeNotif.php"
@@ -60,6 +61,9 @@ sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/pane
 upload "$ROOT/panel-overrides/AccountCreated.php" "/tmp/panel-email-overrides/AccountCreated.php"
 upload "$ROOT/panel-overrides/email.blade.php" "/tmp/panel-email-overrides/email.blade.php"
 upload "$ROOT/panel-overrides/UserCreationService.php" "/tmp/panel-email-overrides/UserCreationService.php"
+upload "$ROOT/panel-overrides/phantom-notif.blade.php" "/tmp/panel-email-overrides/phantom-notif.blade.php"
+upload "$ROOT/panel-overrides/SendPasswordReset.php" "/tmp/panel-email-overrides/SendPasswordReset.php"
+upload "$ROOT/panel-overrides/ServerInstalled.php" "/tmp/panel-email-overrides/ServerInstalled.php"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
@@ -112,6 +116,7 @@ chown www-data:www-data \
   app/Providers/EventServiceProvider.php \
   routes/store.php \
   app/Support/CustomerName.php \
+  app/Support/EmailGuide.php \
   app/Jobs/CreatePanelUser.php \
   app/Jobs/CreateServer.php \
   app/Notifications/AccountWelcomeNotif.php \
@@ -153,11 +158,16 @@ sudo -u www-data php -l app/Http/Controllers/Api/AuthController.php
 sudo -u www-data php -l app/Jobs/CreatePanelUser.php
 sudo -u www-data php -l app/Jobs/CreateServer.php
 sudo -u www-data php -l app/Support/CustomerName.php
+sudo -u www-data php -l app/Support/EmailGuide.php
 sudo -u www-data php -l app/Notifications/AccountWelcomeNotif.php
+sudo -u www-data php -l /var/www/pterodactyl/app/Notifications/AccountCreated.php
+sudo -u www-data php -l /var/www/pterodactyl/app/Notifications/SendPasswordReset.php
+sudo -u www-data php -l /var/www/pterodactyl/app/Notifications/ServerInstalled.php
 sudo -u www-data php -l app/Notifications/ServerReadyNotif.php
 sudo -u www-data php -l app/Http/Middleware/Store/CheckPlanOrder.php
 sudo -u www-data php -l app/Providers/EventServiceProvider.php
 sudo -u www-data php -l routes/store.php
+test -f /var/www/pterodactyl/resources/views/emails/phantom.blade.php && echo phantom_template_ok
 systemctl is-active php8.3-fpm billing-worker nginx
 echo "Billing theme deployed."
 REMOTE

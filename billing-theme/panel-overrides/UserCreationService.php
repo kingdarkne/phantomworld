@@ -27,10 +27,6 @@ class UserCreationService
     /**
      * Create a new user on the system.
      *
-     * Billing CreatePanelUser always supplies a password and sends its own
-     * welcome + verify emails — do not also fire AccountCreated in that case.
-     * Only email when we generated a reset token (admin invite / no password).
-     *
      * @throws \Exception
      * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      */
@@ -56,12 +52,7 @@ class UserCreationService
         }
 
         $this->connection->commit();
-
-        // Skip AccountCreated when the caller provided a password (billing signup /
-        // guest checkout). Those flows already email welcome + verify from billing.
-        if (isset($generateResetToken)) {
-            $user->notify(new AccountCreated($user, $token ?? null));
-        }
+        $user->notify(new AccountCreated($user, $token ?? null));
 
         Activity::event('user:user.create')
             ->subject($user)

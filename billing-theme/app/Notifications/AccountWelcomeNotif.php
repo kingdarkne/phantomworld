@@ -3,7 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Client;
-use App\Models\Setting;
+use App\Support\CustomerName;
+use App\Support\EmailGuide;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,47 +37,50 @@ class AccountWelcomeNotif extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
-        $panelUrl = rtrim((string) Setting::where('key', 'panel_url')->value('value'), '/') ?: 'https://panel.phantom-chicken.com';
-        $billingUrl = rtrim((string) config('app.url'), '/');
-        $dashUrl = url()->route('client.dash');
+        $brand = EmailGuide::brand();
+        $billingUrl = EmailGuide::billingUrl();
+        $panelUrl = EmailGuide::panelUrl();
+        $dashUrl = EmailGuide::billingDashUrl();
 
-        $lines = [
-            'Welcome to Phantom Hosting — your account is ready.',
-            '',
-            'Billing portal: ' . $billingUrl,
-            'Billing email: ' . $this->client->email,
+        $billingPass = $this->billingPassword
+            ? $this->billingPassword . ' (save this — shown once)'
+            : 'The password you chose when registering';
+
+        $panelPass = $this->panelPassword
+            ? $this->panelPassword . ' (save this — shown once)'
+            : 'Same as billing, or use Forgot Password on the panel';
+
+        $body = EmailGuide::twoSitesBlurb()
+            . "\n\n"
+            . "Your account is ready. Keep this email for your login details.\n"
+            . "You will also get a separate Verify Email message — please confirm your address.";
+
+        $steps = [
+            'Billing: open ' . $billingUrl . ' → click Login → use your email + billing password',
+            'Dashboard: after login you land on ' . $dashUrl . ' for invoices and renewals',
+            'Game panel: open ' . $panelUrl . ' → sign in with username "' . $this->panelUsername . '" (or your email)',
+            'Servers: click your server name to open the console, files, and Start / Stop controls',
+            'Verify: open the Verify Email message and tap Verify so your account stays unlocked',
         ];
 
-        if ($this->billingPassword) {
-            $lines[] = 'Billing password: ' . $this->billingPassword;
-            $lines[] = '(Save this password — it is only shown once.)';
-        } else {
-            $lines[] = 'Billing password: the password you chose when registering (or use Forgot Password).';
-        }
-
-        $lines[] = '';
-        $lines[] = 'Game panel: ' . $panelUrl;
-        $lines[] = 'Panel username: ' . $this->panelUsername;
-        $lines[] = 'Panel email: ' . $this->client->email;
-
-        if ($this->panelPassword) {
-            $lines[] = 'Panel password: ' . $this->panelPassword;
-            $lines[] = '(Same tip — save it now; it is only emailed once.)';
-        } else {
-            $lines[] = 'Panel password: use Forgot Password on the panel if you need a reset.';
-        }
-
-        $lines[] = '';
-        $lines[] = 'Check your inbox for a separate email with a Verify Email button — please confirm your address.';
-
-        return (new MailMessage)->subject('Welcome to Phantom Hosting')->view('emails.notif', [
-            'subject' => 'Welcome to Phantom Hosting',
-            'greeting_name' => \App\Support\CustomerName::greetingFor($this->client),
-            'body_message' => implode("\n", $lines),
-            'body_action' => 'Open your billing dashboard to manage servers, invoices, and renewals.',
+        return (new MailMessage)->subject('Welcome to ' . $brand)->view('emails.notif', [
+            'subject' => 'Welcome to ' . $brand,
+            'greeting_name' => CustomerName::greetingFor($this->client),
+            'body_message' => $body,
+            'body_action' => 'Need help? Reply to this email or open a ticket from your billing dashboard.',
+            'details' => [
+                'Billing URL' => $billingUrl,
+                'Billing email' => $this->client->email,
+                'Billing password' => $billingPass,
+                'Game panel URL' => $panelUrl,
+                'Panel username' => $this->panelUsername,
+                'Panel password' => $panelPass,
+            ],
+            'steps_title' => 'Beginner login guide',
+            'steps' => $steps,
             'button_text' => 'Open Billing Dashboard',
             'button_url' => $dashUrl,
-            'notice' => 'You received this email because an account was created on Phantom Hosting.',
+            'notice' => 'You received this because an account was created on ' . $brand . '.',
         ]);
     }
 

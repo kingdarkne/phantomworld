@@ -6,6 +6,8 @@ use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\Server;
+use App\Support\CustomerName;
+use App\Support\EmailGuide;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -43,19 +45,27 @@ class PayInvoiceNotif extends Notification implements ShouldQueue
         $currencyName = $currency->name ?? 'USD';
         $total = number_format((float) $this->invoice->total, 2);
         $dueText = $dueDate ? (string) $dueDate : 'upon receipt';
-
-        $body = "Please pay for {$name}.\n"
-            . "Amount due: {$symbol}{$total} {$currencyName}\n"
-            . "Due / renew date: {$dueText}";
+        $invoiceUrl = url()->route('client.invoice.show', ['id' => $this->invoice->id]);
 
         return (new MailMessage)->subject('Payment due — ' . $name . ' (' . $symbol . $total . ')')->view('emails.notif', [
             'subject' => 'Payment due',
-            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
-            'body_message' => $body,
-            'body_action' => 'Click below to view the invoice, amount due, and pay or renew.',
+            'greeting_name' => CustomerName::greetingFor($notifiable),
+            'body_message' => "Please pay for {$name} to keep your service active.",
+            'body_action' => 'Log into billing if the button asks you to sign in first.',
+            'details' => [
+                'Service' => $name,
+                'Amount due' => $symbol . $total . ' ' . $currencyName,
+                'Due / renew date' => $dueText,
+            ],
+            'steps_title' => 'How to pay',
+            'steps' => [
+                'Tap View Invoice (or open ' . EmailGuide::billingUrl() . ' → Login)',
+                'Review the amount and choose a payment method',
+                'After payment, watch for a confirmation email',
+            ],
             'button_text' => 'View Invoice',
-            'button_url' => url()->route('client.invoice.show', ['id' => $this->invoice->id]),
-            'notice' => 'You received this email because you ordered a product or service from Phantom Hosting.',
+            'button_url' => $invoiceUrl,
+            'notice' => 'You received this because you ordered a product or service from ' . EmailGuide::brand() . '.',
         ]);
     }
 

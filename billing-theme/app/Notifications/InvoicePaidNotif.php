@@ -7,6 +7,8 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\PlanCycle;
 use App\Models\Server;
+use App\Support\CustomerName;
+use App\Support\EmailGuide;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -50,26 +52,32 @@ class InvoicePaidNotif extends Notification implements ShouldQueue
         $currencyName = $currency->name ?? 'USD';
         $total = number_format((float) $this->invoice->total, 2);
 
-        $body = "Thank you — payment for {$name} was successful.\n"
-            . "Paid amount: {$symbol}{$total} {$currencyName}\n";
-
+        $details = [
+            'Service' => $name,
+            'Paid amount' => $symbol . $total . ' ' . $currencyName,
+        ];
         if ($renewDate) {
-            $body .= 'Next renew / due date: ' . $renewDate . "\n";
+            $details['Next renew / due'] = (string) $renewDate;
         }
         if ($renewPrice !== null) {
-            $body .= "Recurring renew price: {$symbol}{$renewPrice} {$currencyName}\n";
+            $details['Renew price'] = $symbol . $renewPrice . ' ' . $currencyName;
         }
-
-        $body .= "\nYour game panel account uses this same email. Watch for a separate email when the server finishes installing.";
 
         return (new MailMessage)->subject('Payment received — ' . $name)->view('emails.notif', [
             'subject' => 'Payment received',
-            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
-            'body_message' => $body,
-            'body_action' => 'View the invoice and server details in your client area.',
+            'greeting_name' => CustomerName::greetingFor($notifiable),
+            'body_message' => "Thank you — payment for {$name} was successful.\n\nYour game panel uses the same email. Watch for a separate message when the server finishes installing.",
+            'body_action' => 'Open billing anytime for invoices; use the game panel for console and Start/Stop.',
+            'details' => $details,
+            'steps_title' => 'What to do next',
+            'steps' => [
+                'Billing dashboard: ' . EmailGuide::billingDashUrl(),
+                'Game panel login: ' . EmailGuide::panelUrl() . ' (same email)',
+                'When install finishes, open your server → Console → Start if needed',
+            ],
             'button_text' => 'View Invoice',
             'button_url' => url()->route('client.invoice.show', ['id' => $this->invoice->id]),
-            'notice' => 'You received this email because you completed a payment with Phantom Hosting.',
+            'notice' => 'You received this because you completed a payment with ' . EmailGuide::brand() . '.',
         ]);
     }
 

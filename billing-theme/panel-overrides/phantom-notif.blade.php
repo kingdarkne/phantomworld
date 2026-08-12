@@ -105,10 +105,12 @@
                                 <td style="padding:16px 18px;">
                                     <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#2ee6c5;margin-bottom:12px;">{{ $stepsTitle }}</div>
                                     @foreach ($steps as $i => $step)
-                                        <p style="margin:{{ $i === 0 ? '0' : '10px' }} 0 0;font-size:14px;line-height:1.55;color:#c9d4e3;">
-                                            <span style="display:inline-block;min-width:22px;color:#2ee6c5;font-weight:700;">{{ $i + 1 }}.</span>
-                                            {{ $step }}
-                                        </p>
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:{{ $i === 0 ? '0' : '10px' }} 0 0;">
+                                            <tr>
+                                                <td width="28" valign="top" style="font-size:13px;font-weight:700;color:#061018;background:#2ee6c5;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;">{{ $i + 1 }}</td>
+                                                <td style="padding-left:10px;font-size:14px;line-height:1.5;color:#c9d4e3;">{{ $step }}</td>
+                                            </tr>
+                                        </table>
                                     @endforeach
                                 </td>
                             </tr>
