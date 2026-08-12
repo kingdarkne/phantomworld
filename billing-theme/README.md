@@ -17,3 +17,6 @@ VPS_PASSWORD='...' ./billing-theme/deploy.sh
 - Faster preloader, font preload, nginx gzip + 7-day static cache
 - Optimized `galaxy_bg.webp` background
 - Fixed Bot Terms / Bot Privacy footer links
+- Checkout: import missing `Str`/`Hash`/`Auth`/`Client` so guest buy works
+- Restored corrupted `CreatePanelUser` job (panel account creation)
+- Client nav Discord link uses `client.bot.index`

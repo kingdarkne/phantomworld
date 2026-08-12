@@ -31,6 +31,9 @@ upload "$ROOT/resources/views/layouts/styles.blade.php" "/var/www/billing/resour
 upload "$ROOT/resources/views/layouts/store.blade.php" "/var/www/billing/resources/views/layouts/store.blade.php"
 upload "$ROOT/resources/views/layouts/preloader.blade.php" "/var/www/billing/resources/views/layouts/preloader.blade.php"
 upload "$ROOT/app/Http/Middleware/Store/SetDefaultSession.php" "/var/www/billing/app/Http/Middleware/Store/SetDefaultSession.php"
+upload "$ROOT/app/Http/Controllers/Api/StoreController.php" "/var/www/billing/app/Http/Controllers/Api/StoreController.php"
+upload "$ROOT/app/Jobs/CreatePanelUser.php" "/var/www/billing/app/Jobs/CreatePanelUser.php"
+upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
 
@@ -55,12 +58,17 @@ chown www-data:www-data \
   resources/views/layouts/styles.blade.php \
   resources/views/layouts/store.blade.php \
   resources/views/layouts/preloader.blade.php \
-  app/Http/Middleware/Store/SetDefaultSession.php
+  resources/views/layouts/client/nav.blade.php \
+  app/Http/Middleware/Store/SetDefaultSession.php \
+  app/Http/Controllers/Api/StoreController.php \
+  app/Jobs/CreatePanelUser.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
 chmod +x /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-currency.sh
 sudo -u www-data php artisan view:clear
 sudo -u www-data php artisan cache:clear
+sudo -u www-data php -l app/Http/Controllers/Api/StoreController.php
+sudo -u www-data php -l app/Jobs/CreatePanelUser.php
 systemctl is-active php8.3-fpm billing-worker nginx
 echo "Billing theme deployed."
 REMOTE
