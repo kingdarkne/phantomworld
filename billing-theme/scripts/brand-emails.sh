@@ -26,6 +26,13 @@ if [[ -f "$BILLING_ROOT/.env" ]]; then
   sed -i 's/^MAIL_FROM_NAME=.*/MAIL_FROM_NAME="Phantom Hosting"/' "$BILLING_ROOT/.env" || true
 fi
 
+# Billing config/app.php hardcodes HedystiaBilling — force brand name
+if [[ -f "$BILLING_ROOT/config/app.php" ]]; then
+  sed -i "s/'name' => 'HedystiaBilling'/'name' => env('APP_NAME', 'Phantom Hosting')/" "$BILLING_ROOT/config/app.php"
+  sed -i "s/'name' => \"HedystiaBilling\"/'name' => env('APP_NAME', 'Phantom Hosting')/" "$BILLING_ROOT/config/app.php"
+  echo "billing_config_name_patched"
+fi
+
 # --- Billing clients name columns ---
 cd "$BILLING_ROOT"
 php -r "
