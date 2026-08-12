@@ -72,6 +72,7 @@ upload "$ROOT/scripts/fix-fivem-egg.sh" "/tmp/fix-billing-fivem-egg.sh"
 upload "$ROOT/scripts/install-discord-bot-eggs.sh" "/tmp/install-discord-bot-eggs.sh"
 upload "$ROOT/scripts/attach-all-eggs-to-plans.sh" "/tmp/attach-all-eggs-to-plans.sh"
 upload "$ROOT/scripts/ensure-main-node-and-games.sh" "/tmp/ensure-main-node-and-games.sh"
+upload "$ROOT/scripts/fix-admin-customer-link.sh" "/tmp/fix-admin-customer-link.sh"
 sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/billing-eggs"
 upload "$ROOT/eggs/egg-discord-js.json" "/tmp/billing-eggs/egg-discord-js.json"
 upload "$ROOT/eggs/egg-discord-py.json" "/tmp/billing-eggs/egg-discord-py.json"
@@ -128,13 +129,14 @@ chown www-data:www-data \
   app/Notifications/ResetPasswordNotification.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh /tmp/fix-admin-customer-link.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
 bash /tmp/install-discord-bot-eggs.sh || true
 bash /tmp/attach-all-eggs-to-plans.sh || true
 bash /tmp/ensure-main-node-and-games.sh || true
+bash /tmp/fix-admin-customer-link.sh || true
 OVERRIDES=/tmp/panel-email-overrides bash /tmp/brand-billing-emails.sh || true
 # Ensure owner gets purchase alerts
 if ! grep -q '^OWNER_EMAIL=' /var/www/billing/.env; then

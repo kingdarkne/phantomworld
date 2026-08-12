@@ -41,7 +41,7 @@ class Client extends Model implements
         'language',
         'auto_renew',
         'is_active',
-        'is_admin',
+        // is_admin is intentionally NOT fillable — only set by operators in DB/admin UI
     ];
 
     protected $hidden = ['remember_token'];

@@ -65,13 +65,37 @@ class CreatePanelUser implements ShouldQueue
         $data = $response->json();
         if (!empty($data['data'])) {
             $user_obj = $data['data'][0];
-            if ($user_obj['attributes']['email'] == $this->client->email
-                && Client::where('user_id', $user_obj['attributes']['id'])->count() == 0) {
-                $this->client->user_id = $user_obj['attributes']['id'];
+            $attrs = $user_obj['attributes'] ?? [];
+            $panelUserId = (int) ($attrs['id'] ?? 0);
+            $panelEmail = (string) ($attrs['email'] ?? '');
+            $isRootAdmin = !empty($attrs['root_admin']);
+
+            if ($panelUserId > 0 && strcasecmp($panelEmail, (string) $this->client->email) === 0) {
+                // Never attach a billing customer to a panel administrator.
+                if ($isRootAdmin) {
+                    Log::error('[CreatePanelUser] Refusing to link client #' . $this->client->id
+                        . ' (' . $this->client->email . ') to root_admin panel user #' . $panelUserId
+                        . '. Move the admin to a different email, then retry.');
+
+                    return $this->fail();
+                }
+
+                $linkedElsewhere = Client::where('user_id', $panelUserId)
+                    ->where('id', '!=', $this->client->id)
+                    ->exists();
+
+                if ($linkedElsewhere) {
+                    Log::error('[CreatePanelUser] Panel user #' . $panelUserId
+                        . ' is already linked to another billing client.');
+
+                    return $this->fail();
+                }
+
+                $this->client->user_id = $panelUserId;
                 $this->client->save();
 
                 $this->sendWelcome(
-                    (string) $user_obj['attributes']['username'],
+                    (string) ($attrs['username'] ?? 'user'),
                     null
                 );
 
@@ -83,6 +107,10 @@ class CreatePanelUser implements ShouldQueue
         $username = preg_replace('/[^A-Za-z0-9]/', '', $local . Str::random(4));
         if ($username === '') {
             $username = 'user' . Str::random(6);
+        }
+        // Never collide with the reserved panel admin username.
+        if (strcasecmp($username, 'admin') === 0 || str_starts_with(strtolower($username), 'admin')) {
+            $username = 'user' . Str::random(8);
         }
 
         $panelPassword = Str::random(16);
@@ -102,6 +130,7 @@ class CreatePanelUser implements ShouldQueue
             'first_name' => $firstName,
             'last_name' => $lastName,
             'password' => $panelPassword,
+            'root_admin' => false,
         ]);
 
         if ($create_response->failed()) {
@@ -115,6 +144,15 @@ class CreatePanelUser implements ShouldQueue
         }
 
         $user_data = $create_response->json()['attributes'];
+
+        // Belt-and-suspenders: never persist a root_admin link from the API response.
+        if (!empty($user_data['root_admin'])) {
+            Log::error('[CreatePanelUser] Panel returned root_admin=true for new user #'
+                . ($user_data['id'] ?? '?') . ' — refusing to link client #' . $this->client->id);
+
+            return $this->fail();
+        }
+
         $this->client->user_id = $user_data['id'];
         $this->client->save();
 
