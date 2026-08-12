@@ -1,4 +1,4 @@
-﻿-- Phantom Core - Custom Job System with Progression
+-- Phantom Core - Custom Job System with Progression
 -- High-quality job system with progression and ranks
 
 local jobProgression = {

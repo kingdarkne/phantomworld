@@ -220,7 +220,8 @@ function InitializeTour()
     local firstLocation = TourLocations[1]
     if firstLocation and firstLocation.effects then
         NetworkOverrideClockTime(firstLocation.effects.time * 24, 0, 0)
-        SetWeatherTypeOverride(firstLocation.effects.weather)
+        SetWeatherTypeNowPersist(firstLocation.effects.weather)
+        SetOverrideWeather(firstLocation.effects.weather)
     end
 end
 
@@ -235,7 +236,8 @@ function RestorePlayer()
     FreezeEntityPosition(PlayerPedId(), false)
     
     -- Clear weather override
-    ClearWeatherTypeOverride()
+    ClearOverrideWeather()
+    ClearWeatherTypePersist()
     
     -- Clear any tasks
     ClearPedTasks(PlayerPedId())
@@ -296,9 +298,10 @@ function ApplyLocationEffects(effects)
         NetworkOverrideClockTime(effects.time * 24, 0, 0)
     end
     
-    -- Set weather
+    -- Set weather (FiveM natives — SetWeatherTypeOverride does not exist)
     if effects.weather then
-        SetWeatherTypeOverride(effects.weather)
+        SetWeatherTypeNowPersist(effects.weather)
+        SetOverrideWeather(effects.weather)
     end
     
     -- Set timecycle
