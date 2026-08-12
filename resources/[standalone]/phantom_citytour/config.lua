@@ -55,14 +55,13 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    -- Freeroam: do NOT block multichar with the cinematic tour.
-    -- Tour is available after spawn via F7 / /citytour.
-    AutoStartOnFirstJoin = false,
-    ShowPromptOnSpawn = false,
-    AutoStartDelay = 2,
+    -- Freeroam: never block multichar. After spawn, offer an optional tour.
+    AutoStartOnFirstJoin = false, -- must opt in (prompt / F7 / /citytour)
+    ShowPromptOnSpawn = true, -- ask once after first spawn
+    AutoStartDelay = 4, -- seconds after spawn before prompt
     RequiredPlayTime = 0,
-    CooldownTime = 30, -- minutes between repeat tours (after first completion)
-    -- false = instant handoff to multichar (faster joins). true = force tour before characters.
+    CooldownTime = 5, -- minutes between manual restarts
+    -- Keep false so joins stay fast
     ForceBeforeMultichar = false,
     ForceEveryJoin = false,
 }

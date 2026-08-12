@@ -12,6 +12,8 @@ local tourStartTime = 0
 local lastTourTime = 0
 local tourCompleted = false
 local KVP_DONE = 'phantom_citytour_pre_done'
+local KVP_SPAWN_PROMPTED = 'phantom_citytour_spawn_prompted'
+local spawnPromptShown = false
 
 local function getCore()
     if QBCore then return QBCore end
@@ -39,31 +41,88 @@ local function refreshTourCompleted()
     return tourCompleted
 end
 
+--- After character spawn: optional prompt — player starts the tour themselves.
+function OfferCityTourOnSpawn()
+    if isTourActive then return end
+    if not Config.NewPlayerSettings.ShowPromptOnSpawn then
+        return
+    end
+    if spawnPromptShown then return end
+    spawnPromptShown = true
+
+    -- Already finished the tour before — soft reminder only once per client install
+    if HasPlayerCompletedTour() and GetResourceKvpInt(KVP_SPAWN_PROMPTED) == 1 then
+        return
+    end
+
+    SetResourceKvpInt(KVP_SPAWN_PROMPTED, 1)
+
+    CreateThread(function()
+        -- Let HUD / starter car settle
+        Wait((tonumber(Config.NewPlayerSettings.AutoStartDelay) or 4) * 1000)
+        if isTourActive then return end
+
+        local startNow = false
+        if lib and lib.alertDialog then
+            local result = lib.alertDialog({
+                header = Config.Language.TourTitle or 'City Tour',
+                content = 'Want a guided look around Los Santos?\n\nYou can also press **F7** or type **/citytour** anytime.',
+                centered = true,
+                cancel = true,
+                labels = {
+                    confirm = 'Start tour',
+                    cancel = 'Maybe later',
+                },
+            })
+            startNow = (result == 'confirm')
+        end
+
+        if startNow then
+            StartCityTour()
+        elseif lib and lib.notify then
+            lib.notify({
+                title = 'City Tour',
+                description = ('Press %s or /citytour whenever you want the tour.'):format(Config.Keybinds.StartTour or 'F7'),
+                type = 'inform',
+                duration = 10000,
+            })
+        end
+    end)
+end
+
 -- Initialize (post-spawn helpers only — pre-multichar does not wait on this)
 CreateThread(function()
-    while not getCore() do
+    local deadline = GetGameTimer() + 60000
+    while not getCore() and GetGameTimer() < deadline do
         Wait(200)
     end
+    if not QBCore then return end
 
     PlayerData = QBCore.Functions.GetPlayerData() or {}
 
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         PlayerData = QBCore.Functions.GetPlayerData() or {}
-        -- Do not auto-start tour after spawn; it already ran before multichar.
+        spawnPromptShown = false
+        OfferCityTourOnSpawn()
     end)
 
     RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
         PlayerData.job = JobInfo
     end)
+
+    -- If player already loaded when resource starts/restarts
+    if LocalPlayer.state.isLoggedIn or (PlayerData and PlayerData.citizenid) then
+        OfferCityTourOnSpawn()
+    end
 end)
 
 function HasPlayerCompletedTour()
     return tourCompleted or GetResourceKvpInt(KVP_DONE) == 1
 end
 
--- First join: auto-play tour once. Returning players skip unless they press F7 or /citytour.
+-- Kept for compatibility; tour is offered after spawn, not forced.
 function CheckForNewPlayer()
-    -- Disabled: tour is started from Afterlife before CharactersMenu.
+    OfferCityTourOnSpawn()
 end
 
 --- Optional pre-multichar tour. Always signals `phantom_citytour:client:finished`.
