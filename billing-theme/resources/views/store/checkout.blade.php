@@ -64,6 +64,16 @@
             <form action="{{ route('api.store.checkout', ['id' => $id]) }}" method="POST" data-callback="checkoutForm" id="checkout-form">
                 @csrf
 
+                @guest
+                <div class="form-group row">
+                    <label class="col-lg-3 col-form-label" for="checkout-email">Account email</label>
+                    <div class="col-lg-7">
+                        <input type="email" class="form-control" name="email" id="checkout-email" required maxlength="255" placeholder="you@example.com" autocomplete="email">
+                        <small class="form-text text-muted">We email your billing + game panel login, invoice amount, and renew date here.</small>
+                    </div>
+                </div>
+                @endguest
+
                 <div class="form-group row">
                     <label class="col-lg-3 col-form-label">Payment Method</label>
                     <div class="col-lg-7">

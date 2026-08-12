@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Server;
 use App\Models\ServerAddon;
 use App\Models\Setting;
+use App\Notifications\ServerReadyNotif;
 use App\Support\DiscordRelay;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -160,6 +161,12 @@ class CreateServer implements ShouldQueue
         $this->server->identifier = $server_attr['identifier'];
         $this->server->status = 0;
         $this->server->save();
+
+        try {
+            $client->notify(new ServerReadyNotif($this->server));
+        } catch (\Throwable $e) {
+            Log::error('[CreateServer] ServerReady email failed: ' . $e->getMessage());
+        }
 
         DiscordRelay::serverCreated($this->server, $client, $this->apiUrl);
     }

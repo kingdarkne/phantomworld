@@ -171,7 +171,13 @@ class StoreController extends ApiController
             ]);
         }
 
-        $clientId = auth()->check() ? auth()->user()->id : $this->createGuestAccount();
+        $clientId = auth()->check()
+            ? auth()->user()->id
+            : $this->createGuestAccount($request);
+
+        if ($clientId instanceof \Illuminate\Http\JsonResponse) {
+            return $clientId;
+        }
 
         // Logged-in buyers still need a Pterodactyl user before provisioning.
         if (auth()->check() && empty(auth()->user()->user_id)) {
@@ -285,10 +291,18 @@ class StoreController extends ApiController
         ]);
     }
 
-    private function createGuestAccount()
+    private function createGuestAccount(Request $request)
     {
         if (auth()->check()) {
             return auth()->id();
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|max:255|unique:clients,email',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->respondJson(['errors' => $validator->errors()->all()]);
         }
 
         $currency = session('currency');
@@ -296,7 +310,7 @@ class StoreController extends ApiController
         $currencyName = (is_object($currency) && !empty($currency->name)) ? $currency->name : 'USD';
         $country = (is_object($tax) && !empty($tax->country)) ? $tax->country : 'Global';
 
-        $email = 'guest_' . Str::random(10) . '@phantom-chicken.com';
+        $email = strtolower(trim((string) $request->input('email')));
         $password_raw = Str::random(16);
         $client = Client::create([
             'email' => $email,
@@ -311,9 +325,10 @@ class StoreController extends ApiController
         Auth::login($client);
 
         try {
-            CreatePanelUser::dispatch($client)->onQueue('high');
+            // Sync so welcome email with billing + panel passwords goes out before redirect
+            CreatePanelUser::dispatchSync($client, $password_raw);
         } catch (\Throwable $e) {
-            Log::error('[checkout] CreatePanelUser dispatch failed: ' . $e->getMessage());
+            Log::error('[checkout] CreatePanelUser failed: ' . $e->getMessage());
         }
 
         return $client->id;

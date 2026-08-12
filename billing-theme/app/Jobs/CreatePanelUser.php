@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Client;
 use App\Models\Setting;
+use App\Notifications\AccountWelcomeNotif;
 use App\Support\DiscordRelay;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -18,34 +19,23 @@ class CreatePanelUser implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * The client instance.
-     *
-     * @var \App\Models\Client
-     */
     protected $client;
 
     protected $apiKey;
 
     protected $apiUrl;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct(Client $client)
+    /** Optional billing-portal password to include in the welcome email (guests). */
+    protected ?string $billingPassword;
+
+    public function __construct(Client $client, ?string $billingPassword = null)
     {
         $this->client = $client;
+        $this->billingPassword = $billingPassword;
         $this->apiKey = Setting::where('key', 'panel_app_api_key')->value('value');
         $this->apiUrl = Setting::where('key', 'panel_url')->value('value');
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
         if (empty($this->apiKey) || empty($this->apiUrl)) {
@@ -79,6 +69,11 @@ class CreatePanelUser implements ShouldQueue
                 $this->client->user_id = $user_obj['attributes']['id'];
                 $this->client->save();
 
+                $this->sendWelcome(
+                    (string) $user_obj['attributes']['username'],
+                    null
+                );
+
                 return;
             }
         }
@@ -89,14 +84,18 @@ class CreatePanelUser implements ShouldQueue
             $username = 'user' . Str::random(6);
         }
 
+        $panelPassword = Str::random(16);
+
         $create_response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
         ])->post(rtrim($this->apiUrl, '/') . '/api/application/users', [
             'username' => $username,
             'email' => $this->client->email,
             'first_name' => 'First',
             'last_name' => 'Last',
+            'password' => $panelPassword,
         ]);
 
         if ($create_response->failed()) {
@@ -113,10 +112,34 @@ class CreatePanelUser implements ShouldQueue
         $this->client->user_id = $user_data['id'];
         $this->client->save();
 
+        $this->sendWelcome((string) ($user_data['username'] ?? $username), $panelPassword);
+
         try {
             DiscordRelay::panelUserCreated($this->client, (string) $this->apiUrl);
         } catch (\Throwable $e) {
             Log::warning('[CreatePanelUser] DiscordRelay failed: ' . $e->getMessage());
+        }
+    }
+
+    private function sendWelcome(string $panelUsername, ?string $panelPassword): void
+    {
+        // Skip disposable guest_*@phantom-chicken.com leftovers from older checkouts
+        if (preg_match('/^guest_/i', (string) $this->client->email)
+            && str_ends_with(strtolower((string) $this->client->email), '@phantom-chicken.com')) {
+            Log::info('[CreatePanelUser] Skipping welcome email for legacy guest address ' . $this->client->email);
+
+            return;
+        }
+
+        try {
+            $this->client->notify(new AccountWelcomeNotif(
+                $this->client,
+                $panelUsername,
+                $panelPassword,
+                $this->billingPassword
+            ));
+        } catch (\Throwable $e) {
+            Log::error('[CreatePanelUser] Welcome email failed: ' . $e->getMessage());
         }
     }
 }
