@@ -86,7 +86,8 @@ NewCharacterAnimation = function()
 
     TaskGoToCoordAnyMeans(PlayerPedId(), data.endcoords.x, data.endcoords.y, data.endcoords.z, 1.0, 0, false, 1, 0)
 
-    while true do
+    local deadline = GetGameTimer() + 20000
+    while GetGameTimer() < deadline do
         if #(GetEntityCoords(PlayerPedId()) - data.endcoords) < 8 then
             break
         end

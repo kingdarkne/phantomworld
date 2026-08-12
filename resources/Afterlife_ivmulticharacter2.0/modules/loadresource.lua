@@ -12,22 +12,15 @@ end)
 LoadResource = function()
 	print('[Multicharacter] LoadResource started...')
 
-	-- Close NC loading screen once the session is ready (do not hard-wait 60s)
-	local waited = 0
-	while waited < 5000 do
-		Wait(250)
-		waited = waited + 250
-		if waited >= 1500 then
-			break
-		end
-	end
+	-- Short settle so NUI/session attach (do not burn 5s+)
+	Wait(750)
 
 	ShutdownLoadingScreen()
 	ShutdownLoadingScreenNui()
 	DisplayRadar(false)
 	TriggerServerEvent('Update:RoutingBucket', math.random(1000, 10000))
 
-	-- Wait for player ped to exist
+	-- Wait briefly for ped — never abort join if ped is late
 	local attempts = 0
 	while not DoesEntityExist(PlayerPedId()) and attempts < 50 do
 		Wait(100)
@@ -35,15 +28,15 @@ LoadResource = function()
 	end
 
 	if not DoesEntityExist(PlayerPedId()) then
-		print('[Multicharacter] ERROR: Player ped does not exist!')
-		return
+		print('[Multicharacter] WARN: Player ped not ready yet — continuing to menu')
+	else
+		print('[Multicharacter] Player ped ready, fading in...')
 	end
 
-	print('[Multicharacter] Player ped ready, fading in...')
-	DoScreenFadeIn(500)
-	Wait(500)
+	DoScreenFadeIn(400)
+	Wait(200)
 
-	-- JOIN ORDER: loading screen → city tour → multichar → outfit → spawn
+	-- Optional city tour before multichar (disabled by default for freeroam speed)
 	local tourDone = false
 	local tourHandler
 	tourHandler = AddEventHandler('phantom_citytour:client:finished', function()
@@ -58,15 +51,24 @@ LoadResource = function()
 		end)
 		if not ok then
 			print(('[Multicharacter] City tour failed to start: %s'):format(tostring(err)))
+			tourDone = true
 		end
 	else
-		print('[Multicharacter] phantom_citytour not started — skipping tour')
+		tourDone = true
 	end
 
-	if started then
-		local timeout = GetGameTimer() + 180000 -- 3 min max
+	if started and not tourDone then
+		-- Cap wait tightly; freeroam config finishes immediately via finished event
+		local timeout = GetGameTimer() + 45000
 		while not tourDone and GetGameTimer() < timeout do
-			Wait(200)
+			Wait(100)
+		end
+		if not tourDone then
+			print('[Multicharacter] City tour timed out — forcing CharactersMenu')
+			pcall(function()
+				exports['phantom_citytour']:StopCityTour(true)
+			end)
+			tourDone = true
 		end
 	end
 
@@ -74,6 +76,5 @@ LoadResource = function()
 		RemoveEventHandler(tourHandler)
 	end
 
-	-- Hand off to character select
 	CharactersMenu()
 end

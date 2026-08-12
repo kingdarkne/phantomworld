@@ -399,14 +399,19 @@ function TourController:setupPlayerAnimation(animationData)
     
     local ped = PlayerPedId()
     
-    -- Load animation dict
-    RequestAnimDict(animationData.dict)
-    while not HasAnimDictLoaded(animationData.dict) do
-        Wait(10)
+    -- Load animation dict (timeout so tour never soft-locks)
+    if animationData.dict and animationData.dict ~= '' then
+        RequestAnimDict(animationData.dict)
+        local deadline = GetGameTimer() + 5000
+        while not HasAnimDictLoaded(animationData.dict) do
+            if GetGameTimer() > deadline then
+                print(('[phantom_citytour] anim dict timeout: %s'):format(animationData.dict))
+                return
+            end
+            Wait(10)
+        end
+        TaskPlayAnim(ped, animationData.dict, animationData.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
     end
-    
-    -- Play animation
-    TaskPlayAnim(ped, animationData.dict, animationData.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
 end
 
 -- Set up player (initial setup)

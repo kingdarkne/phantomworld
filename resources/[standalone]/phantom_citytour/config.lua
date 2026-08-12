@@ -55,15 +55,15 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    -- Tour runs BEFORE multichar (wired from Afterlife LoadResource).
-    -- Keep post-spawn auto-start OFF so players are not forced into a second tour.
+    -- Freeroam: do NOT block multichar with the cinematic tour.
+    -- Tour is available after spawn via F7 / /citytour.
     AutoStartOnFirstJoin = false,
     ShowPromptOnSpawn = false,
     AutoStartDelay = 2,
     RequiredPlayTime = 0,
     CooldownTime = 30, -- minutes between repeat tours (after first completion)
-    -- Play tour once per client (KVP) before first multichar. Set ForceEveryJoin true to replay every session.
-    ForceBeforeMultichar = true,
+    -- false = instant handoff to multichar (faster joins). true = force tour before characters.
+    ForceBeforeMultichar = false,
     ForceEveryJoin = false,
 }
 

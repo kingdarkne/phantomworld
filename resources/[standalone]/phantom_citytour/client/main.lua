@@ -66,8 +66,14 @@ function CheckForNewPlayer()
     -- Disabled: tour is started from Afterlife before CharactersMenu.
 end
 
---- Run cinematic tour before multicharacter. Signals `phantom_citytour:client:finished` when done.
+--- Optional pre-multichar tour. Always signals `phantom_citytour:client:finished`.
 function StartCityTourPreMultichar()
+    -- Fast path: freeroam does not gate character select on the cinematic tour.
+    if not Config.NewPlayerSettings.ForceBeforeMultichar then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
     if isTourActive then
         TriggerEvent('phantom_citytour:client:finished')
         return
@@ -82,9 +88,19 @@ function StartCityTourPreMultichar()
 
     preMulticharMode = true
     CreateThread(function()
-        -- Brief settle after loadscreen fade so cams/NUI attach cleanly
         Wait(400)
-        StartCityTour()
+        local ok, err = pcall(StartCityTour)
+        if not ok then
+            print(('[phantom_citytour] tour error: %s'):format(tostring(err)))
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
+            return
+        end
+        if preMulticharMode and not isTourActive then
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
+            return
+        end
         if lib and lib.notify then
             lib.notify({
                 title = 'City Tour',
@@ -459,10 +475,18 @@ end
 
 -- Utility functions
 function LoadAnimDict(dict)
+    if not dict or dict == '' then return false end
+    if HasAnimDictLoaded(dict) then return true end
+    RequestAnimDict(dict)
+    local deadline = GetGameTimer() + 5000
     while not HasAnimDictLoaded(dict) do
-        RequestAnimDict(dict)
-        Wait(5)
+        if GetGameTimer() > deadline then
+            print(('[phantom_citytour] anim dict timeout: %s'):format(dict))
+            return false
+        end
+        Wait(10)
     end
+    return true
 end
 
 RegisterCommand('+phantom_citytour_toggle', function()
