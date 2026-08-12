@@ -135,6 +135,16 @@ end
 CreateThread(function()
     Wait(2500)
     spawnJobPeds()
+    for _, d in ipairs(Config.DealerBlips or {}) do
+        local blip = AddBlipForCoord(d.coords.x, d.coords.y, d.coords.z)
+        SetBlipSprite(blip, d.sprite or 326)
+        SetBlipColour(blip, d.color or 2)
+        SetBlipScale(blip, 0.75)
+        SetBlipAsShortRange(blip, true)
+        BeginTextCommandSetBlipName('STRING')
+        AddTextComponentSubstringPlayerName(d.label)
+        EndTextCommandSetBlipName(blip)
+    end
 end)
 
 -- One-time freeroam orientation after character load

@@ -89,3 +89,12 @@ Config.ShopZones = {
     { label = 'Bank', coords = vec3(314.23, -278.83, 54.17), radius = 2.2, bank = true },
     { label = 'Bank', coords = vec3(-350.8, -49.57, 49.04), radius = 2.2, bank = true },
 }
+
+-- Backup map blips for JG dealerships (spaced city-wide; showroom is NUI, vanilla MLO/world)
+Config.DealerBlips = {
+    { label = 'PDM — Cars', coords = vec3(-55.99, -1096.59, 26.42), sprite = 326, color = 2 },
+    { label = 'Luxury Autos', coords = vec3(-1257.4, -369.12, 36.98), sprite = 523, color = 46 },
+    { label = 'Boat Dealer', coords = vec3(-739.55, -1333.75, 1.6), sprite = 410, color = 3 },
+    { label = 'Aircraft Dealer', coords = vec3(-1623.0, -3151.56, 13.99), sprite = 423, color = 5 },
+    { label = 'Truck Dealer', coords = vec3(1214.0, -3205.0, 6.0), sprite = 477, color = 17 },
+}

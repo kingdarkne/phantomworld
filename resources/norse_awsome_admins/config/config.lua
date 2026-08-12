@@ -85,7 +85,7 @@ Config.OpenKey = 'HOME'
 
 Config.ESXGroups = { admin = { 'admin','mod','superadmin' }, super = { 'superadmin' } }
 Config.QBGroups  = { admin = { 'admin','god' }, super = { 'god' } }
-Config.QBOXGroups= { admin = { 'god' }, super = { 'god' } }
+Config.QBOXGroups= { admin = { 'god', 'admin' }, super = { 'god' } }
 
 -- Admin duty job integration
 -- When Enabled=true:
