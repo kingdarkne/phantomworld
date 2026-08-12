@@ -25,6 +25,7 @@ upload "$ROOT/public/dist/css/phantom-theme.css" "/var/www/billing/public/dist/c
 upload "$ROOT/bootstrap/helpers.php" "/var/www/billing/bootstrap/helpers.php"
 upload "$ROOT/resources/views/store/pages.blade.php" "/var/www/billing/resources/views/store/pages.blade.php"
 upload "$ROOT/resources/views/store/checkout.blade.php" "/var/www/billing/resources/views/store/checkout.blade.php"
+upload "$ROOT/resources/views/store/order.blade.php" "/var/www/billing/resources/views/store/order.blade.php"
 upload "$ROOT/resources/views/layouts/store/header.blade.php" "/var/www/billing/resources/views/layouts/store/header.blade.php"
 upload "$ROOT/resources/views/layouts/store/footer.blade.php" "/var/www/billing/resources/views/layouts/store/footer.blade.php"
 upload "$ROOT/resources/views/layouts/store/nav.blade.php" "/var/www/billing/resources/views/layouts/store/nav.blade.php"
