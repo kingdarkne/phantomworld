@@ -1,4 +1,4 @@
-﻿-- Phantom Core - Garage System
+-- Phantom Core - Garage System
 -- High-quality garage system with impound and personal garages
 
 local playerGarages = {}

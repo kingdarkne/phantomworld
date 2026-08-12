@@ -35,5 +35,6 @@ dependencies {
 }
 
 export 'StartCityTour'
+export 'StartCityTourPreMultichar'
 export 'StopCityTour'
 export 'IsTourActive'

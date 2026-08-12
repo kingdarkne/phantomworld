@@ -173,7 +173,7 @@ RegisterCommand('resetworldevents', function()
     lib.notify({ title = 'World Events', description = 'Menu reset. Use /worldevents to reopen', type = 'info' })
 end, false)
 
-RegisterKeyMapping('worldevents', 'Open World Events Panel', 'keyboard', 'F8')
+RegisterKeyMapping('worldevents', 'Open World Events Panel', 'keyboard', 'DELETE')
 
 -- Close menu with ESC
 CreateThread(function()

@@ -1,4 +1,4 @@
-﻿-- Phantom Core - Interaction Menu
+-- Phantom Core - Interaction Menu
 -- High-quality 3D target-based interaction menu
 
 local nearbyEntities = {}

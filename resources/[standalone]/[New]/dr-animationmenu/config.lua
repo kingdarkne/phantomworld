@@ -22,7 +22,7 @@ AK4Y.ShortcutKey = 21  -- Key to use the saved animation. (21 = SHIFT)
 AK4Y.CrouchKey = "LCONTROL" -- Key to toggle the crouch animation. (Left Ctrl - use LCONTROL for FiveM)
 AK4Y.CancelKey = "X"   -- Key to cancel the current animation. (X)
 AK4Y.CancelHandsUp = true -- If true, the player raises their hands if there’s no animation to cancel.
-AK4Y.PointKey = "P"    -- Key to toggle the pointing animation. (P)
+AK4Y.PointKey = "B"    -- Key to toggle the pointing animation. (B)
 AK4Y.RagdollKey = "U"  -- Key to toggle the ragdoll animation. (U)
-AK4Y.AnimationAcceptKey = "F2" -- Key to accept the invite.
+AK4Y.AnimationAcceptKey = "Y" -- Key to accept the invite.
 AK4Y.AnimationDeclineKey = "N" -- Key to decline the invite.

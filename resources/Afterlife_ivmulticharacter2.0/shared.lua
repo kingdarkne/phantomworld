@@ -50,7 +50,7 @@ Config.appartmentevent = 'apartments:client:setupSpawnUI' -- ps-housing:client:s
 Config.SpawnSelector = false
 
 Config.Prefix = 'char'
-Config.Maxslots = 4
+Config.Maxslots = 3
 Config.Identifier = 'license'
 
 Config.maxdob = 2005

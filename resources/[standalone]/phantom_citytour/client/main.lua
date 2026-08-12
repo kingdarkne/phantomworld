@@ -1,17 +1,37 @@
-local QBCore = exports['qbx_core']:GetCoreObject()
+local QBCore = nil
 local isTourActive = false
 local currentLocationIndex = 1
 local isPaused = false
 local cameraHandle = nil
 local playerHandle = nil
+local preMulticharMode = false
 
 -- Local variables
 local PlayerData = {}
 local tourStartTime = 0
 local lastTourTime = 0
 local tourCompleted = false
+local KVP_DONE = 'phantom_citytour_pre_done'
+local KVP_SPAWN_PROMPTED = 'phantom_citytour_spawn_prompted'
+local spawnPromptShown = false
+
+local function getCore()
+    if QBCore then return QBCore end
+    local ok, core = pcall(function()
+        return exports['qbx_core']:GetCoreObject()
+    end)
+    if ok then QBCore = core end
+    return QBCore
+end
 
 local function refreshTourCompleted()
+    -- Prefer KVP for pre-multichar; fall back to server metadata when loaded
+    if GetResourceKvpInt(KVP_DONE) == 1 then
+        tourCompleted = true
+        return true
+    end
+    local core = getCore()
+    if not core then return tourCompleted end
     local ok, completed = pcall(function()
         return lib.callback.await('phantom_citytour:hasCompleted', false)
     end)
@@ -21,67 +41,139 @@ local function refreshTourCompleted()
     return tourCompleted
 end
 
--- Initialize
-CreateThread(function()
-    while not QBCore do
-        Wait(100)
+--- After character spawn: optional prompt — player starts the tour themselves.
+--- Only call this AFTER outfit save (new) or returning player is fully in world.
+function OfferCityTourOnSpawn()
+    if isTourActive then return end
+    if not Config.NewPlayerSettings.ShowPromptOnSpawn then
+        return
     end
-    
-    PlayerData = QBCore.Functions.GetPlayerData()
-    
-    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-        PlayerData = QBCore.Functions.GetPlayerData()
-        CheckForNewPlayer()
+    if spawnPromptShown then return end
+    spawnPromptShown = true
+
+    -- Already finished the tour before — soft reminder only once per client install
+    if HasPlayerCompletedTour() and GetResourceKvpInt(KVP_SPAWN_PROMPTED) == 1 then
+        return
+    end
+
+    SetResourceKvpInt(KVP_SPAWN_PROMPTED, 1)
+
+    CreateThread(function()
+        -- Let starter-car / HUD settle after outfit save
+        Wait((tonumber(Config.NewPlayerSettings.AutoStartDelay) or 4) * 1000)
+        if isTourActive then return end
+
+        local startNow = false
+        if lib and lib.alertDialog then
+            local result = lib.alertDialog({
+                header = Config.Language.TourTitle or 'City Tour',
+                content = 'Want a guided look around Los Santos?\n\nYou can also press **F7** or type **/citytour** anytime.',
+                centered = true,
+                cancel = true,
+                labels = {
+                    confirm = 'Start tour',
+                    cancel = 'Maybe later',
+                },
+            })
+            startNow = (result == 'confirm')
+        end
+
+        if startNow then
+            StartCityTour()
+        elseif lib and lib.notify then
+            lib.notify({
+                title = 'City Tour',
+                description = ('Press %s or /citytour whenever you want the tour.'):format(Config.Keybinds.StartTour or 'F7'),
+                type = 'inform',
+                duration = 10000,
+            })
+        end
     end)
-    
+end
+
+-- Initialize (post-outfit helpers — never during multichar)
+CreateThread(function()
+    local deadline = GetGameTimer() + 60000
+    while not getCore() and GetGameTimer() < deadline do
+        Wait(200)
+    end
+    if not QBCore then return end
+
+    PlayerData = QBCore.Functions.GetPlayerData() or {}
+
+    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+        PlayerData = QBCore.Functions.GetPlayerData() or {}
+        -- Do not prompt here — new chars still open outfit maker after this event.
+        spawnPromptShown = false
+    end)
+
     RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
         PlayerData.job = JobInfo
     end)
 
-    Wait(4000)
-    if PlayerData and PlayerData.citizenid then
-        CheckForNewPlayer()
-    end
+    -- Shared ready signal from starterpack (after outfit save / returning spawn)
+    AddEventHandler('phantom:client:characterReady', function()
+        OfferCityTourOnSpawn()
+    end)
+
+    -- Fallback if starterpack is stopped: only after first outfit save (not multichar)
+    RegisterNetEvent('illenium-appearance:client:characterCreated', function()
+        SetTimeout(1500, function()
+            OfferCityTourOnSpawn()
+        end)
+    end)
 end)
 
 function HasPlayerCompletedTour()
-    return tourCompleted
+    return tourCompleted or GetResourceKvpInt(KVP_DONE) == 1
 end
 
--- First join: auto-play tour once. Returning players skip unless they press F7 or /citytour.
+-- Kept for compatibility; tour is offered after outfit/character ready.
 function CheckForNewPlayer()
+    OfferCityTourOnSpawn()
+end
+
+--- Optional pre-multichar tour. Always signals `phantom_citytour:client:finished`.
+function StartCityTourPreMultichar()
+    -- Fast path: freeroam does not gate character select on the cinematic tour.
+    if not Config.NewPlayerSettings.ForceBeforeMultichar then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    if isTourActive then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    -- Returning clients (KVP) skip straight to multichar unless ForceEveryJoin is on.
+    local alreadyDone = GetResourceKvpInt(KVP_DONE) == 1
+    if alreadyDone and not Config.NewPlayerSettings.ForceEveryJoin then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    preMulticharMode = true
     CreateThread(function()
-        refreshTourCompleted()
-
-        if tourCompleted then
+        Wait(400)
+        local ok, err = pcall(StartCityTour)
+        if not ok then
+            print(('[phantom_citytour] tour error: %s'):format(tostring(err)))
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
             return
         end
-
-        local delay = (Config.NewPlayerSettings.AutoStartDelay or 5) * 1000
-        Wait(delay)
-
-        if tourCompleted or isTourActive then
+        if preMulticharMode and not isTourActive then
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
             return
         end
-
-        if Config.NewPlayerSettings.AutoStartOnFirstJoin then
-            if lib and lib.notify then
-                lib.notify({
-                    title = 'Phantom World',
-                    description = Config.Language.WelcomeMessage,
-                    type = 'inform',
-                    duration = 10000
-                })
-            end
-            StartCityTour()
-            return
-        end
-
-        if Config.NewPlayerSettings.ShowPromptOnSpawn then
-            TriggerEvent('chat:addMessage', {
-                color = {0, 255, 0},
-                multiline = true,
-                args = {'[Phantom Tour]', Config.Language.PressToStart:format(Config.Keybinds.StartTour)}
+        if lib and lib.notify then
+            lib.notify({
+                title = 'City Tour',
+                description = 'SPACE skip location · BACKSPACE skip whole tour',
+                type = 'inform',
+                duration = 7000,
             })
         end
     end)
@@ -97,11 +189,11 @@ function StartCityTour()
         })
         return
     end
-    
-    -- Repeat tours only after the player has completed once.
-    if tourCompleted then
+
+    -- Repeat tours only after the player has completed once (manual F7/citytour).
+    if not preMulticharMode and tourCompleted then
         local currentTime = GetGameTimer()
-        local cooldownMs = Config.NewPlayerSettings.CooldownTime * 60000
+        local cooldownMs = (Config.NewPlayerSettings.CooldownTime or 30) * 60000
 
         if currentTime - lastTourTime < cooldownMs then
             local remainingTime = math.ceil((cooldownMs - (currentTime - lastTourTime)) / 60000)
@@ -113,65 +205,86 @@ function StartCityTour()
             return
         end
     end
-    
+
     isTourActive = true
     currentLocationIndex = 1
     isPaused = false
     tourStartTime = GetGameTimer()
-    
-    -- Initialize tour
+
     InitializeTour()
-    
-    -- Start first location
     ProcessLocation(currentLocationIndex)
-    
-    -- Show UI
+
     SendNUIMessage({
         action = "showTour",
         tourData = GetTourOverview(),
         currentLocation = currentLocationIndex
     })
-    
-    TriggerEvent('chat:addMessage', {
-        color = {0, 255, 0},
-        multiline = true,
-        args = {"[Phantom Tour]", "Welcome to " .. Config.Language.TourTitle}
-    })
+
+    if lib and lib.notify then
+        lib.notify({
+            title = 'Phantom World',
+            description = Config.Language.WelcomeMessage,
+            type = 'inform',
+            duration = 8000
+        })
+    else
+        TriggerEvent('chat:addMessage', {
+            color = {0, 255, 0},
+            multiline = true,
+            args = {"[Phantom Tour]", "Welcome to " .. Config.Language.TourTitle}
+        })
+    end
 end
 
 function StopCityTour(markCompleted)
-    if not isTourActive then return end
-    
+    if not isTourActive then
+        if preMulticharMode then
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
+        end
+        return
+    end
+
     isTourActive = false
     isPaused = false
     lastTourTime = GetGameTimer()
 
     if markCompleted then
         tourCompleted = true
-        TriggerServerEvent('phantom_citytour:markCompleted')
+        SetResourceKvpInt(KVP_DONE, 1)
+        -- Best-effort metadata when a character is already loaded
+        pcall(function()
+            TriggerServerEvent('phantom_citytour:markCompleted')
+        end)
     end
-    
+
     if cameraHandle then
         RenderScriptCams(false, true, 500, true, true)
         DestroyCam(cameraHandle, false)
         cameraHandle = nil
     end
-    
-    -- Restore player
+
     RestorePlayer()
-    
-    -- Hide UI
+
     SendNUIMessage({
         action = "hideTour"
     })
-    
-    -- Show completion message
+
     local tourDuration = math.floor((GetGameTimer() - tourStartTime) / 1000)
-    TriggerEvent('chat:addMessage', {
-        color = {0, 255, 0},
-        multiline = true,
-        args = {"[Phantom Tour]", Config.Language.TourCompleted .. " (Duration: " .. tourDuration .. "s)"}
-    })
+    if not preMulticharMode then
+        TriggerEvent('chat:addMessage', {
+            color = {0, 255, 0},
+            multiline = true,
+            args = {"[Phantom Tour]", Config.Language.TourCompleted .. " (Duration: " .. tourDuration .. "s)"}
+        })
+    end
+
+    if preMulticharMode then
+        preMulticharMode = false
+        -- Keep ped hidden/frozen briefly — Afterlife CharactersMenu takes over next
+        DisplayRadar(false)
+        TriggerEvent('phantom_citytour:client:finished')
+    end
 end
 
 function InitializeTour()
@@ -190,7 +303,8 @@ function InitializeTour()
     local firstLocation = TourLocations[1]
     if firstLocation and firstLocation.effects then
         NetworkOverrideClockTime(firstLocation.effects.time * 24, 0, 0)
-        SetWeatherTypeOverride(firstLocation.effects.weather)
+        SetWeatherTypeNowPersist(firstLocation.effects.weather)
+        SetOverrideWeather(firstLocation.effects.weather)
     end
 end
 
@@ -205,7 +319,8 @@ function RestorePlayer()
     FreezeEntityPosition(PlayerPedId(), false)
     
     -- Clear weather override
-    ClearWeatherTypeOverride()
+    ClearOverrideWeather()
+    ClearWeatherTypePersist()
     
     -- Clear any tasks
     ClearPedTasks(PlayerPedId())
@@ -266,9 +381,10 @@ function ApplyLocationEffects(effects)
         NetworkOverrideClockTime(effects.time * 24, 0, 0)
     end
     
-    -- Set weather
+    -- Set weather (FiveM natives — SetWeatherTypeOverride does not exist)
     if effects.weather then
-        SetWeatherTypeOverride(effects.weather)
+        SetWeatherTypeNowPersist(effects.weather)
+        SetOverrideWeather(effects.weather)
     end
     
     -- Set timecycle
@@ -426,10 +542,18 @@ end
 
 -- Utility functions
 function LoadAnimDict(dict)
+    if not dict or dict == '' then return false end
+    if HasAnimDictLoaded(dict) then return true end
+    RequestAnimDict(dict)
+    local deadline = GetGameTimer() + 5000
     while not HasAnimDictLoaded(dict) do
-        RequestAnimDict(dict)
-        Wait(5)
+        if GetGameTimer() > deadline then
+            print(('[phantom_citytour] anim dict timeout: %s'):format(dict))
+            return false
+        end
+        Wait(10)
     end
+    return true
 end
 
 RegisterCommand('+phantom_citytour_toggle', function()
@@ -446,6 +570,13 @@ RegisterCommand('phantom_citytour_skip', function()
     if isTourActive then SkipLocation() end
 end, false)
 RegisterKeyMapping('phantom_citytour_skip', 'Phantom City Tour (skip location)', 'keyboard', Config.Keybinds.SkipLocation)
+
+RegisterCommand('phantom_citytour_skip_all', function()
+    if isTourActive then
+        StopCityTour(true)
+    end
+end, false)
+RegisterKeyMapping('phantom_citytour_skip_all', 'Phantom City Tour (skip entire tour)', 'keyboard', Config.Keybinds.SkipTour or 'BACK')
 
 RegisterCommand('phantom_citytour_pause', function()
     if isTourActive then PauseTour() end
@@ -465,7 +596,8 @@ RegisterNUICallback('startTour', function(data, cb)
 end)
 
 RegisterNUICallback('stopTour', function(data, cb)
-    StopCityTour(false)
+    -- Skipping from the pre-multichar tour still counts as completed
+    StopCityTour(preMulticharMode == true)
     cb('ok')
 end)
 
@@ -498,6 +630,7 @@ end)
 
 -- Exports
 exports('StartCityTour', StartCityTour)
+exports('StartCityTourPreMultichar', StartCityTourPreMultichar)
 exports('StopCityTour', StopCityTour)
 exports('IsTourActive', function() return isTourActive end)
 

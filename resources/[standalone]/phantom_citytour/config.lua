@@ -31,6 +31,7 @@ Config.TourSettings = {
 Config.Keybinds = {
     StartTour = 'F7', -- Start/stop tour
     SkipLocation = 'SPACE', -- Skip current location
+    SkipTour = 'BACK', -- Skip entire tour (pre-multichar + manual)
     PauseTour = 'PAUSE', -- Pause/resume (changed from P to avoid conflict)
     ToggleUI = 'H' -- Hide/show UI
 }
@@ -54,11 +55,15 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    AutoStartOnFirstJoin = true,
-    ShowPromptOnSpawn = true,
-    AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
-    RequiredPlayTime = 0, -- minutes before tour can be started again
-    CooldownTime = 30 -- minutes between repeat tours (after first completion)
+    -- Freeroam: never block multichar. After spawn, offer an optional tour.
+    AutoStartOnFirstJoin = false, -- must opt in (prompt / F7 / /citytour)
+    ShowPromptOnSpawn = true, -- ask once after first spawn
+    AutoStartDelay = 6, -- seconds after outfit save before tour prompt (after starter car)
+    RequiredPlayTime = 0,
+    CooldownTime = 5, -- minutes between manual restarts
+    -- Keep false so joins stay fast
+    ForceBeforeMultichar = false,
+    ForceEveryJoin = false,
 }
 
 -- Admin settings

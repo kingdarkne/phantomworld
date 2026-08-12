@@ -1,6 +1,8 @@
 Config = {}
 
 --- UI toggles (also overridable via convars qbx_hud:showRank / qbx_hud:showJob)
+--- Bottom-left strip disabled for freeroam (phantom_dashboard:hideUi / stop resource)
+Config.Enabled = GetConvarInt('phantom_dashboard:hideUi', 0) ~= 1
 Config.ShowRank = true
 Config.ShowJob = true
 Config.ShowGang = true

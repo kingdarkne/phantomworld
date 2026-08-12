@@ -1,4 +1,4 @@
-﻿-- Phantom Core - Banking System
+-- Phantom Core - Banking System
 -- High-quality banking with ATMs and transactions
 
 local atmBlips = {}

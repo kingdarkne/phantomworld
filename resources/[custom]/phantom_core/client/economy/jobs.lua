@@ -1,4 +1,4 @@
-﻿-- Phantom Core - Job Payout System
+-- Phantom Core - Job Payout System
 -- High-quality job payout system with bonuses
 
 local currentJob = nil

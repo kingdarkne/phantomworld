@@ -149,7 +149,7 @@ RegisterCommand('gangmenu', function()
     OpenGangMenu()
 end)
 
-RegisterKeyMapping('gangmenu', 'Open Gang Menu', 'keyboard', 'F7')
+RegisterKeyMapping('gangmenu', 'Open Gang Menu', 'keyboard', 'INSERT')
 
 -- Open gang menu
 function OpenGangMenu()

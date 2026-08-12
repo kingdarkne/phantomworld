@@ -194,9 +194,40 @@ XNL_CurrentPlayerXP = 0
 XNL_driving = 0
 XNL_crafting = 0
 
+-- Rank bar / level-up UI must wait until the player is fully in-world
+-- (not during multichar or first-outfit creator).
+local XNL_SpawnReady = false
+local XNL_AwaitingFirstOutfit = false
+local XNL_PendingRankShow = false
+
+local function XNL_MarkSpawnReady()
+	if XNL_AwaitingFirstOutfit then return end
+	XNL_SpawnReady = true
+	-- Flush even if we were already marked ready (XP can load after characterReady)
+	if not XNL_PendingRankShow then return end
+	XNL_PendingRankShow = false
+	local CurLevel = XNL_GetLevelFromXP(XNL_CurrentPlayerXP)
+	CreateRankBar(
+		XNL_GetXPFloorForLevel(CurLevel),
+		XNL_GetXPCeilingForLevel(CurLevel),
+		XNL_CurrentPlayerXP,
+		XNL_CurrentPlayerXP,
+		CurLevel,
+		false
+	)
+end
+
+local function XNL_ResetSpawnGate()
+	XNL_SpawnReady = false
+	XNL_AwaitingFirstOutfit = false
+	XNL_PendingRankShow = false
+end
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded')
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+	XNL_SpawnReady = false
+	XNL_AwaitingFirstOutfit = false
+	XNL_PendingRankShow = false
 	-- Wait for qbx_core server-side to fully register the player before calling the callback
 	Wait(2000)
 	local pdata = getPlayerData()
@@ -207,9 +238,47 @@ AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
 		-- Never overwrite with lower value: XP may have been added before this callback returned
 		XNL_CurrentPlayerXP = math.max(XNL_CurrentPlayerXP, dbXP)
 		XNL_crafting = tonumber(experience.crafting) or 0
-		-- Initialize the rank bar display so the player sees their rank on spawn
-		XNL_SetInitialXPLevels(XNL_CurrentPlayerXP, true, false)
+		-- Load XP silently — do NOT show rank bar until fully spawned
+		XNL_SetInitialXPLevels(XNL_CurrentPlayerXP, false, false)
+		XNL_PendingRankShow = true
+		-- If character was already marked ready while we were loading XP, show now
+		if XNL_SpawnReady then
+			XNL_MarkSpawnReady()
+		end
 	end
+	-- New chars open CreateFirstCharacter right after this; wait a beat.
+	SetTimeout(1500, function()
+		if XNL_AwaitingFirstOutfit then return end
+		XNL_MarkSpawnReady()
+	end)
+end)
+
+-- New character: outfit maker is about to open — hold rank UI
+RegisterNetEvent('qb-clothes:client:CreateFirstCharacter', function()
+	XNL_AwaitingFirstOutfit = true
+	XNL_SpawnReady = false
+end)
+
+RegisterNetEvent('illenium-appearance:client:CreateFirstCharacter', function()
+	XNL_AwaitingFirstOutfit = true
+	XNL_SpawnReady = false
+end)
+
+RegisterNetEvent('illenium-appearance:client:characterCreated', function()
+	XNL_AwaitingFirstOutfit = false
+	XNL_PendingRankShow = true
+	SetTimeout(800, function()
+		XNL_MarkSpawnReady()
+	end)
+end)
+
+-- Shared ready signal (starterpack / returning spawn)
+AddEventHandler('phantom:client:characterReady', function()
+	XNL_AwaitingFirstOutfit = false
+	XNL_PendingRankShow = true
+	SetTimeout(600, function()
+		XNL_MarkSpawnReady()
+	end)
 end)
 
 -- Save XP when character unloads (logout/switch) so it persists
@@ -219,6 +288,7 @@ AddEventHandler('QBCore:Client:OnPlayerUnload', function()
 	if pdata and pdata.citizenid and XNL_CurrentPlayerXP and XNL_CurrentPlayerXP >= 0 then
 		TriggerServerEvent('xnlrankbar:server:setxp', XNL_CurrentPlayerXP, pdata.citizenid)
 	end
+	XNL_ResetSpawnGate()
 end)
 
 -- Periodic save of XP so it persists even if player disconnects without gaining more XP
@@ -276,7 +346,7 @@ Citizen.CreateThread(function()
 	if not XNL_EnableZKeyForRankbar then return end
 	while true do
 	Wait(1)
-		if IsControlJustPressed(0, 20) then
+		if XNL_SpawnReady and IsControlJustPressed(0, 20) then
 			CurLevel = XNL_GetLevelFromXP(XNL_CurrentPlayerXP)
 			CreateRankBar(XNL_GetXPFloorForLevel(CurLevel), XNL_GetXPCeilingForLevel(CurLevel), XNL_CurrentPlayerXP, XNL_CurrentPlayerXP, CurLevel, false)
 
@@ -779,6 +849,12 @@ end
 -- for it to make it function like it should
 --===================================================================================
 function CreateRankBar(XP_StartLimit_RankBar, XP_EndLimit_RankBar, playersPreviousXP, playersCurrentXP, CurrentPlayerLevel, TakingAwayXP)
+	-- Block rank / level-up HUD until the player is fully spawned in-world
+	if not XNL_SpawnReady then
+		XNL_PendingRankShow = true
+		return
+	end
+
 	RankBarColor = 116 -- The Normal Online Ranbar color (IS NOT used for the globes!)
 	if TakingAwayXP and XNL_UseRedBarWhenLosingXP then
 		RankBarColor = 6 -- Dark Red

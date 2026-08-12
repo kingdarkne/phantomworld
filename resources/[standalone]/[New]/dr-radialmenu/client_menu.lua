@@ -44,8 +44,8 @@ exports('RemoveOption', RemoveOption)
 
 -- Main thread
 Citizen.CreateThread(function()
-    local keyBind = "F1"
-    local keyBind2 = "-"
+    local keyBind = "-"
+    local keyBind2 = "-" -- hold Minus for radial (F1 reserved for Server Info)
     while true do
         Citizen.Wait(0)
         SetBigmapActive(false, false)

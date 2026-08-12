@@ -1,57 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Phantom World Main Menu</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div id="root" class="hidden">
-      <div class="menu-container">
-        <div class="menu-header">
-          <h1>PHANTOM MENU</h1>
-          <p>Cars • Jobs • Membership</p>
+<head>
+  <meta charset="UTF-8" />
+  <title>Phantom Interaction Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="root" class="hidden">
+    <div class="hub">
+      <header class="hub-head">
+        <div>
+          <p class="eyebrow">Interaction Menu</p>
+          <h1>PHANTOM HUB</h1>
+          <p class="sub">Jobs · Cars · Houses · Gangs · Phone · Quick actions</p>
         </div>
+        <button class="x" data-action="close" aria-label="Close">✕</button>
+      </header>
 
-        <div class="menu-sections">
-          <div class="section">
-            <h2>Vehicles</h2>
-            <button data-action="vehicles_openGarage">Open Garage</button>
-            <button data-action="vehicles_returnCurrent">Return Current Vehicle</button>
-          </div>
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="home">Home</button>
+        <button class="tab" data-tab="vehicles">Vehicles</button>
+        <button class="tab" data-tab="jobs">Jobs</button>
+        <button class="tab" data-tab="world">World</button>
+        <button class="tab" data-tab="social">Social</button>
+        <button class="tab" data-tab="staff">Staff</button>
+      </nav>
 
-          <div class="section">
-            <h2>Jobs</h2>
-            <div class="jobs-grid">
-              <button data-action="jobs_set" data-job="unemployed">Unemployed</button>
-              <button data-action="jobs_set" data-job="trucker">Trucker</button>
-              <button data-action="jobs_set" data-job="garbage">Garbage</button>
-              <button data-action="jobs_set" data-job="tow">Tow</button>
-              <button data-action="jobs_set" data-job="taxi">Taxi</button>
-              <button data-action="jobs_set" data-job="security">Security</button>
-            </div>
-          </div>
+      <div class="panels">
+        <section class="panel active" id="panel-home">
+          <button class="tile" data-action="open_help"><span>Help Board</span><small>F1 guide &amp; keybinds</small></button>
+          <button class="tile" data-action="open_phone"><span>Phone</span><small>NPWD · key M</small></button>
+          <button class="tile" data-action="vehicles_call"><span>Call Vehicle</span><small>Owned / job cars</small></button>
+          <button class="tile" data-action="open_emotes"><span>Emotes</span><small>Animation menu</small></button>
+          <button class="tile" data-action="starter_car"><span>Starter Car</span><small>/startercar claim</small></button>
+          <button class="tile" data-action="jobcall"><span>Phone Contract</span><small>Force a job call</small></button>
+        </section>
 
-          <div class="section">
-            <h2>Membership</h2>
-            <p>View your tier, coins and remaining free trial.</p>
-            <button data-action="membership_open">Open Membership Info</button>
-          </div>
+        <section class="panel" id="panel-vehicles">
+          <button class="tile" data-action="vehicles_call"><span>Vehicle Caller</span><small>F9 menu</small></button>
+          <button class="tile" data-action="vehicles_openGarage"><span>Nearest Garage</span><small>Take out / store</small></button>
+          <button class="tile" data-action="vehicles_returnCurrent"><span>Return Current</span><small>Despawn current ride</small></button>
+          <button class="tile" data-action="wp_pdm"><span>Waypoint · PDM</span><small>Legion dealership</small></button>
+          <button class="tile" data-action="wp_luxury"><span>Waypoint · Luxury</span><small>Rockford autos</small></button>
+          <button class="tile" data-action="wp_boats"><span>Waypoint · Boats</span><small>South docks</small></button>
+        </section>
 
-          <div class="section">
-            <h2>Admin</h2>
-            <p>Staff only. Opens EasyAdmin if your identifiers have the right ACE permissions.</p>
-            <button data-action="admin_open">Open EasyAdmin</button>
-          </div>
-        </div>
+        <section class="panel" id="panel-jobs">
+          <button class="tile" data-action="wp_jobboard"><span>Job Board</span><small>Legion NPC</small></button>
+          <button class="tile job" data-action="jobs_set" data-job="unemployed"><span>Civilian</span><small>Unemployed</small></button>
+          <button class="tile job" data-action="jobs_set" data-job="trucker"><span>Trucker</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="garbage"><span>Garbage</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="tow"><span>Tow</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="taxi"><span>Taxi</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="mechanic"><span>Mechanic</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="burgershot"><span>Burger Shot</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="security"><span>Security</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="recycle"><span>Recycling</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="police"><span>LSPD</span></button>
+          <button class="tile job" data-action="jobs_set" data-job="ambulance"><span>EMS</span></button>
+        </section>
 
-        <div class="menu-footer">
-          <span>Press F10 again or ESC to close</span>
-        </div>
+        <section class="panel" id="panel-world">
+          <button class="tile" data-action="wp_housing"><span>Housing Area</span><small>next_housing markers</small></button>
+          <button class="tile" data-action="open_gang"><span>Gang Menu</span><small>INSERT</small></button>
+          <button class="tile" data-action="open_cvr"><span>Cops vs Robbers</span><small>END</small></button>
+          <button class="tile" data-action="open_events"><span>World Events</span><small>DELETE</small></button>
+          <button class="tile" data-action="open_tour"><span>City Tour</span><small>F7</small></button>
+          <button class="tile" data-action="wp_airport"><span>Aircraft Dealer</span><small>LSIA</small></button>
+        </section>
+
+        <section class="panel" id="panel-social">
+          <button class="tile" data-action="open_discord"><span>Discord</span><small>discord.gg/Z9Mxu72zZ6</small></button>
+          <button class="tile" data-action="membership_open"><span>Membership</span><small>Tiers &amp; coins</small></button>
+          <button class="tile" data-action="open_scoreboard"><span>Scoreboard</span><small>F4</small></button>
+          <button class="tile" data-action="toggle_blips"><span>Player Blips</span><small>Toggle</small></button>
+        </section>
+
+        <section class="panel" id="panel-staff">
+          <button class="tile" data-action="admin_open"><span>EasyAdmin</span><small>F12</small></button>
+          <button class="tile" data-action="norse_open"><span>Norse Admin</span><small>HOME</small></button>
+          <button class="tile" data-action="vmenu_open"><span>vMenu</span><small>F5</small></button>
+        </section>
       </div>
+
+      <footer class="hub-foot">F10 / ESC to close · Freeroam Interaction Hub</footer>
     </div>
-
-    <script src="script.js"></script>
-  </body>
-  </html>
-
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

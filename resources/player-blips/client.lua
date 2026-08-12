@@ -212,7 +212,7 @@ RegisterCommand('toggleblips', function()
     ToggleBlips()
 end, false)
 
-RegisterKeyMapping('toggleblips', 'Toggle Player Blips', 'keyboard', 'F9')
+RegisterKeyMapping('toggleblips', 'Toggle Player Blips', 'keyboard', 'PERIOD')
 
 -- NUI Callback for admin panel (if you have one)
 RegisterNUICallback('updatePlayerBlips', function(data, cb)
