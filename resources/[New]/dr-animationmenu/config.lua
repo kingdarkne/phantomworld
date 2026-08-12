@@ -1,6 +1,6 @@
 AK4Y = {}
 
-AK4Y.MenuKey = "F7"         -- Key to open the menu.
+AK4Y.MenuKey = "F3"         -- Key to open the menu.
 AK4Y.Language = "en"        -- Menu language. You can add your own translations in the `Languages` table.
 
 AK4Y.MaxDistancesForPreview = { -- Maximum distances for the preview character.

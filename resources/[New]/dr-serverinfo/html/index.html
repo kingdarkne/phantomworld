@@ -1,194 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Info</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phantom World Help</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <div id="container" class="hidden">
-        <div class="panel">
-            <div class="header">
-                <h1><i class="fas fa-info-circle"></i> Server Info &amp; Help</h1>
-                <button id="close-btn" class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="content">
-                <section>
-                    <h2><i class="fas fa-server"></i> Welcome</h2>
-                    <p>This guide explains jobs, activities, keybinds, the XP system, and how to get around. You can open this anytime with <kbd>F1</kbd> or <code>/help</code>. If you changed keybinds, check <strong>Settings &gt; Key Bindings &gt; FiveM</strong>.</p>
-                </section>
+  <div id="container" class="hidden">
+    <div class="panel">
+      <div class="header">
+        <h1><i class="fas fa-ghost"></i> Phantom World — Help</h1>
+        <button id="close-btn" class="close-btn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="content">
 
-                <section>
-                    <h2><i class="fas fa-globe"></i> About This Server</h2>
-                    <p><strong>Phantom World</strong> is a QBCore roleplay server. Enjoy the city: get a job, buy a house, run businesses, do heists, and earn RP (experience) as you play. Join the Discord for rules, updates, and support: <strong>discord.gg/phantomworld</strong>.</p>
-                </section>
+        <section>
+          <h2><i class="fas fa-bolt"></i> Welcome</h2>
+          <p><strong>Phantom World</strong> is a freeroam-first Los Santos — jobs on demand, phone contracts, dealers across the map, and light RP. Open this board anytime with <kbd>F1</kbd> or <code>/help</code>.</p>
+          <p>Discord: <strong>discord.gg/Z9Mxu72zZ6</strong> · Join: <strong>cfx.re/join/3m87mo</strong></p>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-star"></i> XP &amp; Rank (RP) System</h2>
-                    <p><strong>How it works:</strong> You earn <strong>RP (experience points)</strong> by doing jobs and making money. The more you work and get paid, the more XP you gain. Your rank is shown on-screen (XNLRankBar) and is saved to your character.</p>
-                    <ul>
-                        <li><strong>Earning XP:</strong> When you receive <strong>money</strong> from a job (paychecks, sales, deliveries, etc.), you automatically get a small amount of RP. Different jobs give slightly different XP rates (e.g. police/EMS/mechanic a bit more per dollar).</li>
-                        <li><strong>Rank bar:</strong> The on-screen rank/XP bar shows your progress. Leveling up reflects your activity on the server.</li>
-                        <li><strong>Admins:</strong> Staff can give RP with <code>/givexp &lt;amount&gt;</code> (themselves) or <code>/givexp &lt;player id&gt; &lt;amount&gt;</code> (e.g. <code>/givexp 5 5000</code>).</li>
-                    </ul>
-                    <p class="note">XP is tied to your character and persists across sessions. There is no separate “level” command for players — just play jobs and earn money to gain RP.</p>
-                </section>
+        <section>
+          <h2><i class="fas fa-route"></i> First Join</h2>
+          <ol>
+            <li>Friendly loadscreen → city tour (BACKSPACE skips) → multichar → outfit → spawn</li>
+            <li>Claim your free ride with <code>/startercar</code> (or free once at PDM)</li>
+            <li>Press <kbd>F10</kbd> for the Interaction Hub (jobs, cars, houses, gangs, phone…)</li>
+          </ol>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-gem"></i> Membership &amp; Coins (Supporter Perks)</h2>
-                    <p><strong>Membership tiers:</strong> <code>none</code>, <code>bronze</code>, <code>silver</code>, <code>gold</code>, <code>diamond</code>. Higher tiers unlock extra perks and access to some custom vehicles.</p>
-                    <ul>
-                        <li><strong>Free trial:</strong> Every brand new character gets a free <strong>30-day Gold membership</strong>, starter money, RP boost, and basic items to help you get going.</li>
-                        <li><strong>After trial:</strong> When the trial expires, your tier returns to <code>none</code>. You can keep playing normally or upgrade again via the store.</li>
-                        <li><strong>Coins:</strong> Special currency used for supporter perks (e.g. custom cars). Your balance is stored per character.</li>
-                        <li><strong>Check status:</strong> Use <code>/membership</code> in chat to see your tier and coin balance.</li>
-                        <li><strong>How to get more:</strong> Support the server via the official Tebex store (link in Discord). After purchase, staff will apply your tier/coins in-game.</li>
-                        <li><strong>Staff tools:</strong> Admins manage perks with <code>/setmembership</code>, <code>/addcoins</code>, and <code>/removecoins</code>.</li>
-                    </ul>
-                    <p class="note">Membership and coins never give god-mode or rule-breaking powers. They are for supporter perks like cosmetics and access to selected custom vehicles.</p>
-                </section>
+        <section>
+          <h2><i class="fas fa-keyboard"></i> Keybinds (no conflicts)</h2>
+          <p>Change any of these in <strong>Settings → Key Bindings → FiveM</strong>.</p>
+          <table class="keybinds">
+            <tr><th>Action</th><th>Default key</th></tr>
+            <tr><td>Help / Info board</td><td><kbd>F1</kbd> · <code>/help</code></td></tr>
+            <tr><td>Inventory hotbar radial</td><td>Hold <kbd>F2</kbd></td></tr>
+            <tr><td>Emotes</td><td><kbd>F3</kbd></td></tr>
+            <tr><td>Scoreboard</td><td><kbd>F4</kbd> (hold <kbd>F8</kbd>)</td></tr>
+            <tr><td>vMenu (staff tools)</td><td><kbd>F5</kbd></td></tr>
+            <tr><td>Mechanic tablet</td><td><kbd>F6</kbd></td></tr>
+            <tr><td>City tour</td><td><kbd>F7</kbd></td></tr>
+            <tr><td>Call / spawn vehicles</td><td><kbd>F9</kbd> · <code>/vehicles</code></td></tr>
+            <tr><td>Player blips toggle</td><td><kbd>.</kbd> (period) · <code>/playerblips</code></td></tr>
+            <tr><td>Interaction Hub (GTAO-style)</td><td><kbd>F10</kbd> · <code>/mainmenu</code></td></tr>
+            <tr><td>EasyAdmin</td><td><kbd>F12</kbd></td></tr>
+            <tr><td>Norse admin</td><td><kbd>HOME</kbd></td></tr>
+            <tr><td>Phone (NPWD)</td><td><kbd>M</kbd></td></tr>
+            <tr><td>Inventory</td><td><kbd>TAB</kbd></td></tr>
+            <tr><td>Proximity interact (shops, NPCs, banks)</td><td><kbd>E</kbd></td></tr>
+            <tr><td>Target eye</td><td>Hold <kbd>LALT</kbd></td></tr>
+            <tr><td>Radial (quick actions)</td><td>Hold <kbd>-</kbd></td></tr>
+            <tr><td>Engine</td><td><kbd>G</kbd></td></tr>
+            <tr><td>Lock vehicle</td><td><kbd>L</kbd></td></tr>
+            <tr><td>Seatbelt</td><td><kbd>B</kbd></td></tr>
+            <tr><td>Voice proximity cycle</td><td><kbd>`</kbd> (grave)</td></tr>
+            <tr><td>Gang menu</td><td><kbd>INSERT</kbd> · <code>/gangmenu</code></td></tr>
+            <tr><td>Cops vs Robbers</td><td><kbd>END</kbd> · <code>/cvr</code></td></tr>
+            <tr><td>World events</td><td><kbd>DELETE</kbd> · <code>/worldevents</code></td></tr>
+            <tr><td>vMenu noclip (staff)</td><td><kbd>PAGEUP</kbd></td></tr>
+          </table>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-university"></i> Banking (Phantom)</h2>
-                    <p><strong>Phantom's Banking</strong> — deposit, withdraw, transfer, and view history.</p>
-                    <ul>
-                        <li><strong>At a bank:</strong> Go to any <strong>Phantom Banking</strong> blip on the map, find the banker or use the zone, press <kbd>E</kbd> to open the bank.</li>
-                        <li><strong>ATMs:</strong> Go to any <strong>Phantom ATM</strong> (blip or in-world ATM), press <kbd>E</kbd>. First time: set a 4-digit PIN; then use it to access your account.</li>
-                        <li><strong>Phone:</strong> Open <strong>Phone</strong> (<kbd>M</kbd>) → tap <strong>Welcome Phantom</strong> (bank app) for the full bank UI anywhere.</li>
-                    </ul>
-                    <p class="note">Use <code>/bank</code> to open banking from anywhere (if enabled).</p>
-                </section>
+        <section>
+          <h2><i class="fas fa-car"></i> Cars &amp; Dealers</h2>
+          <ul>
+            <li><strong>Starter:</strong> <code>/startercar</code> — free pick once</li>
+            <li><strong>PDM</strong> Legion · <strong>Luxury Autos</strong> Rockford · <strong>Boats</strong> docks · <strong>Aircraft</strong> LSIA · <strong>Trucks</strong> port</li>
+            <li>Self-service — no cardealer job required. Call owned cars with <kbd>F9</kbd></li>
+          </ul>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-briefcase"></i> Jobs (City Hall / Employment)</h2>
-                    <p>Get a job at <strong>City Hall</strong> (blip on map) or at the job location. Available jobs:</p>
-                    <ul class="jobs-list">
-                        <li><strong>Law Enforcement (Police)</strong> — LEO</li>
-                        <li><strong>EMS (Ambulance)</strong> — Medical</li>
-                        <li><strong>Burgershot</strong> — Food service (Burger Shot)</li>
-                        <li><strong>LS Customs / Beeker's / Benny's</strong> — Mechanic</li>
-                        <li><strong>Vehicle Dealer (Cardealer)</strong></li>
-                        <li><strong>Taxi</strong></li>
-                        <li><strong>Real Estate</strong></li>
-                        <li><strong>Bus</strong> — Bus driver</li>
-                        <li><strong>Towing</strong></li>
-                        <li><strong>Trucker</strong></li>
-                        <li><strong>Garbage</strong> — Garbage collector</li>
-                        <li><strong>Vineyard</strong> — Picker</li>
-                        <li><strong>Hotdog</strong> — Sales</li>
-                        <li><strong>Pizzeria</strong></li>
-                        <li><strong>Noodle</strong></li>
-                        <li><strong>Cool Beans</strong></li>
-                        <li><strong>Reporter</strong> — Journalist</li>
-                        <li><strong>Law Firm (Lawyer)</strong> — Associate</li>
-                        <li><strong>Honorary (Judge)</strong></li>
-                        <li><strong>Civilian (Unemployed)</strong> — Freelancer</li>
-                    </ul>
-                </section>
+        <section>
+          <h2><i class="fas fa-briefcase"></i> Jobs &amp; Contracts</h2>
+          <ul>
+            <li>Job board NPC near Legion — Press <kbd>E</kbd> (trucker, taxi, garbage, tow, mechanic, burgershot, security, recycle…)</li>
+            <li>LSPD / EMS desks for freeroam clock-in</li>
+            <li>Underground contact for phone contracts</li>
+            <li>GTAO-style calls: hitman, robbery, repo, bounty — test with <code>/jobcall</code></li>
+          </ul>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-tasks"></i> What You Can Do</h2>
-                    <ul>
-                        <li><strong>Housing:</strong> Use <strong>ps-housing</strong> — find property blips or use the phone/housing menu to buy or enter homes. Inside a property, press <kbd>Z</kbd> to open the furniture store and decorate.</li>
-                        <li><strong>Apartments:</strong> Spawn at apartments; use <strong>qb-apartments</strong> to enter your apartment.</li>
-                        <li><strong>Burger Shot:</strong> Work at or visit <strong>Burger Shot</strong> (y_burgershot) for food and job.</li>
-                        <li><strong>Police / EMS:</strong> Get hired at City Hall or the station; use job-specific items and vehicles (MDT, stashes, etc.).</li>
-                        <li><strong>Mechanics:</strong> LS Customs, Beeker's Garage, Benny's — repair and customize vehicles.</li>
-                        <li><strong>Heists / Robberies:</strong> Fleeca (dr-fleeca), Ammo (dr-ammorobbery), etc. — follow in-game prompts at locations.</li>
-                        <li><strong>Garages &amp; vehicles:</strong> Go to <strong>Parking</strong> or <strong>Garage</strong> blips, press <kbd>E</kbd> to take out or store vehicles. Depots for impounded vehicles.</li>
-                        <li><strong>Clothing &amp; Barber:</strong> Visit <strong>Clothing</strong> and <strong>Barber</strong> blips to change appearance.</li>
-                        <li><strong>Driving school:</strong> <strong>DR Driving School</strong> — get your license.</li>
-                        <li><strong>Animations:</strong> Use the animation menu (dr-animationmenu) to play emotes.</li>
-                        <li><strong>Rental vehicles:</strong> <strong>dr-rental</strong> — rent cars at rental locations.</li>
-                        <li><strong>Phone:</strong> Messages, contacts, banking (Welcome Phantom), garage, jobs, ads, Twitter, etc.</li>
-                    </ul>
-                </section>
+        <section>
+          <h2><i class="fas fa-home"></i> Housing</h2>
+          <p>Homes use <strong>next_housing</strong>. Look for for-sale property markers. Staff can seed listings and enable direct purchase in <code>/nexthousing</code>.</p>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-keyboard"></i> Keybinds</h2>
-                    <p>Default keys. You can change them in <strong>Settings &gt; Key Bindings &gt; FiveM</strong>.</p>
-                    <table class="keybinds">
-                        <tr><td>Server Info / Help (this menu)</td><td><kbd>F1</kbd> or <code>/help</code> <code>/serverinfo</code> <code>/about</code></td></tr>
-                        <tr><td>Phone</td><td><kbd>M</kbd></td></tr>
-                        <tr><td>Inventory</td><td><kbd>TAB</kbd></td></tr>
-                        <tr><td>Hotbar (keybind slots)</td><td><kbd>Z</kbd></td></tr>
-                        <tr><td>HUD / Settings menu (icons, design)</td><td><kbd>I</kbd></td></tr>
-                        <tr><td>Vehicle lock / unlock</td><td><kbd>L</kbd></td></tr>
-                        <tr><td>Vehicle engine on/off</td><td><kbd>G</kbd></td></tr>
-                        <tr><td>Answer phone call</td><td><kbd>Y</kbd></td></tr>
-                        <tr><td>Decline phone call</td><td><kbd>J</kbd></td></tr>
-                        <tr><td>Interact (bank, garage, doors, ATMs)</td><td><kbd>E</kbd> (target)</td></tr>
-                        <tr><td>Door lock (when at a door)</td><td><kbd>E</kbd></td></tr>
-                        <tr><td>Remote door trigger</td><td><kbd>H</kbd></td></tr>
-                        <tr><td>Voice (push to talk cycle)</td><td><kbd>`</kbd> (grave, below Esc) — see voice settings</td></tr>
-                        <tr><td>Housing — furniture store (inside your property only)</td><td><kbd>Z</kbd> (same key as hotbar; context-dependent)</td></tr>
-                        <tr><td>vMenu (vehicles, teleport, player options)</td><td><kbd>N</kbd> — <strong>Staff only</strong></td></tr>
-                        <tr><td>Admin menu</td><td><code>/admin</code> — <strong>Admin only</strong></td></tr>
-                    </table>
-                </section>
+        <section>
+          <h2><i class="fas fa-university"></i> Banking &amp; Shops</h2>
+          <ul>
+            <li>Banks / ATMs — press <kbd>E</kbd> (omes banking)</li>
+            <li>24/7, Liquor, Ammu-Nation, Clothing — press <kbd>E</kbd></li>
+            <li>Phone banking via NPWD apps</li>
+          </ul>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-user-shield"></i> Who Can Use What</h2>
-                    <ul>
-                        <li><strong>All players:</strong> Phone (<kbd>M</kbd>), inventory (<kbd>TAB</kbd>), server info (<kbd>F1</kbd>), banking, jobs, garages, housing, <code>/ask &lt;question&gt;</code> for AI help.</li>
-                        <li><strong>Admin only:</strong> <code>/admin</code> (admin menu), <code>/givexp</code>, <code>/givemoney</code>, <code>/giveitem</code>, <code>/car</code>, <code>/givekeys</code>, <code>/setjob</code>, and other admin commands. vMenu (<kbd>N</kbd>) is usually restricted to staff.</li>
-                        <li><strong>Owners / Gods:</strong> Full server control; all admin commands plus server console tools.</li>
-                    </ul>
-                    <p class="note">If a command says “no permission” or doesn’t work, you don’t have access. Ask staff or check Discord for roles.</p>
-                </section>
+        <section>
+          <h2><i class="fas fa-star"></i> Rank &amp; Membership</h2>
+          <p>Earn XP as you play (XNL rank bar). Membership tiers / coins: <code>/membership</code>. Weapon rank gates are off for freeroam.</p>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-map-marker-alt"></i> Map Icons</h2>
-                    <ul>
-                        <li><strong>Phantom Banking / Phantom ATM</strong> — Banks and ATMs (press E to use).</li>
-                        <li><strong>Parking / Garage</strong> — Take out or store vehicles (press <kbd>E</kbd>).</li>
-                        <li><strong>Depot / Air Depot / LSYMC / Big Rig Depot</strong> — Impounded or stored vehicles.</li>
-                        <li><strong>Hangars / Airport</strong> — Planes and helicopters.</li>
-                        <li><strong>Boathouses</strong> — Boats.</li>
-                        <li><strong>24/7, Ammunation, Clothing, Barber, etc.</strong> — Shops and services.</li>
-                        <li><strong>City Hall</strong> — Licenses and jobs.</li>
-                        <li><strong>Hospital / Police</strong> — EMS and LEO.</li>
-                    </ul>
-                </section>
+        <section>
+          <h2><i class="fas fa-user-shield"></i> Staff</h2>
+          <ul>
+            <li>EasyAdmin <kbd>F12</kbd> · Norse <kbd>HOME</kbd> · vMenu <kbd>F5</kbd></li>
+            <li>Owners show <strong>[OWNER]</strong> overhead + in chat</li>
+          </ul>
+        </section>
 
-                <section>
-                    <h2><i class="fas fa-question-circle"></i> Quick Tips</h2>
-                    <ul>
-                        <li>Get a job at <strong>City Hall</strong> (blip on map) or apply at the business (e.g. Burger Shot, mechanic shop).</li>
-                        <li>Earn <strong>XP (RP)</strong> by working and making money — see the <strong>XP &amp; Rank</strong> section above.</li>
-                        <li>Garages: drive to a <strong>Parking</strong> blip and press <kbd>E</kbd> to open the garage menu.</li>
-                        <li>Banking: use <strong>Welcome Phantom</strong> on your phone, or visit a bank/ATM and press <kbd>E</kbd>.</li>
-                        <li><strong>No admin around?</strong> Use <code>/ask &lt;question&gt;</code> to get help from the AI assistant (e.g. /ask How do I get a job?).</li>
-                        <li>Need more help? Open this guide with <kbd>F1</kbd>, or ask in server Discord: <strong>discord.gg/phantomworld</strong>.</li>
-                    </ul>
-                </section>
-            </div>
-        </div>
+        <section>
+          <h2><i class="fas fa-lightbulb"></i> Tips</h2>
+          <ul>
+            <li>Use the <kbd>F10</kbd> hub for everything in one place</li>
+            <li>Ask AI help: <code>/ask your question</code></li>
+            <li>Be cool — freeroam first, light RP welcome</li>
+          </ul>
+        </section>
+
+      </div>
     </div>
-    <script>
-        const container = document.getElementById('container');
-        const closeBtn = document.getElementById('close-btn');
-
-        function close() {
-            container.classList.add('hidden');
-            fetch('https://dr-serverinfo/close', { method: 'POST', body: JSON.stringify({}) }).catch(() => {});
-        }
-
-        window.addEventListener('message', function(event) {
-            const data = event.data;
-            if (data.action === 'open') {
-                container.classList.remove('hidden');
-            } else if (data.action === 'close') {
-                container.classList.add('hidden');
-            }
-        });
-
-        closeBtn.addEventListener('click', close);
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') close();
-        });
-    </script>
+  </div>
+  <script>
+    const container = document.getElementById('container');
+    document.getElementById('close-btn').addEventListener('click', () => {
+      container.classList.add('hidden');
+      fetch(`https://${GetParentResourceName()}/close`, { method: 'POST', body: '{}' });
+    });
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.action === 'open') container.classList.remove('hidden');
+      if (e.data && e.data.action === 'close') container.classList.add('hidden');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        container.classList.add('hidden');
+        fetch(`https://${GetParentResourceName()}/close`, { method: 'POST', body: '{}' });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -3,7 +3,7 @@ Config = {}
 -- Menu settings
 Config.Menu = {
     enabled = true,
-    openKey = 'F3', -- Key to open the menu
+    openKey = 'F9', -- Key to open the menu (F3 = emotes)
     command = 'vehicles', -- Command to open the menu
 }
 

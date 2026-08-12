@@ -9,7 +9,7 @@ RegisterCommand('cvr', function()
     OpenArenaMenu()
 end)
 
-RegisterKeyMapping('cvr', 'Open Cops vs Robbers', 'keyboard', 'F8')
+RegisterKeyMapping('cvr', 'Open Cops vs Robbers', 'keyboard', 'END')
 
 -- Open arena selection menu
 function OpenArenaMenu()

@@ -11,7 +11,7 @@
   },
   "general": {
     "useResourceIntegration": true,
-    "toggleKey": "f4",
+    "toggleKey": "m",
     "toggleCommand": "phone",
     "defaultLanguage": "en",
     "showId": false,
