@@ -20,3 +20,4 @@ VPS_PASSWORD='...' ./billing-theme/deploy.sh
 - Checkout: import missing `Str`/`Hash`/`Auth`/`Client` so guest buy works
 - Restored corrupted `CreatePanelUser` job (panel account creation)
 - Client nav Discord link uses `client.bot.index`
+- Free Plan capped at **2 servers per logged-in account** (login required)

@@ -66,8 +66,47 @@ class StoreController extends ApiController
         'coupon' => 'nullable|string|max:255|exists:coupons,code',
     ];
 
+    /**
+     * Enforce stock / per-client caps (Free Plan max 2 per person).
+     * Free / capped plans require a logged-in account.
+     */
+    private function assertCanOrderPlan($id)
+    {
+        $plan = Plan::find($id);
+        if (!$plan) {
+            return $this->respondJson(['error' => 'That server plan was not found.'], 404);
+        }
+
+        if (!Plan::verifyPlan($plan)) {
+            return $this->respondJson(['error' => 'This server plan is currently out of stock.']);
+        }
+
+        if ($plan->per_client_limit) {
+            if (!auth()->check()) {
+                return $this->respondJson([
+                    'error' => 'Please log in or create an account to order this plan (max '
+                        . (int) $plan->per_client_limit . ' per person).',
+                ]);
+            }
+
+            if (!Plan::verifyPlan($plan, auth()->user())) {
+                return $this->respondJson([
+                    'error' => 'You already have the maximum of '
+                        . (int) $plan->per_client_limit
+                        . ' free/limited server(s) on this plan.',
+                ]);
+            }
+        }
+
+        return null;
+    }
+
     public function summary(Request $request, $id)
     {
+        if ($deny = $this->assertCanOrderPlan($id)) {
+            return $deny;
+        }
+
         $validator = Validator::make($request->all(), $this->order_rules);
 
         if ($validator->fails()) {
@@ -81,6 +120,10 @@ class StoreController extends ApiController
 
     public function order(Request $request, $id)
     {
+        if ($deny = $this->assertCanOrderPlan($id)) {
+            return $deny;
+        }
+
         $rules = array_merge(['server_name' => 'required|string|max:150'], $this->order_rules);
         $validator = Validator::make($request->all(), $rules);
 
@@ -108,6 +151,10 @@ class StoreController extends ApiController
             return redirect()->route('order', ['id' => $id]);
         }
 
+        if ($deny = $this->assertCanOrderPlan($id)) {
+            return $deny;
+        }
+
         if (is_null($extension = ExtensionManager::getExtension($gateway = $request->input('gateway')))) {
             return $this->respondJson(['error' => 'The payment gateway is invalid!']);
         }
@@ -115,7 +162,33 @@ class StoreController extends ApiController
         $order_data = session("order_server_$id");
         session()->forget("order_server_$id");
 
+        // Free / capped plans never use guest checkout
+        $plan = Plan::find($id);
+        if ($plan && $plan->per_client_limit && !auth()->check()) {
+            return $this->respondJson([
+                'error' => 'Please log in to claim a free server (max '
+                    . (int) $plan->per_client_limit . ' per person).',
+            ]);
+        }
+
         $clientId = auth()->check() ? auth()->user()->id : $this->createGuestAccount();
+
+        // Re-check after resolving the client (race-safe for free plan)
+        if ($plan && $plan->per_client_limit) {
+            $owned = Server::where('client_id', $clientId)
+                ->where('plan_id', $plan->id)
+                ->where(function ($query) {
+                    $query->where('status', 0)->orWhere('status', 1);
+                })
+                ->count();
+            if ($owned >= (int) $plan->per_client_limit) {
+                return $this->respondJson([
+                    'error' => 'You already have the maximum of '
+                        . (int) $plan->per_client_limit
+                        . ' free server(s).',
+                ]);
+            }
+        }
 
         $nest_egg_id = explode(':', $order_data['egg']);
         $location_node_id = explode(':', $order_data['node']);
