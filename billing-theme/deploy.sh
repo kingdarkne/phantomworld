@@ -41,6 +41,8 @@ upload "$ROOT/app/Http/Controllers/Api/StoreController.php" "/var/www/billing/ap
 upload "$ROOT/app/Http/Controllers/Api/AuthController.php" "/var/www/billing/app/Http/Controllers/Api/AuthController.php"
 upload "$ROOT/app/Models/Client.php" "/var/www/billing/app/Models/Client.php"
 upload "$ROOT/app/Providers/AuthServiceProvider.php" "/var/www/billing/app/Providers/AuthServiceProvider.php"
+upload "$ROOT/app/Providers/EventServiceProvider.php" "/var/www/billing/app/Providers/EventServiceProvider.php"
+upload "$ROOT/routes/store.php" "/var/www/billing/routes/store.php"
 upload "$ROOT/app/Support/CustomerName.php" "/var/www/billing/app/Support/CustomerName.php"
 upload "$ROOT/app/Jobs/CreatePanelUser.php" "/var/www/billing/app/Jobs/CreatePanelUser.php"
 upload "$ROOT/app/Jobs/CreateServer.php" "/var/www/billing/app/Jobs/CreateServer.php"
@@ -57,6 +59,7 @@ upload "$ROOT/scripts/brand-emails.sh" "/tmp/brand-billing-emails.sh"
 sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/panel-email-overrides"
 upload "$ROOT/panel-overrides/AccountCreated.php" "/tmp/panel-email-overrides/AccountCreated.php"
 upload "$ROOT/panel-overrides/email.blade.php" "/tmp/panel-email-overrides/email.blade.php"
+upload "$ROOT/panel-overrides/UserCreationService.php" "/tmp/panel-email-overrides/UserCreationService.php"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
@@ -106,6 +109,8 @@ chown www-data:www-data \
   app/Http/Controllers/Api/AuthController.php \
   app/Models/Client.php \
   app/Providers/AuthServiceProvider.php \
+  app/Providers/EventServiceProvider.php \
+  routes/store.php \
   app/Support/CustomerName.php \
   app/Jobs/CreatePanelUser.php \
   app/Jobs/CreateServer.php \
@@ -135,16 +140,24 @@ fi
 sudo -u www-data php artisan view:clear
 sudo -u www-data php artisan cache:clear
 sudo -u www-data php artisan config:clear || true
+sudo -u www-data php artisan route:clear || true
 # Panel cache so egg entry change is visible
 if [ -d /var/www/pterodactyl ]; then
   sudo -u www-data php /var/www/pterodactyl/artisan cache:clear || true
+  sudo -u www-data php -l /var/www/pterodactyl/app/Services/Users/UserCreationService.php
+  systemctl restart pteroq || true
+  supervisorctl restart pterodactyl-worker:* || true
 fi
 sudo -u www-data php -l app/Http/Controllers/Api/StoreController.php
+sudo -u www-data php -l app/Http/Controllers/Api/AuthController.php
 sudo -u www-data php -l app/Jobs/CreatePanelUser.php
 sudo -u www-data php -l app/Jobs/CreateServer.php
+sudo -u www-data php -l app/Support/CustomerName.php
 sudo -u www-data php -l app/Notifications/AccountWelcomeNotif.php
 sudo -u www-data php -l app/Notifications/ServerReadyNotif.php
 sudo -u www-data php -l app/Http/Middleware/Store/CheckPlanOrder.php
+sudo -u www-data php -l app/Providers/EventServiceProvider.php
+sudo -u www-data php -l routes/store.php
 systemctl is-active php8.3-fpm billing-worker nginx
 echo "Billing theme deployed."
 REMOTE

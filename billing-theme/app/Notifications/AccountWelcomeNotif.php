@@ -38,9 +38,10 @@ class AccountWelcomeNotif extends Notification implements ShouldQueue
     {
         $panelUrl = rtrim((string) Setting::where('key', 'panel_url')->value('value'), '/') ?: 'https://panel.phantom-chicken.com';
         $billingUrl = rtrim((string) config('app.url'), '/');
+        $dashUrl = url()->route('client.dash');
 
         $lines = [
-            'Your Phantom Hosting account is ready.',
+            'Welcome to Phantom Hosting — your account is ready.',
             '',
             'Billing portal: ' . $billingUrl,
             'Billing email: ' . $this->client->email,
@@ -62,20 +63,20 @@ class AccountWelcomeNotif extends Notification implements ShouldQueue
             $lines[] = 'Panel password: ' . $this->panelPassword;
             $lines[] = '(Same tip — save it now; it is only emailed once.)';
         } else {
-            $lines[] = 'Panel password: check your panel welcome/reset email, or use Forgot Password on the panel.';
+            $lines[] = 'Panel password: use Forgot Password on the panel if you need a reset.';
         }
 
         $lines[] = '';
-        $lines[] = 'After checkout you will also receive emails with the amount due, renew/due date, and a link to manage or renew your server.';
+        $lines[] = 'Check your inbox for a separate email with a Verify Email button — please confirm your address.';
 
-        return (new MailMessage)->subject('Your Phantom Hosting login details')->view('emails.notif', [
-            'subject' => 'Your account is ready',
+        return (new MailMessage)->subject('Welcome to Phantom Hosting')->view('emails.notif', [
+            'subject' => 'Welcome to Phantom Hosting',
             'greeting_name' => \App\Support\CustomerName::greetingFor($this->client),
             'body_message' => implode("\n", $lines),
-            'body_action' => 'Open the billing portal to manage servers, invoices, and renewals.',
-            'button_text' => 'Open Billing',
-            'button_url' => $billingUrl . '/client',
-            'notice' => 'You received this email because an account was created for an order on Phantom Hosting.',
+            'body_action' => 'Open your billing dashboard to manage servers, invoices, and renewals.',
+            'button_text' => 'Open Billing Dashboard',
+            'button_url' => $dashUrl,
+            'notice' => 'You received this email because an account was created on Phantom Hosting.',
         ]);
     }
 

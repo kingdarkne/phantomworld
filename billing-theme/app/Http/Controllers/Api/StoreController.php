@@ -334,6 +334,12 @@ class StoreController extends ApiController
         Auth::login($client);
 
         try {
+            $client->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            Log::error('[checkout] Verify email failed: ' . $e->getMessage());
+        }
+
+        try {
             // Sync so welcome email with billing + panel passwords goes out before redirect
             CreatePanelUser::dispatchSync($client, $password_raw);
         } catch (\Throwable $e) {

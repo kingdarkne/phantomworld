@@ -9,7 +9,6 @@ use App\Models\Invoice;
 use App\Models\Tax;
 use App\Rules\Captcha;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -123,11 +122,17 @@ class AuthController extends ApiController
             $referer->save();
         }
 
-        event(new Registered($client));
+        // Verify + one welcome only. Welcome is sent by CreatePanelUser after the panel
+        // account is created. Panel AccountCreated is suppressed when a password is supplied.
+        try {
+            $client->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[register] Verify email failed: ' . $e->getMessage());
+        }
 
         CreatePanelUser::dispatch($client)->onQueue('high');
 
-        return $this->respondJson(['success' => 'Account registered successfully! Redirecting...']);
+        return $this->respondJson(['success' => 'Account registered successfully! Check your email to verify, then continue. Redirecting...']);
     }
 
     public function forgot(Request $request)
