@@ -66,6 +66,18 @@
 
                 @guest
                 <div class="form-group row">
+                    <label class="col-lg-3 col-form-label" for="checkout-first-name">First name</label>
+                    <div class="col-lg-7">
+                        <input type="text" class="form-control" name="first_name" id="checkout-first-name" maxlength="100" placeholder="First name" autocomplete="given-name">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3 col-form-label" for="checkout-last-name">Last name</label>
+                    <div class="col-lg-7">
+                        <input type="text" class="form-control" name="last_name" id="checkout-last-name" maxlength="100" placeholder="Last name" autocomplete="family-name">
+                    </div>
+                </div>
+                <div class="form-group row">
                     <label class="col-lg-3 col-form-label" for="checkout-email">Account email</label>
                     <div class="col-lg-7">
                         <input type="email" class="form-control" name="email" id="checkout-email" required maxlength="255" placeholder="you@example.com" autocomplete="email">

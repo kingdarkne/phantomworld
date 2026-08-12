@@ -46,7 +46,8 @@ class RenewServerNotif extends Notification implements ShouldQueue
         $body .= 'Please renew before the due date or the server may be suspended.';
 
         return (new MailMessage)->subject('Renew soon — ' . $planName)->view('emails.notif', [
-            'subject' => 'Server Expiring',
+            'subject' => 'Renewal reminder',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
             'body_message' => $body,
             'body_action' => 'Open your server page to renew and keep the service online.',
             'button_text' => 'Renew Server',

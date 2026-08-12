@@ -63,7 +63,8 @@ class InvoicePaidNotif extends Notification implements ShouldQueue
         $body .= "\nYour game panel account uses this same email. Watch for a separate email when the server finishes installing.";
 
         return (new MailMessage)->subject('Payment received — ' . $name)->view('emails.notif', [
-            'subject' => 'Product Paid',
+            'subject' => 'Payment received',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
             'body_message' => $body,
             'body_action' => 'View the invoice and server details in your client area.',
             'button_text' => 'View Invoice',

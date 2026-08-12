@@ -16,7 +16,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Active Servers</h3>
                     <div class="card-tools">
-                        <a href="{{ $panelUrl }}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">
+                        <a href="{{ $panelUrl }}/auth/login" class="btn btn-primary btn-sm" target="_blank" rel="noopener">
                             Login to Game Panel <i class="fas fa-external-link-alt"></i>
                         </a>
                         <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
@@ -93,15 +93,75 @@
                     </table>
                 </div>
             </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Canceled Servers</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Plan</th>
+                                <th>Server Name</th>
+                                <th>Cancellation Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($server_model->where(['client_id' => auth()->user()->id, 'status' => 3])->get() as $server)
+                                <tr>
+                                    <td>{{ $server->id }}</td>
+                                    <td>{{ optional($plan_model->find($server->plan_id))->name }}</td>
+                                    <td>{{ $server->server_name }}</td>
+                                    <td>{{ $server->updated_at }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Suspended Servers</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Plan</th>
+                                <th>Server Name</th>
+                                <th>Suspension Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($server_model->where(['client_id' => auth()->user()->id, 'status' => 2])->get() as $server)
+                                <tr>
+                                    <td>{{ $server->id }}</td>
+                                    <td>{{ optional($plan_model->find($server->plan_id))->name }}</td>
+                                    <td>{{ $server->server_name }}</td>
+                                    <td>{{ $server->updated_at }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Game Panel Access</h3>
                 </div>
                 <div class="card-body">
-                    <p class="mb-2">Your servers are created on <strong>Main Node</strong> (<code>wings.phantom-chicken.com</code>) and managed in the hosting panel.</p>
-                    <p class="mb-3">Use the same email as your billing account. Check your welcome email for the panel password (or use Forgot Password on the panel).</p>
+                    <p class="mb-2">Servers are created on <strong>Main Node</strong> (<code>wings.phantom-chicken.com</code>) — the same node as the hosting panel.</p>
+                    <p class="mb-3">Log in with your billing email. Use the welcome email password, or Forgot Password on the panel.</p>
                     <a href="{{ $panelUrl }}/auth/login" class="btn btn-primary" target="_blank" rel="noopener">
                         Go to Panel Login <i class="fas fa-sign-in-alt"></i>
                     </a>

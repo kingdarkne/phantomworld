@@ -38,6 +38,10 @@ upload "$ROOT/resources/views/layouts/preloader.blade.php" "/var/www/billing/res
 upload "$ROOT/app/Http/Middleware/Store/SetDefaultSession.php" "/var/www/billing/app/Http/Middleware/Store/SetDefaultSession.php"
 upload "$ROOT/app/Http/Middleware/Store/CheckPlanOrder.php" "/var/www/billing/app/Http/Middleware/Store/CheckPlanOrder.php"
 upload "$ROOT/app/Http/Controllers/Api/StoreController.php" "/var/www/billing/app/Http/Controllers/Api/StoreController.php"
+upload "$ROOT/app/Http/Controllers/Api/AuthController.php" "/var/www/billing/app/Http/Controllers/Api/AuthController.php"
+upload "$ROOT/app/Models/Client.php" "/var/www/billing/app/Models/Client.php"
+upload "$ROOT/app/Providers/AuthServiceProvider.php" "/var/www/billing/app/Providers/AuthServiceProvider.php"
+upload "$ROOT/app/Support/CustomerName.php" "/var/www/billing/app/Support/CustomerName.php"
 upload "$ROOT/app/Jobs/CreatePanelUser.php" "/var/www/billing/app/Jobs/CreatePanelUser.php"
 upload "$ROOT/app/Jobs/CreateServer.php" "/var/www/billing/app/Jobs/CreateServer.php"
 upload "$ROOT/app/Notifications/AccountWelcomeNotif.php" "/var/www/billing/app/Notifications/AccountWelcomeNotif.php"
@@ -46,7 +50,13 @@ upload "$ROOT/app/Notifications/PayInvoiceNotif.php" "/var/www/billing/app/Notif
 upload "$ROOT/app/Notifications/InvoicePaidNotif.php" "/var/www/billing/app/Notifications/InvoicePaidNotif.php"
 upload "$ROOT/app/Notifications/RenewServerNotif.php" "/var/www/billing/app/Notifications/RenewServerNotif.php"
 upload "$ROOT/app/Notifications/InvoiceDueNotif.php" "/var/www/billing/app/Notifications/InvoiceDueNotif.php"
+upload "$ROOT/app/Notifications/ResetPasswordNotification.php" "/var/www/billing/app/Notifications/ResetPasswordNotification.php"
 upload "$ROOT/resources/views/emails/notif.blade.php" "/var/www/billing/resources/views/emails/notif.blade.php"
+upload "$ROOT/resources/views/layouts/store/modals.blade.php" "/var/www/billing/resources/views/layouts/store/modals.blade.php"
+upload "$ROOT/scripts/brand-emails.sh" "/tmp/brand-billing-emails.sh"
+sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/panel-email-overrides"
+upload "$ROOT/panel-overrides/AccountCreated.php" "/tmp/panel-email-overrides/AccountCreated.php"
+upload "$ROOT/panel-overrides/email.blade.php" "/tmp/panel-email-overrides/email.blade.php"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
@@ -84,13 +94,19 @@ chown www-data:www-data \
   resources/views/layouts/store/footer.blade.php \
   resources/views/layouts/store/nav.blade.php \
   resources/views/layouts/store/scripts.blade.php \
+  resources/views/layouts/store/modals.blade.php \
   resources/views/layouts/styles.blade.php \
   resources/views/layouts/store.blade.php \
   resources/views/layouts/preloader.blade.php \
   resources/views/layouts/client/nav.blade.php \
+  resources/views/emails/notif.blade.php \
   app/Http/Middleware/Store/SetDefaultSession.php \
   app/Http/Middleware/Store/CheckPlanOrder.php \
   app/Http/Controllers/Api/StoreController.php \
+  app/Http/Controllers/Api/AuthController.php \
+  app/Models/Client.php \
+  app/Providers/AuthServiceProvider.php \
+  app/Support/CustomerName.php \
   app/Jobs/CreatePanelUser.php \
   app/Jobs/CreateServer.php \
   app/Notifications/AccountWelcomeNotif.php \
@@ -99,16 +115,17 @@ chown www-data:www-data \
   app/Notifications/InvoicePaidNotif.php \
   app/Notifications/RenewServerNotif.php \
   app/Notifications/InvoiceDueNotif.php \
-  resources/views/emails/notif.blade.php
+  app/Notifications/ResetPasswordNotification.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
 bash /tmp/install-discord-bot-eggs.sh || true
 bash /tmp/attach-all-eggs-to-plans.sh || true
 bash /tmp/ensure-main-node-and-games.sh || true
+OVERRIDES=/tmp/panel-email-overrides bash /tmp/brand-billing-emails.sh || true
 # Ensure owner gets purchase alerts
 if ! grep -q '^OWNER_EMAIL=' /var/www/billing/.env; then
   echo 'OWNER_EMAIL=ericaxavier897@gmail.com' >> /var/www/billing/.env

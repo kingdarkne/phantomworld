@@ -49,7 +49,8 @@ class InvoiceDueNotif extends Notification implements ShouldQueue
             . 'Please pay now to avoid suspension or removal.';
 
         return (new MailMessage)->subject('Overdue invoice — ' . $name)->view('emails.notif', [
-            'subject' => 'Product Overdue',
+            'subject' => 'Invoice overdue',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
             'body_message' => $body,
             'body_action' => 'Pay the invoice below to keep your service active.',
             'button_text' => 'Pay Invoice',

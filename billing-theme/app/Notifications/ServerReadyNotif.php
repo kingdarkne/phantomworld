@@ -75,7 +75,8 @@ class ServerReadyNotif extends Notification implements ShouldQueue
         }
 
         return (new MailMessage)->subject('Your server is ready — ' . $planName)->view('emails.notif', [
-            'subject' => 'Server Ready',
+            'subject' => 'Your server is ready',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($client ?? null),
             'body_message' => implode("\n", $lines),
             'body_action' => 'Manage renewals and invoices in the billing client area.',
             'button_text' => 'View Server in Billing',

@@ -49,7 +49,8 @@ class PayInvoiceNotif extends Notification implements ShouldQueue
             . "Due / renew date: {$dueText}";
 
         return (new MailMessage)->subject('Payment due — ' . $name . ' (' . $symbol . $total . ')')->view('emails.notif', [
-            'subject' => 'New Product Payment',
+            'subject' => 'Payment due',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($notifiable),
             'body_message' => $body,
             'body_action' => 'Click below to view the invoice, amount due, and pay or renew.',
             'button_text' => 'View Invoice',

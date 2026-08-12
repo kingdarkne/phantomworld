@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Notifications\AccountWelcomeNotif;
+use App\Support\CustomerName;
 use App\Support\DiscordRelay;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -85,6 +86,11 @@ class CreatePanelUser implements ShouldQueue
         }
 
         $panelPassword = Str::random(16);
+        [$firstName, $lastName] = CustomerName::from(
+            (string) $this->client->email,
+            $this->client->first_name ?? null,
+            $this->client->last_name ?? null
+        );
 
         $create_response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
@@ -93,8 +99,8 @@ class CreatePanelUser implements ShouldQueue
         ])->post(rtrim($this->apiUrl, '/') . '/api/application/users', [
             'username' => $username,
             'email' => $this->client->email,
-            'first_name' => 'First',
-            'last_name' => 'Last',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'password' => $panelPassword,
         ]);
 

@@ -299,6 +299,8 @@ class StoreController extends ApiController
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|max:255|unique:clients,email',
+            'first_name' => 'nullable|string|min:1|max:100',
+            'last_name' => 'nullable|string|min:1|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -311,9 +313,16 @@ class StoreController extends ApiController
         $country = (is_object($tax) && !empty($tax->country)) ? $tax->country : 'Global';
 
         $email = strtolower(trim((string) $request->input('email')));
+        [$first, $last] = \App\Support\CustomerName::from(
+            $email,
+            $request->input('first_name'),
+            $request->input('last_name')
+        );
         $password_raw = Str::random(16);
         $client = Client::create([
             'email' => $email,
+            'first_name' => $first,
+            'last_name' => $last,
             'password' => Hash::make($password_raw),
             'currency' => $currencyName,
             'country' => $country,

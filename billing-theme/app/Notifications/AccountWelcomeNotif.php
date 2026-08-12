@@ -69,7 +69,8 @@ class AccountWelcomeNotif extends Notification implements ShouldQueue
         $lines[] = 'After checkout you will also receive emails with the amount due, renew/due date, and a link to manage or renew your server.';
 
         return (new MailMessage)->subject('Your Phantom Hosting login details')->view('emails.notif', [
-            'subject' => 'Account Ready',
+            'subject' => 'Your account is ready',
+            'greeting_name' => \App\Support\CustomerName::greetingFor($this->client),
             'body_message' => implode("\n", $lines),
             'body_action' => 'Open the billing portal to manage servers, invoices, and renewals.',
             'button_text' => 'Open Billing',
