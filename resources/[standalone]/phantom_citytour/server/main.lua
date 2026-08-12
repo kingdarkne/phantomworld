@@ -11,7 +11,7 @@ end)
 RegisterNetEvent('phantom_citytour:markCompleted', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
+    if not Player then return end -- pre-multichar completion is stored client-side via KVP
     Player.Functions.SetMetaData(META_COMPLETED, true)
 end)
 

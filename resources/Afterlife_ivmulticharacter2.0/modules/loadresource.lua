@@ -17,7 +17,6 @@ LoadResource = function()
 	while waited < 5000 do
 		Wait(250)
 		waited = waited + 250
-		-- Give the loadscreen a short moment to paint, then hand off to multichar
 		if waited >= 1500 then
 			break
 		end
@@ -44,6 +43,37 @@ LoadResource = function()
 	DoScreenFadeIn(500)
 	Wait(500)
 
-	-- Now show character menu
+	-- JOIN ORDER: loading screen → city tour → multichar → outfit → spawn
+	local tourDone = false
+	local tourHandler
+	tourHandler = AddEventHandler('phantom_citytour:client:finished', function()
+		tourDone = true
+	end)
+
+	local started = false
+	if GetResourceState('phantom_citytour') == 'started' then
+		local ok, err = pcall(function()
+			exports['phantom_citytour']:StartCityTourPreMultichar()
+			started = true
+		end)
+		if not ok then
+			print(('[Multicharacter] City tour failed to start: %s'):format(tostring(err)))
+		end
+	else
+		print('[Multicharacter] phantom_citytour not started — skipping tour')
+	end
+
+	if started then
+		local timeout = GetGameTimer() + 180000 -- 3 min max
+		while not tourDone and GetGameTimer() < timeout do
+			Wait(200)
+		end
+	end
+
+	if tourHandler then
+		RemoveEventHandler(tourHandler)
+	end
+
+	-- Hand off to character select
 	CharactersMenu()
 end

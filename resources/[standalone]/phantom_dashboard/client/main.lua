@@ -21,6 +21,10 @@ local function sendDashboard(payload)
 end
 
 local function pushPlayerInfo()
+    if not Config.Enabled then
+        sendDashboard({ visible = false })
+        return
+    end
     if not LocalPlayer.state.isLoggedIn then return end
     if isMenuBlocking() then return end
 
@@ -105,6 +109,10 @@ CreateThread(function()
 end)
 
 CreateThread(function()
+    if not Config.Enabled then
+        sendDashboard({ visible = false })
+        return
+    end
     while true do
         if LocalPlayer.state.isLoggedIn then
             pushPlayerInfo()

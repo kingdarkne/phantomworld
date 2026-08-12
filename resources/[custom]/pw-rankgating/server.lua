@@ -144,6 +144,12 @@ local WEAPON_RANKS = {
 -- ============================================================
 -- ox_inventory hook — block weapon item if rank too low
 -- ============================================================
+-- Freeroam default: disabled (setr pw_rankgating:enabled 1 to restore)
+if GetConvarInt('pw_rankgating:enabled', 0) ~= 1 then
+    print('^3[pw-rankgating]^7 Disabled (freeroam). setr pw_rankgating:enabled 1 to restore.')
+    return
+end
+
 if GetResourceState('ox_inventory') == 'started' then
     exports.ox_inventory:registerHook('swapItems', function(payload)
         -- Only care about items being added to a player inventory (not dropped/container)

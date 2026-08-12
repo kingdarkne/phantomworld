@@ -31,6 +31,7 @@ Config.TourSettings = {
 Config.Keybinds = {
     StartTour = 'F7', -- Start/stop tour
     SkipLocation = 'SPACE', -- Skip current location
+    SkipTour = 'BACK', -- Skip entire tour (pre-multichar + manual)
     PauseTour = 'PAUSE', -- Pause/resume (changed from P to avoid conflict)
     ToggleUI = 'H' -- Hide/show UI
 }
@@ -54,11 +55,16 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    AutoStartOnFirstJoin = true,
-    ShowPromptOnSpawn = true,
-    AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
-    RequiredPlayTime = 0, -- minutes before tour can be started again
-    CooldownTime = 30 -- minutes between repeat tours (after first completion)
+    -- Tour runs BEFORE multichar (wired from Afterlife LoadResource).
+    -- Keep post-spawn auto-start OFF so players are not forced into a second tour.
+    AutoStartOnFirstJoin = false,
+    ShowPromptOnSpawn = false,
+    AutoStartDelay = 2,
+    RequiredPlayTime = 0,
+    CooldownTime = 30, -- minutes between repeat tours (after first completion)
+    -- Play tour once per client (KVP) before first multichar. Set ForceEveryJoin true to replay every session.
+    ForceBeforeMultichar = true,
+    ForceEveryJoin = false,
 }
 
 -- Admin settings
