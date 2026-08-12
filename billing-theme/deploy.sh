@@ -34,6 +34,7 @@ upload "$ROOT/app/Http/Middleware/Store/SetDefaultSession.php" "/var/www/billing
 upload "$ROOT/app/Http/Middleware/Store/CheckPlanOrder.php" "/var/www/billing/app/Http/Middleware/Store/CheckPlanOrder.php"
 upload "$ROOT/app/Http/Controllers/Api/StoreController.php" "/var/www/billing/app/Http/Controllers/Api/StoreController.php"
 upload "$ROOT/app/Jobs/CreatePanelUser.php" "/var/www/billing/app/Jobs/CreatePanelUser.php"
+upload "$ROOT/app/Jobs/CreateServer.php" "/var/www/billing/app/Jobs/CreateServer.php"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
@@ -64,7 +65,8 @@ chown www-data:www-data \
   app/Http/Middleware/Store/SetDefaultSession.php \
   app/Http/Middleware/Store/CheckPlanOrder.php \
   app/Http/Controllers/Api/StoreController.php \
-  app/Jobs/CreatePanelUser.php
+  app/Jobs/CreatePanelUser.php \
+  app/Jobs/CreateServer.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
 chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-currency.sh
@@ -73,6 +75,7 @@ sudo -u www-data php artisan view:clear
 sudo -u www-data php artisan cache:clear
 sudo -u www-data php -l app/Http/Controllers/Api/StoreController.php
 sudo -u www-data php -l app/Jobs/CreatePanelUser.php
+sudo -u www-data php -l app/Jobs/CreateServer.php
 sudo -u www-data php -l app/Http/Middleware/Store/CheckPlanOrder.php
 systemctl is-active php8.3-fpm billing-worker nginx
 echo "Billing theme deployed."

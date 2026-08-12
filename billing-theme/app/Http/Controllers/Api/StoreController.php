@@ -173,6 +173,15 @@ class StoreController extends ApiController
 
         $clientId = auth()->check() ? auth()->user()->id : $this->createGuestAccount();
 
+        // Logged-in buyers still need a Pterodactyl user before provisioning.
+        if (auth()->check() && empty(auth()->user()->user_id)) {
+            try {
+                CreatePanelUser::dispatchSync(auth()->user());
+            } catch (\Throwable $e) {
+                Log::error('[checkout] CreatePanelUser sync failed: ' . $e->getMessage());
+            }
+        }
+
         // Re-check after resolving the client (race-safe for free plan)
         if ($plan && $plan->per_client_limit) {
             $owned = Server::where('client_id', $clientId)
