@@ -39,6 +39,7 @@ upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/re
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
 upload "$ROOT/scripts/fix-free-limit.sh" "/tmp/fix-billing-free-limit.sh"
+upload "$ROOT/scripts/fix-fivem-egg.sh" "/tmp/fix-billing-fivem-egg.sh"
 
 if [ -f "$ROOT/public/galaxy_bg.webp" ]; then
   upload "$ROOT/public/galaxy_bg.webp" "/var/www/billing/public/galaxy_bg.webp"
@@ -68,11 +69,16 @@ chown www-data:www-data \
   app/Jobs/CreatePanelUser.php \
   app/Jobs/CreateServer.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
+bash /tmp/fix-billing-fivem-egg.sh || true
 sudo -u www-data php artisan view:clear
 sudo -u www-data php artisan cache:clear
+# Panel cache so egg entry change is visible
+if [ -d /var/www/pterodactyl ]; then
+  sudo -u www-data php /var/www/pterodactyl/artisan cache:clear || true
+fi
 sudo -u www-data php -l app/Http/Controllers/Api/StoreController.php
 sudo -u www-data php -l app/Jobs/CreatePanelUser.php
 sudo -u www-data php -l app/Jobs/CreateServer.php
