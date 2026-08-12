@@ -42,6 +42,12 @@ upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
 upload "$ROOT/scripts/fix-free-limit.sh" "/tmp/fix-billing-free-limit.sh"
 upload "$ROOT/scripts/fix-fivem-egg.sh" "/tmp/fix-billing-fivem-egg.sh"
+upload "$ROOT/scripts/install-discord-bot-eggs.sh" "/tmp/install-discord-bot-eggs.sh"
+sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/billing-eggs"
+upload "$ROOT/eggs/egg-discord-js.json" "/tmp/billing-eggs/egg-discord-js.json"
+upload "$ROOT/eggs/egg-discord-py.json" "/tmp/billing-eggs/egg-discord-py.json"
+upload "$ROOT/eggs/egg-nodejs.json" "/tmp/billing-eggs/egg-nodejs.json"
+upload "$ROOT/eggs/egg-python.json" "/tmp/billing-eggs/egg-python.json"
 
 if [ -f "$ROOT/public/galaxy_bg.webp" ]; then
   upload "$ROOT/public/galaxy_bg.webp" "/var/www/billing/public/galaxy_bg.webp"
@@ -74,10 +80,11 @@ chown www-data:www-data \
   app/Jobs/CreateServer.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
+bash /tmp/install-discord-bot-eggs.sh || true
 sudo -u www-data php artisan view:clear
 sudo -u www-data php artisan cache:clear
 # Panel cache so egg entry change is visible

@@ -45,7 +45,7 @@
         <section class="ph-features">
             <div class="ph-features-head">
                 <h2>Built for players who hate lag</h2>
-                <p>Every plan ships ready for Minecraft, bots, and custom game stacks — no waiting around for tickets to start your server.</p>
+                <p>Every plan ships ready for Minecraft, Discord bots (Discord.js + Discord.py), and custom game stacks — no waiting around for tickets to start your server.</p>
             </div>
             <div class="ph-feature-grid">
                 <div class="ph-feature">
@@ -53,8 +53,8 @@
                     <span>Spin up in seconds after checkout. No queue, no mystery delays.</span>
                 </div>
                 <div class="ph-feature">
-                    <strong>Protected network</strong>
-                    <span>Stay online when attacks hit — protection is included, not an upsell.</span>
+                    <strong>Discord.js &amp; Python</strong>
+                    <span>Bot plans include Discord.js (Node) and Discord.py eggs with selectable runtime versions.</span>
                 </div>
                 <div class="ph-feature">
                     <strong>Panel control</strong>
