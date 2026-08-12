@@ -58,7 +58,7 @@ Config.NewPlayerSettings = {
     -- Freeroam: never block multichar. After spawn, offer an optional tour.
     AutoStartOnFirstJoin = false, -- must opt in (prompt / F7 / /citytour)
     ShowPromptOnSpawn = true, -- ask once after first spawn
-    AutoStartDelay = 4, -- seconds after spawn before prompt
+    AutoStartDelay = 6, -- seconds after outfit save before tour prompt (after starter car)
     RequiredPlayTime = 0,
     CooldownTime = 5, -- minutes between manual restarts
     -- Keep false so joins stay fast

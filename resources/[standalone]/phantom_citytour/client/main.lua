@@ -42,6 +42,7 @@ local function refreshTourCompleted()
 end
 
 --- After character spawn: optional prompt — player starts the tour themselves.
+--- Only call this AFTER outfit save (new) or returning player is fully in world.
 function OfferCityTourOnSpawn()
     if isTourActive then return end
     if not Config.NewPlayerSettings.ShowPromptOnSpawn then
@@ -58,7 +59,7 @@ function OfferCityTourOnSpawn()
     SetResourceKvpInt(KVP_SPAWN_PROMPTED, 1)
 
     CreateThread(function()
-        -- Let HUD / starter car settle
+        -- Let starter-car / HUD settle after outfit save
         Wait((tonumber(Config.NewPlayerSettings.AutoStartDelay) or 4) * 1000)
         if isTourActive then return end
 
@@ -90,7 +91,7 @@ function OfferCityTourOnSpawn()
     end)
 end
 
--- Initialize (post-spawn helpers only — pre-multichar does not wait on this)
+-- Initialize (post-outfit helpers — never during multichar)
 CreateThread(function()
     local deadline = GetGameTimer() + 60000
     while not getCore() and GetGameTimer() < deadline do
@@ -102,25 +103,32 @@ CreateThread(function()
 
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         PlayerData = QBCore.Functions.GetPlayerData() or {}
+        -- Do not prompt here — new chars still open outfit maker after this event.
         spawnPromptShown = false
-        OfferCityTourOnSpawn()
     end)
 
     RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
         PlayerData.job = JobInfo
     end)
 
-    -- If player already loaded when resource starts/restarts
-    if LocalPlayer.state.isLoggedIn or (PlayerData and PlayerData.citizenid) then
+    -- Shared ready signal from starterpack (after outfit save / returning spawn)
+    AddEventHandler('phantom:client:characterReady', function()
         OfferCityTourOnSpawn()
-    end
+    end)
+
+    -- Fallback if starterpack is stopped: only after first outfit save (not multichar)
+    RegisterNetEvent('illenium-appearance:client:characterCreated', function()
+        SetTimeout(1500, function()
+            OfferCityTourOnSpawn()
+        end)
+    end)
 end)
 
 function HasPlayerCompletedTour()
     return tourCompleted or GetResourceKvpInt(KVP_DONE) == 1
 end
 
--- Kept for compatibility; tour is offered after spawn, not forced.
+-- Kept for compatibility; tour is offered after outfit/character ready.
 function CheckForNewPlayer()
     OfferCityTourOnSpawn()
 end

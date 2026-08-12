@@ -216,27 +216,26 @@ RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
                     print(('[dr-starterpack] giveStarterPack failed: %s'):format(err))
                 end
             end
-            Wait(800)
-            fresh = getPlayer(src) or fresh
         end
-
-        -- Always offer car picker until claimed (fixes missing openCarSelect)
-        offerStarterCar(src, fresh)
+        -- Do NOT open car picker here — client requests after outfit save / returning spawn.
     end)
 end)
 
--- Client can request choices anytime (/startercar)
-RegisterNetEvent('dr-starterpack:server:requestCarSelect', function()
+-- Client can request choices after outfit save, or via /startercar (manual = true)
+RegisterNetEvent('dr-starterpack:server:requestCarSelect', function(manual)
     local src = source
     local player = getPlayer(src)
     if not player then return end
     local meta = player.PlayerData.metadata or {}
     if meta.starterpack_car == true then
-        TriggerClientEvent('ox_lib:notify', src, {
-            title = 'Starter Car',
-            description = 'You already claimed your starter car. Visit PDM for more rides.',
-            type = 'inform',
-        })
+        -- Only notify when the player explicitly typed /startercar
+        if manual == true then
+            TriggerClientEvent('ox_lib:notify', src, {
+                title = 'Starter Car',
+                description = 'You already claimed your starter car. Visit PDM for more rides.',
+                type = 'inform',
+            })
+        end
         return
     end
     -- Ensure base pack exists so freeroam players are not stuck without cash/phone

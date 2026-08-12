@@ -3,6 +3,13 @@ local dialogBusy = false
 local carMenuAutoRetryLeft = 1
 local tryOpen -- forward declare (openCarMenu retries call this)
 
+local pendingCars = nil
+local hasSpawned = false
+local outfitFinished = false
+--- New characters open CreateFirstCharacter after OnPlayerLoaded — block prompts until save
+local awaitingFirstOutfit = false
+local promptsArmed = false
+
 local function openCarMenu(cars, manual)
     if type(cars) ~= 'table' or #cars == 0 then return end
     if dialogBusy then return end
@@ -79,10 +86,6 @@ local function openCarMenu(cars, manual)
     if not model or model == '' then return end
     TriggerServerEvent('dr-starterpack:server:claimCar', model)
 end
-
-local pendingCars = nil
-local hasSpawned = false
-local outfitFinished = false
 
 local function requestModel(model)
     model = type(model) == 'string' and joaat(model) or model
@@ -164,31 +167,12 @@ RegisterNetEvent('dr-starterpack:client:spawnStarterCar', function(model, props)
     lib.notify({ title = 'Starter Car', description = 'Enjoy your new ride.', type = 'success' })
 end)
 
---- When illenium / fivem-appearance is running, players never close qb-clothing's menu — but qb-clothing
---- may still be `started` on the server, which would block this menu forever without this check.
-local function appearanceUsesQbClothingOnly()
-    if GetResourceState('qb-clothing') ~= 'started' then return false end
-    if GetResourceState('illenium-appearance') == 'started' then return false end
-    if GetResourceState('fivem-appearance') == 'started' then return false end
-    return true
-end
-
---- Wait for outfit when qb-clothing-only, or when illenium / fivem-appearance runs (they replace qb-clothing gating).
-local function mustWaitForOutfit()
-    if GetResourceState('illenium-appearance') == 'started' then return true end
-    if GetResourceState('fivem-appearance') == 'started' then return true end
-    return appearanceUsesQbClothingOnly()
-end
-
 local function canOpenNow()
     if not pendingCars then return false end
     if not hasSpawned then return false end
+    if not outfitFinished then return false end
+    if awaitingFirstOutfit then return false end
     if dialogBusy then return false end
-
-    if mustWaitForOutfit() and not outfitFinished then
-        return false
-    end
-
     if not IsScreenFadedIn() then return false end
     if IsPauseMenuActive() then return false end
     if not NetworkIsPlayerActive(PlayerId()) then return false end
@@ -201,111 +185,97 @@ tryOpen = function(manual)
     openCarMenu(pendingCars, manual == true)
 end
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+--- Fire once after outfit is saved (new) or returning player is fully in the world.
+local function armPostOutfitPrompts()
+    if promptsArmed then return end
+    if awaitingFirstOutfit then return end
+    promptsArmed = true
+    outfitFinished = true
     hasSpawned = true
-    SetTimeout(2500, function()
+
+    -- Tell other resources (city tour) that character + outfit are ready
+    TriggerEvent('phantom:client:characterReady')
+
+    -- Ask server for starter car list (server no longer pushes this during OnPlayerLoaded)
+    TriggerServerEvent('dr-starterpack:server:requestCarSelect')
+
+    SetTimeout(800, function()
         tryOpen(false)
     end)
-    -- If illenium never fires appearanceLoaded/characterCreated (race or edge case), do not block forever.
-    if mustWaitForOutfit() then
-        SetTimeout(30000, function()
-            if pendingCars and not outfitFinished then
-                outfitFinished = true
-                tryOpen(false)
-            end
-        end)
-    end
+end
+
+-- New character: clothing UI is about to open — do not prompt yet
+RegisterNetEvent('qb-clothes:client:CreateFirstCharacter', function()
+    awaitingFirstOutfit = true
+    outfitFinished = false
+    promptsArmed = false
+end)
+
+RegisterNetEvent('illenium-appearance:client:CreateFirstCharacter', function()
+    awaitingFirstOutfit = true
+    outfitFinished = false
+    promptsArmed = false
+end)
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    hasSpawned = true
+    -- New chars: CreateFirstCharacter usually fires right after this; give it a moment.
+    SetTimeout(1500, function()
+        if awaitingFirstOutfit then return end
+        -- Returning character (no first-outfit flow) — safe to prompt
+        armPostOutfitPrompts()
+    end)
 end)
 
 RegisterNetEvent('qb-clothing:client:onMenuClose', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
-    end)
+    awaitingFirstOutfit = false
+    armPostOutfitPrompts()
 end)
 
+-- New character saved outfit in illenium
 RegisterNetEvent('illenium-appearance:client:characterCreated', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
-    end)
-end)
-
--- Returning players: appearance applied from DB (new characters have no row yet — they use characterCreated above)
-RegisterNetEvent('illenium-appearance:client:appearanceLoaded', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
+    awaitingFirstOutfit = false
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
     end)
 end)
 
 RegisterNetEvent('fivem-appearance:client:characterCreated', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
+    awaitingFirstOutfit = false
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
     end)
 end)
 
--- Illenium applies skin on OnPlayerLoaded; no separate event — allow menu shortly after load.
-RegisterNetEvent('illenium-appearance:client:reloadSkin', function()
-    outfitFinished = true
-end)
-
-CreateThread(function()
-    while true do
-        if hasSpawned and GetResourceState('qb-clothing') ~= 'started'
-            and GetResourceState('illenium-appearance') ~= 'started'
-            and GetResourceState('fivem-appearance') ~= 'started'
-            and not outfitFinished then
-            outfitFinished = true
-        end
-        Wait(1000)
-    end
+-- Returning players: appearance applied from DB
+RegisterNetEvent('illenium-appearance:client:appearanceLoaded', function()
+    if awaitingFirstOutfit then return end
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
+    end)
 end)
 
 RegisterNetEvent('dr-starterpack:client:openCarSelect', function(cars)
     pendingCars = cars
     carMenuAutoRetryLeft = 1
-    SetTimeout(1800, function()
+    -- Only open if outfit/character is already ready (never during multichar / creator)
+    SetTimeout(500, function()
         tryOpen(false)
     end)
-    -- Server may send this before appearance events; ensure menu opens even if outfit gate never clears.
-    if mustWaitForOutfit() then
-        SetTimeout(25000, function()
-            if pendingCars and not outfitFinished then
-                outfitFinished = true
-                tryOpen(false)
-            end
-        end)
-    end
 end)
 
 RegisterCommand('startercar', function()
-    -- Ask server for choices (works even if openCarSelect was missed on first load)
     if not pendingCars or #pendingCars == 0 then
         lib.notify({
             title = 'Starter Car',
             description = 'Loading starter car list…',
             type = 'inform',
         })
-        TriggerServerEvent('dr-starterpack:server:requestCarSelect')
+        TriggerServerEvent('dr-starterpack:server:requestCarSelect', true)
         return
     end
+    awaitingFirstOutfit = false
     outfitFinished = true
     hasSpawned = true
     tryOpen(true)
 end, false)
-
--- Soft nudge after spawn if the car list never arrived
-CreateThread(function()
-    local waited = 0
-    while waited < 20000 do
-        Wait(1000)
-        waited = waited + 1000
-        if pendingCars and #pendingCars > 0 then return end
-        if hasSpawned then
-            TriggerServerEvent('dr-starterpack:server:requestCarSelect')
-            return
-        end
-    end
-end)
