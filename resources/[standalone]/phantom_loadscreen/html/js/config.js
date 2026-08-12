@@ -16,11 +16,14 @@ const Config = {
   backgroundImage:
     'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1920&q=80',
   tips: [
+    'Type /startercar to claim your free starter ride (or grab one free at PDM).',
+    'Visit Platinum Deluxe Motorsport for self-service cars — no job needed.',
+    'Buy homes with next_housing direct purchase — look for for-sale property markers.',
     'Press E at stores and job NPCs to hop into work instantly.',
     'Your phone rings with contracts — hitman, robbery, repo, and bounty tips.',
     'Join Discord for events, support, and crew-ups.',
     'First join includes a city tour — BACKSPACE skips the whole thing.',
-    'F3 emotes · M phone · L lock vehicle · G engine.',
+    'F3 emotes · M phone · L lock vehicle · G engine · /vehicles to call your cars.',
     'Be cool to other players — freeroam first, light RP welcome.',
   ],
 };

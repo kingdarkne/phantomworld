@@ -137,6 +137,18 @@ CreateThread(function()
     spawnJobPeds()
 end)
 
+-- One-time freeroam orientation after character load
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    SetTimeout(8000, function()
+        lib.notify({
+            title = 'Phantom World',
+            description = 'Free starter car: /startercar · Buy rides at PDM · Homes via next_housing for-sale markers',
+            type = 'inform',
+            duration = 12000,
+        })
+    end)
+end)
+
 CreateThread(function()
     while true do
         local sleep = 750

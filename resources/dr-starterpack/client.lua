@@ -280,13 +280,31 @@ RegisterNetEvent('dr-starterpack:client:openCarSelect', function(cars)
 end)
 
 RegisterCommand('startercar', function()
+    -- Ask server for choices (works even if openCarSelect was missed on first load)
     if not pendingCars or #pendingCars == 0 then
         lib.notify({
             title = 'Starter Car',
-            description = 'No starter vehicle selection is available right now.',
-            type = 'error'
+            description = 'Loading starter car list…',
+            type = 'inform',
         })
+        TriggerServerEvent('dr-starterpack:server:requestCarSelect')
         return
     end
+    outfitFinished = true
+    hasSpawned = true
     tryOpen(true)
 end, false)
+
+-- Soft nudge after spawn if the car list never arrived
+CreateThread(function()
+    local waited = 0
+    while waited < 20000 do
+        Wait(1000)
+        waited = waited + 1000
+        if pendingCars and #pendingCars > 0 then return end
+        if hasSpawned then
+            TriggerServerEvent('dr-starterpack:server:requestCarSelect')
+            return
+        end
+    end
+end)

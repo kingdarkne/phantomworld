@@ -166,29 +166,68 @@ local function getStarterCarChoices()
     return merged
 end
 
+local function offerStarterCar(src, player)
+    player = player or getPlayer(src)
+    if not player then return end
+    local meta = player.PlayerData.metadata or {}
+    if meta.starterpack_car == true then return end
+    local choices = getStarterCarChoices()
+    if #choices == 0 then return end
+    TriggerClientEvent('dr-starterpack:client:openCarSelect', src, choices)
+end
+
 RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
     local src = source
     local player = getPlayer(src)
     if not player then return end
-    if alreadyClaimed(player) then
-        return
-    end
 
     CreateThread(function()
-        Wait(2000)
+        Wait(2500)
         local fresh = getPlayer(src)
         if not fresh then return end
-        local ok, err = pcall(function()
-            giveStarterPack(fresh, src)
-        end)
-        if not ok then
-            if lib and lib.print and lib.print.error then
-                lib.print.error(('[dr-starterpack] giveStarterPack failed: %s'):format(err))
-            else
-                print(('[dr-starterpack] giveStarterPack failed: %s'):format(err))
+
+        if not alreadyClaimed(fresh) then
+            local ok, err = pcall(function()
+                giveStarterPack(fresh, src)
+            end)
+            if not ok then
+                if lib and lib.print and lib.print.error then
+                    lib.print.error(('[dr-starterpack] giveStarterPack failed: %s'):format(err))
+                else
+                    print(('[dr-starterpack] giveStarterPack failed: %s'):format(err))
+                end
             end
+            Wait(800)
+            fresh = getPlayer(src) or fresh
         end
+
+        -- Always offer car picker until claimed (fixes missing openCarSelect)
+        offerStarterCar(src, fresh)
     end)
+end)
+
+-- Client can request choices anytime (/startercar)
+RegisterNetEvent('dr-starterpack:server:requestCarSelect', function()
+    local src = source
+    local player = getPlayer(src)
+    if not player then return end
+    local meta = player.PlayerData.metadata or {}
+    if meta.starterpack_car == true then
+        TriggerClientEvent('ox_lib:notify', src, {
+            title = 'Starter Car',
+            description = 'You already claimed your starter car. Visit PDM for more rides.',
+            type = 'inform',
+        })
+        return
+    end
+    -- Ensure base pack exists so freeroam players are not stuck without cash/phone
+    if not alreadyClaimed(player) then
+        pcall(function()
+            giveStarterPack(player, src)
+        end)
+        player = getPlayer(src) or player
+    end
+    offerStarterCar(src, player)
 end)
 
 -- Persist XNLRankBar XP to DB (if using XNLRankBar)
