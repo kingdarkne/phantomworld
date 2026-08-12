@@ -41,32 +41,51 @@ local function giveStarterPack(player, src)
     src = src or (player and player.PlayerData and player.PlayerData.source) or source
     if not src then return end
 
-    -- Money: cash
-    player.Functions.AddMoney('cash', Config.Starter.Cash, 'starter-pack')
+    local cash = tonumber(Config.Starter.Cash) or 0
+    local bank = tonumber(Config.Starter.Bank) or 0
+    if cash > 0 then
+        player.Functions.AddMoney('cash', cash, 'starter-pack')
+    end
+    if bank > 0 then
+        player.Functions.AddMoney('bank', bank, 'starter-pack')
+    end
 
     -- Starter items
     for _, entry in ipairs(Config.Starter.ExtraItems or {}) do
         addItem(src, entry.name, entry.count or 1, entry.metadata)
     end
 
-    -- Starter gun + ammo
-    addItem(src, Config.Starter.GunItem, 1, { serie = tostring(math.random(10000000, 99999999)) })
-    addItem(src, Config.Starter.AmmoItem, Config.Starter.AmmoCount, {})
+    -- Optional starter gun + ammo (disabled when GunItem is nil)
+    if Config.Starter.GunItem and Config.Starter.GunItem ~= '' then
+        addItem(src, Config.Starter.GunItem, 1, { serie = tostring(math.random(10000000, 99999999)) })
+        if Config.Starter.AmmoItem and (tonumber(Config.Starter.AmmoCount) or 0) > 0 then
+            addItem(src, Config.Starter.AmmoItem, Config.Starter.AmmoCount, {})
+        end
+    end
 
     -- Rank metadata (used by HUD / scripts)
-    player.Functions.SetMetaData('rank', Config.Starter.Level)
-    player.Functions.SetMetaData('rankxp_level', Config.Starter.Level)
+    local level = tonumber(Config.Starter.Level) or 1
+    player.Functions.SetMetaData('rank', level)
+    player.Functions.SetMetaData('rankxp_level', level)
 
-    -- XNLRankBar (optional): set to rank 20 on first join
-    if GetResourceState('XNLRankBar') == 'started' and Config.Starter.XNLRankXP then
+    -- XNLRankBar (optional): only apply when XP > 0
+    local xp = tonumber(Config.Starter.XNLRankXP) or 0
+    if GetResourceState('XNLRankBar') == 'started' and xp > 0 then
         local citizenid = player.PlayerData.citizenid
-        TriggerEvent('dr-starterpack:server:setXnlXp', citizenid, Config.Starter.XNLRankXP)
-        TriggerClientEvent('XNL_NET:XNL_SetInitialXPLevels', src, Config.Starter.XNLRankXP, true, true)
+        TriggerEvent('dr-starterpack:server:setXnlXp', citizenid, xp)
+        TriggerClientEvent('XNL_NET:XNL_SetInitialXPLevels', src, xp, true, true)
     end
 
     -- Mark that base starter pack was granted (car is claimed separately)
     player.Functions.SetMetaData('starterpack', true)
     player.Functions.SetMetaData('starterpack_car', false)
+
+    TriggerClientEvent('ox_lib:notify', src, {
+        title = 'Starter Pack',
+        description = ('Welcome! +$%s cash, +$%s bank, supplies, and a free starter car (/startercar).'):format(cash, bank),
+        type = 'success',
+        duration = 10000,
+    })
 end
 
 local function alreadyClaimed(player)

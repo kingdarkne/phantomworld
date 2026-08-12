@@ -1,6 +1,7 @@
 local dialogBusy = false
 --- After closing the car dialog without picking, offer one automatic reopen (still can use /startercar anytime)
 local carMenuAutoRetryLeft = 1
+local tryOpen -- forward declare (openCarMenu retries call this)
 
 local function openCarMenu(cars, manual)
     if type(cars) ~= 'table' or #cars == 0 then return end
@@ -16,7 +17,7 @@ local function openCarMenu(cars, manual)
             selectOptions[#selectOptions + 1] = {
                 label = label,
                 value = value,
-                description = ('Claim %s as your starter car'):format(value),
+                description = ('Free starter — %s (dealers sell the rest)'):format(value),
             }
         end
     end
@@ -30,11 +31,11 @@ local function openCarMenu(cars, manual)
 
     local result
     local ok, err = pcall(function()
-        result = lib.inputDialog('Choose your starter car', {
+        result = lib.inputDialog('Choose your free starter vehicle', {
             {
                 type = 'select',
-                label = 'Car',
-                description = 'Pick ONE starter vehicle (scroll or type to search)',
+                label = 'Economy starter',
+                description = 'One free used/economy ride. Sports & luxury are at dealerships.',
                 options = selectOptions,
                 required = true,
             }
@@ -65,7 +66,7 @@ local function openCarMenu(cars, manual)
             if carMenuAutoRetryLeft > 0 then
                 carMenuAutoRetryLeft = carMenuAutoRetryLeft - 1
                 SetTimeout(3500, function()
-                    tryOpen(false)
+                    if tryOpen then tryOpen(false) end
                 end)
             end
         end
@@ -195,7 +196,7 @@ local function canOpenNow()
     return true
 end
 
-local function tryOpen(manual)
+tryOpen = function(manual)
     if not canOpenNow() then return end
     openCarMenu(pendingCars, manual == true)
 end
