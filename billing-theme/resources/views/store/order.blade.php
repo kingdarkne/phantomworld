@@ -99,45 +99,84 @@ use App\Models\Category;
                 </div>
                 <hr>
                 <div class="form-group row">
-                    <label class="col-lg-4 col-form-label">Server Nest / Egg</label>
-                    <div class="col-lg-4">
-                        <select class="form-control" name="egg" id="order-egg">
-                            @php $nest_api = $pterodactyl->getNests(); @endphp
+                    <label class="col-lg-4 col-form-label" for="order-egg">Game / Software</label>
+                    <div class="col-lg-6">
+                        <select class="form-control" name="egg" id="order-egg" required>
+                            @php
+                                $allowedEggs = is_array($decoded = json_decode($plan->nests_eggs_id, true)) ? $decoded : [];
+                                $nest_api = $pterodactyl->getNests();
+                                // Prefer unique, modern eggs (skip duplicate Node/FiveM generics)
+                                $skipEggIds = [15, 17, 18];
+                                $defaultEgg = null;
+                                $planName = strtolower((string) $plan->name);
+                                $categoryName = strtolower((string) optional($category_model->find($plan->category_id))->name);
+                                $guessMap = [
+                                    'discord.js' => '8:20', 'discord.py' => '8:21', 'bot' => '8:20',
+                                    'python' => '8:23', 'node' => '8:22',
+                                    'fivem' => '6:16', 'gta' => '6:16', 'free plan' => '6:16',
+                                    'paper' => '1:3', 'dirt' => '1:3', 'stone' => '1:3', 'iron' => '1:3',
+                                    'diamond' => '1:3', 'netherite' => '1:3',
+                                    'vanilla' => '1:1', 'forge' => '1:4', 'bungee' => '1:2', 'sponge' => '1:5',
+                                    'cs:go' => '2:7', 'csgo' => '2:7', 'ark' => '2:8', 'team fortress' => '2:9', 'tf2' => '2:9',
+                                    "garry" => '2:11', 'gmod' => '2:11', 'insurgency' => '2:10',
+                                    'rust' => '4:14', 'mumble' => '3:12', 'teamspeak' => '3:13', 'lavalink' => '3:19',
+                                ];
+                                foreach ($guessMap as $needle => $eggKey) {
+                                    if (str_contains($planName, $needle) || str_contains($categoryName, $needle)) {
+                                        if (in_array($eggKey, $allowedEggs, true)) {
+                                            $defaultEgg = $eggKey;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!$defaultEgg && str_contains($categoryName, 'bot') && in_array('8:20', $allowedEggs, true)) {
+                                    $defaultEgg = '8:20';
+                                }
+                            @endphp
                             @foreach ($nest_api['data'] as $nest)
-                                @php $location_option = false; @endphp
-                                @foreach ($nest['attributes']['relationships']['eggs']['data'] as $egg)
-                                    @if (in_array($nest['attributes']['id'].':'.$egg['attributes']['id'], is_array($decoded = json_decode($plan->nests_eggs_id, true)) ? $decoded : []))
-                                        @unless ($location_option)
-                                            <option value="" disabled>{{ $nest['attributes']['name'] }}</option>
-                                            @php $location_option = true; @endphp
-                                        @endunless
-                                        <option value="{{ $nest['attributes']['id'] }}:{{ $egg['attributes']['id'] }}">{{ $egg['attributes']['name'] }}</option>
-                                    @endif
+                                @php
+                                    $nestEggs = [];
+                                    foreach ($nest['attributes']['relationships']['eggs']['data'] as $egg) {
+                                        $eggId = (int) $egg['attributes']['id'];
+                                        $key = $nest['attributes']['id'].':'.$eggId;
+                                        if (in_array($eggId, $skipEggIds, true)) continue;
+                                        if (!in_array($key, $allowedEggs, true)) continue;
+                                        $nestEggs[] = [$key, $egg['attributes']['name']];
+                                    }
+                                @endphp
+                                @continue(empty($nestEggs))
+                                <option value="" disabled>— {{ $nest['attributes']['name'] }} —</option>
+                                @foreach ($nestEggs as [$eggKey, $eggName])
+                                    <option value="{{ $eggKey }}" @selected($defaultEgg === $eggKey)>{{ $eggName }}</option>
                                 @endforeach
-                                @if ($location_option) <option value="" disabled></option> @endif
                             @endforeach
                         </select>
+                        <small class="form-text text-muted">Pick the game or software egg. Runtimes (Node/Python versions) are chosen later in the game panel.</small>
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label class="col-lg-4 col-form-label">Server Location / Node</label>
-                    <div class="col-lg-4">
-                        <select class="form-control" name="node" id="order-node">
+                    <label class="col-lg-4 col-form-label" for="order-node">Hosting Node</label>
+                    <div class="col-lg-6">
+                        <select class="form-control" name="node" id="order-node" required>
                             @php $location_api = $pterodactyl->getLocations(); @endphp
                             @foreach ($location_api['data'] as $location)
-                                @php $location_option = false; @endphp
                                 @foreach ($location['attributes']['relationships']['nodes']['data'] as $node)
-                                    @if (in_array($location['attributes']['id'].':'.$node['attributes']['id'], is_array($decoded = json_decode($plan->locations_nodes_id, true)) ? $decoded : []))
-                                        @unless ($location_option)
-                                            <option disabled>{{ $location['attributes']['long'] }} ({{ $location['attributes']['short'] }})</option>
-                                            @php $location_option = true; @endphp
-                                        @endunless
-                                        <option value="{{ $location['attributes']['id'] }}:{{ $node['attributes']['id'] }}">{{ $node['attributes']['name'] }}</option>
+                                    @php
+                                        $nodeKey = $location['attributes']['id'].':'.$node['attributes']['id'];
+                                        $allowedNodes = is_array($decodedNodes = json_decode($plan->locations_nodes_id, true)) ? $decodedNodes : [];
+                                        $isMain = (int) $node['attributes']['id'] === 1;
+                                    @endphp
+                                    @if (in_array($nodeKey, $allowedNodes, true) || $isMain)
+                                        <option value="{{ $nodeKey }}" @selected($isMain)>
+                                            {{ $node['attributes']['name'] }}
+                                            — {{ $location['attributes']['long'] }}
+                                            ({{ $node['attributes']['fqdn'] }})
+                                        </option>
                                     @endif
                                 @endforeach
-                                @if ($location_option) <option value="" disabled></option> @endif
                             @endforeach
                         </select>
+                        <small class="form-text text-muted">Servers are created on this node in the hosting panel (Main Node).</small>
                     </div>
                 </div>
                 <div class="form-group row">
@@ -368,13 +407,33 @@ use App\Models\Category;
 
 <script>
 function selectFirstOrderOptions() {
-    ['order-egg', 'order-node'].forEach(function(id) {
-        const sel = document.getElementById(id);
-        if (!sel || sel.value) return;
-        for (const opt of sel.options) {
-            if (opt.value && !opt.disabled) { sel.value = opt.value; break; }
+    const egg = document.getElementById('order-egg');
+    const node = document.getElementById('order-node');
+    if (egg && !egg.value) {
+        for (const opt of egg.options) {
+            if (opt.value && !opt.disabled) { egg.value = opt.value; break; }
         }
-    });
+    }
+    if (node) {
+        let picked = false;
+        for (const opt of node.options) {
+            if (opt.value === '1:1' || (opt.value && /(^|:)1$/.test(opt.value) && opt.text.toLowerCase().includes('main'))) {
+                node.value = opt.value;
+                picked = true;
+                break;
+            }
+        }
+        if (!picked) {
+            for (const opt of node.options) {
+                if (opt.value === '1:1') { node.value = opt.value; picked = true; break; }
+            }
+        }
+        if (!picked && !node.value) {
+            for (const opt of node.options) {
+                if (opt.value && !opt.disabled) { node.value = opt.value; break; }
+            }
+        }
+    }
 }
 document.addEventListener('DOMContentLoaded', function() {
     selectFirstOrderOptions();

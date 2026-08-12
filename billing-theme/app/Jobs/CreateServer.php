@@ -151,7 +151,7 @@ class CreateServer implements ShouldQueue
         if ($createResponse->failed()) {
             $error = 'Failed to create server on panel: ' . $createResponse->body();
             Log::error('[CreateServer] ' . $error);
-            DiscordRelay::serverError($this->server, $client, 'Failed to create server on panel');
+            DiscordRelay::serverError($this->server, $client, 'Failed to create server on panel: ' . substr($createResponse->body(), 0, 300));
 
             return $this->fail();
         }

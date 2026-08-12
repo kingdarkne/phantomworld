@@ -26,6 +26,8 @@ upload "$ROOT/bootstrap/helpers.php" "/var/www/billing/bootstrap/helpers.php"
 upload "$ROOT/resources/views/store/pages.blade.php" "/var/www/billing/resources/views/store/pages.blade.php"
 upload "$ROOT/resources/views/store/checkout.blade.php" "/var/www/billing/resources/views/store/checkout.blade.php"
 upload "$ROOT/resources/views/store/order.blade.php" "/var/www/billing/resources/views/store/order.blade.php"
+upload "$ROOT/resources/views/client/server/index.blade.php" "/var/www/billing/resources/views/client/server/index.blade.php"
+upload "$ROOT/resources/views/client/server/show.blade.php" "/var/www/billing/resources/views/client/server/show.blade.php"
 upload "$ROOT/resources/views/layouts/store/header.blade.php" "/var/www/billing/resources/views/layouts/store/header.blade.php"
 upload "$ROOT/resources/views/layouts/store/footer.blade.php" "/var/www/billing/resources/views/layouts/store/footer.blade.php"
 upload "$ROOT/resources/views/layouts/store/nav.blade.php" "/var/www/billing/resources/views/layouts/store/nav.blade.php"
@@ -52,6 +54,7 @@ upload "$ROOT/scripts/fix-free-limit.sh" "/tmp/fix-billing-free-limit.sh"
 upload "$ROOT/scripts/fix-fivem-egg.sh" "/tmp/fix-billing-fivem-egg.sh"
 upload "$ROOT/scripts/install-discord-bot-eggs.sh" "/tmp/install-discord-bot-eggs.sh"
 upload "$ROOT/scripts/attach-all-eggs-to-plans.sh" "/tmp/attach-all-eggs-to-plans.sh"
+upload "$ROOT/scripts/ensure-main-node-and-games.sh" "/tmp/ensure-main-node-and-games.sh"
 sshpass -e ssh "${SSH_BASE[@]}" -p "$PORT" "${USER}@${HOST}" "mkdir -p /tmp/billing-eggs"
 upload "$ROOT/eggs/egg-discord-js.json" "/tmp/billing-eggs/egg-discord-js.json"
 upload "$ROOT/eggs/egg-discord-py.json" "/tmp/billing-eggs/egg-discord-py.json"
@@ -74,6 +77,9 @@ chown www-data:www-data \
   bootstrap/helpers.php \
   resources/views/store/pages.blade.php \
   resources/views/store/checkout.blade.php \
+  resources/views/store/order.blade.php \
+  resources/views/client/server/index.blade.php \
+  resources/views/client/server/show.blade.php \
   resources/views/layouts/store/header.blade.php \
   resources/views/layouts/store/footer.blade.php \
   resources/views/layouts/store/nav.blade.php \
@@ -96,12 +102,13 @@ chown www-data:www-data \
   resources/views/emails/notif.blade.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
 bash /tmp/install-discord-bot-eggs.sh || true
 bash /tmp/attach-all-eggs-to-plans.sh || true
+bash /tmp/ensure-main-node-and-games.sh || true
 # Ensure owner gets purchase alerts
 if ! grep -q '^OWNER_EMAIL=' /var/www/billing/.env; then
   echo 'OWNER_EMAIL=ericaxavier897@gmail.com' >> /var/www/billing/.env
