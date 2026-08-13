@@ -61,6 +61,16 @@ setr qbx_hud:showRank 1
 setr qbx_hud:showJob 1
 ```
 
-## Discord bot
+## Stuck / bug assist
 
-See [`discord-bot/README.md`](../../discord-bot/README.md) in the repo root.
+Players can run:
+- `/unstuck` (or `/stuck`) — clears stuck NUI focus, unfreezes, soft reposition
+- `/reportstuck` — sends a Discord alert to staff with coords + flags
+
+Auto-detect (configurable):
+- Holding move keys but not moving (~25s)
+- NUI focus stuck (~120s)
+- Black screen / fade stuck (~75s)
+
+Disable: `set phantom_dashboard:stuckWatch 0`
+

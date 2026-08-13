@@ -35,4 +35,6 @@ Config.Discord = {
     ErrorWebhook = GetConvar('phantom_dashboard:errorWebhook', ''),
     --- Capture FX console errors and post to Discord (1/0)
     ErrorReporting = GetConvarInt('phantom_dashboard:errorReporting', 1) == 1,
+    --- Watch for stuck players / likely client bugs (1/0)
+    StuckWatch = GetConvarInt('phantom_dashboard:stuckWatch', 1) == 1,
 }

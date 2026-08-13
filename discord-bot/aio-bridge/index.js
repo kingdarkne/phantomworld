@@ -117,7 +117,7 @@ function mountRelayRoutes(app, client) {
     }
     const entry = req.body || {};
     try {
-      if (String(entry.category || '').toLowerCase() === 'error') {
+      if (String(entry.category || '').toLowerCase() === 'error' || String(entry.category || '').toLowerCase() === 'stuck') {
         await postErrorTargets(client, entry);
       } else {
         await postNormalEvent(client, entry);

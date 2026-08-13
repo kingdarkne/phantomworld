@@ -17,6 +17,7 @@ shared_scripts {
 client_scripts {
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
+    'client/stuck.lua',
 }
 
 server_scripts {
@@ -24,6 +25,7 @@ server_scripts {
     'server/discord_dm.lua',
     'server/alerts.lua',
     'server/errors.lua',
+    'server/stuck.lua',
     'server/discord.lua',
     'server/http.lua',
 }
