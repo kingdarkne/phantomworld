@@ -44,7 +44,8 @@ exports('RemoveOption', RemoveOption)
 
 -- Main thread
 Citizen.CreateThread(function()
-    local keyBind = "F1"
+    -- M = GTA interaction menu key (control 244). Remappable in FiveM settings if needed.
+    local keyBind = "M"
     local keyBind2 = "-"
     while true do
         Citizen.Wait(0)
