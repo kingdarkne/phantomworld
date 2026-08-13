@@ -43,12 +43,16 @@ export function createSlashContext(interaction, ctx) {
       }
     },
     async reply(payload) {
-      if (state.deferred) {
+      const body = typeof payload === 'string' ? { content: payload } : payload;
+      if (state.replied) {
+        return interaction.followUp(body);
+      }
+      if (state.deferred || interaction.deferred) {
         state.replied = true;
-        return interaction.editReply(typeof payload === 'string' ? { content: payload } : payload);
+        return interaction.editReply(body);
       }
       state.replied = true;
-      return interaction.reply(typeof payload === 'string' ? { content: payload } : payload);
+      return interaction.reply(body);
     },
     async followUp(payload) {
       return interaction.followUp(typeof payload === 'string' ? { content: payload } : payload);

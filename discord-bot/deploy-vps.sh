@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Run from repo root on a machine with SSH access to the VPS.
 # Usage: VPS_PASSWORD='...' ./discord-bot/deploy-vps.sh
+# WARNING: --delete will wipe the full multipurpose bot on the VPS.
+# Prefer ./discord-bot/deploy-bot-patches.sh for live ($)TRex V2.0 fixes.
 set -euo pipefail
 
 HOST="${VPS_HOST:-172.245.71.46}"

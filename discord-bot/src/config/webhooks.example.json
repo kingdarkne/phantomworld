@@ -1,0 +1,62 @@
+{
+    "startLogs": {
+        "id": "1477376673115537508",
+        "token": "REPLACE_ME"
+    },
+    "shardLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "errorLogs": {
+        "id": "1477376673115537508",
+        "token": "REPLACE_ME"
+    },
+    "dmLogs": {
+        "id": "1477376673115537508",
+        "token": "REPLACE_ME"
+    },
+    "voiceLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "serverLogs": {
+        "id": "1477376673115537508",
+        "token": "REPLACE_ME"
+    },
+    "serverLogs2": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "commandLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "consoleLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "warnLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "voiceErrorLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "creditLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "evalLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    },
+    "interactionLogs": {
+        "id": "1477376673115537508",
+        "token": "REPLACE_ME"
+    },
+    "bugReportLogs": {
+        "id": "1474069525992444128",
+        "token": "REPLACE_ME"
+    }
+}
