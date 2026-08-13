@@ -176,9 +176,14 @@ function PhantomDashboardEmit(category, title, description, color)
 end
 
 --- Always-on path for SCRIPT ERROR / console failures (ignores alertAll / min players).
-function PhantomDashboardEmitError(title, description, color)
+--- opts: { discordId, category, pingPlayer, invitePlayer }
+function PhantomDashboardEmitError(title, description, color, opts)
+    opts = type(opts) == 'table' and opts or {}
+    local discordId = opts.discordId and tostring(opts.discordId) or ''
+    discordId = discordId:gsub('discord:', '')
+
     local entry = {
-        category = 'error',
+        category = opts.category or 'error',
         title = title or 'FXServer Error',
         description = description or '',
         color = color or 15548997,
@@ -186,12 +191,26 @@ function PhantomDashboardEmitError(title, description, color)
         timestamp = os.time(),
         players = playerCount(),
         maxPlayers = GetConvarInt('sv_maxclients', 48),
+        discordId = discordId ~= '' and discordId or nil,
+        pingPlayer = opts.pingPlayer == true,
+        invitePlayer = opts.invitePlayer == true,
     }
 
     pushLog(entry)
-    postErrorWebhook(embedPayload(entry.title, entry.description, entry.color))
+
+    local payload = embedPayload(entry.title, entry.description, entry.color)
+    if discordId ~= '' and opts.pingPlayer then
+        local users = { discordId }
+        payload.content = ('<@%s>'):format(discordId)
+        if ownerDiscordId ~= '' then
+            payload.content = payload.content .. (' · staff <@%s>'):format(ownerDiscordId)
+            users[#users + 1] = ownerDiscordId
+        end
+        payload.allowed_mentions = { parse = {}, users = users }
+    end
+    postErrorWebhook(payload)
     PhantomDashboardDmOwner(entry)
-    -- Prefer relay so the Discord bot can route to #errors / errorLogs webhook
+    -- Prefer relay so the Discord bot can route + DM the player an invite
     if botRelay and botRelay ~= '' then
         local headers = { ['Content-Type'] = 'application/json' }
         if relayToken and relayToken ~= '' then
@@ -209,8 +228,8 @@ function PhantomDashboardEmitError(title, description, color)
     end
 end
 
-exports('EmitError', function(title, message, color)
-    PhantomDashboardEmitError(title, message, color)
+exports('EmitError', function(title, message, color, opts)
+    PhantomDashboardEmitError(title, message, color, opts)
 end)
 
 --- Lifecycle alerts: always webhook; retry bot relay (bot may start after FXServer).

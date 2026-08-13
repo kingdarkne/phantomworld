@@ -47,10 +47,36 @@ local function allowed(src)
     return true
 end
 
+local function discordIdOf(src)
+    local id = GetPlayerIdentifierByType(src, 'discord')
+    if not id then return nil end
+    return id:gsub('discord:', '')
+end
+
 local function emitStuck(src, kind, data)
     if not PhantomDashboardEmitError then return end
     local title = ('Player Stuck / Possible Bug — %s'):format(kind or 'stuck')
-    PhantomDashboardEmitError(title, formatReport(src, kind, data), 15105570)
+    local did = discordIdOf(src)
+    PhantomDashboardEmitError(title, formatReport(src, kind, data), 15105570, {
+        discordId = did,
+        category = 'stuck',
+        pingPlayer = did ~= nil,
+        invitePlayer = true,
+    })
+
+    if did then
+        TriggerClientEvent('ox_lib:notify', src, {
+            title = 'Phantom Assist',
+            description = 'Staff were notified. Check your Discord DMs for an invite so we can help.',
+            type = 'inform',
+        })
+    else
+        TriggerClientEvent('ox_lib:notify', src, {
+            title = 'Phantom Assist',
+            description = 'Link Discord in FiveM settings, then join discord.gg/phantomworld for help.',
+            type = 'inform',
+        })
+    end
 end
 
 RegisterNetEvent('phantom_dashboard:stuck:auto', function(data)

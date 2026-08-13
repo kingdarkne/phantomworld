@@ -105,12 +105,46 @@ function startRelayServer() {
     const entry = req.body || {};
     try {
       await notifyOwnerEvent(entry);
-      const isError = String(entry.category || '').toLowerCase() === 'error';
-      const mirrorChannelId = isError ? errorChannelId() : statusChannelId();
+      const cat = String(entry.category || '').toLowerCase();
+      const isErrorLike = cat === 'error' || cat === 'stuck';
+      const mirrorChannelId = isErrorLike ? errorChannelId() : statusChannelId();
+      const discordId = String(entry.discordId || '').replace(/^discord:/, '');
+      const ping =
+        entry.pingPlayer && discordId
+          ? `<@${discordId}> having an in-game issue — check DMs / join Discord for help`
+          : undefined;
       if (mirrorChannelId) {
         const channel = await client.channels.fetch(mirrorChannelId);
         if (channel?.isTextBased()) {
-          await channel.send({ embeds: [eventEmbed(entry)] });
+          await channel.send({
+            content: ping,
+            embeds: [eventEmbed(entry)],
+            allowedMentions: discordId ? { users: [discordId] } : undefined,
+          });
+        }
+      }
+      if (cat === 'stuck' || entry.invitePlayer) {
+        const invite =
+          process.env.DISCORD_SERVER_INVITE ||
+          process.env.DISCORD_INVITE_URL ||
+          'https://discord.gg/phantomworld';
+        if (discordId) {
+          try {
+            const user = await client.users.fetch(discordId);
+            await user.send({
+              embeds: [
+                new EmbedBuilder()
+                  .setColor(0xf59e0b)
+                  .setTitle('Need help on Phantom World?')
+                  .setDescription(
+                    `Hey — we detected a **stuck / possible bug**.\n\nJoin Discord so staff can help:\n${invite}\n\nIn-game try: \`/unstuck\``,
+                  )
+                  .setTimestamp(),
+              ],
+            });
+          } catch (dmErr) {
+            console.warn('Player invite DM failed:', dmErr.message);
+          }
         }
       }
       res.json({ ok: true });

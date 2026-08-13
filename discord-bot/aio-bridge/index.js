@@ -62,11 +62,72 @@ function webhookFromClient(client, key) {
   }
 }
 
+function discordInviteUrl(client) {
+  return (
+    process.env.DISCORD_SERVER_INVITE ||
+    process.env.DISCORD_INVITE_URL ||
+    client?.config?.discord?.serverInvite ||
+    'https://discord.gg/phantomworld'
+  );
+}
+
+function extractDiscordId(entry) {
+  if (entry?.discordId) return String(entry.discordId).replace(/^discord:/, '');
+  const desc = String(entry?.description || '');
+  const m = desc.match(/<@!?(\d{16,20})>/);
+  return m ? m[1] : '';
+}
+
+async function dmPlayerHelpInvite(client, entry) {
+  const discordId = extractDiscordId(entry);
+  if (!discordId) return;
+  if (entry.invitePlayer === false) return;
+
+  const invite = discordInviteUrl(client);
+  const embed = new EmbedBuilder()
+    .setColor(0xf59e0b)
+    .setTitle('Need help on Phantom World?')
+    .setDescription(
+      [
+        'Hey — we detected a **stuck / possible bug** on the FiveM server.',
+        '',
+        'Join our Discord so staff can help you fix it:',
+        invite,
+        '',
+        'In-game you can also try: `/unstuck`',
+        '',
+        '_If you already used /reportstuck, staff can see your report._',
+      ].join('\n'),
+    )
+    .setFooter({ text: 'Phantom World Support' })
+    .setTimestamp();
+
+  try {
+    const user = await client.users.fetch(discordId);
+    await user.send({ embeds: [embed] });
+    console.log(`[phantom-fivem] Sent Discord invite DM to ${discordId}`);
+  } catch (err) {
+    console.warn('[phantom-fivem] Player invite DM failed:', err.message);
+  }
+}
+
 async function postErrorTargets(client, entry) {
   const embed = eventEmbed(entry);
-  const payload = { username: 'Phantom FX Errors', embeds: [embed] };
+  const discordId = extractDiscordId(entry);
+  const pingContent =
+    entry.pingPlayer && discordId
+      ? `<@${discordId}> having an in-game issue — check DMs / join Discord for help`
+      : null;
 
-  // Prefer dedicated errorLogs / consoleLogs webhooks from webhooks.json
+  const payload = {
+    username: 'Phantom FX Errors',
+    embeds: [embed],
+  };
+  if (pingContent) {
+    payload.content = pingContent;
+    payload.allowedMentions = { users: [discordId] };
+  }
+
   for (const key of ['errorLogs', 'consoleLogs']) {
     const hook = webhookFromClient(client, key);
     if (!hook) continue;
@@ -82,7 +143,11 @@ async function postErrorTargets(client, entry) {
     try {
       const channel = await client.channels.fetch(channelId);
       if (channel?.isTextBased?.()) {
-        await channel.send({ embeds: [embed] });
+        await channel.send({
+          content: pingContent || undefined,
+          embeds: [embed],
+          allowedMentions: discordId ? { users: [discordId] } : undefined,
+        });
       }
     } catch (err) {
       console.warn('[phantom-fivem] error channel post failed:', err.message);
@@ -90,6 +155,11 @@ async function postErrorTargets(client, entry) {
   }
 
   await dmOwner(client, { embeds: [embed] });
+
+  // Stuck / bug reports: DM the player a Discord invite for help
+  if (String(entry.category || '').toLowerCase() === 'stuck' || entry.invitePlayer) {
+    await dmPlayerHelpInvite(client, entry);
+  }
 }
 
 async function postNormalEvent(client, entry) {
