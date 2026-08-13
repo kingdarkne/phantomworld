@@ -1,77 +1,58 @@
--- GTA-Online Style Weapon Wheel - Client
--- Integrated with ox_inventory/qbx_core
+-- Custom GTA-Online style weapon wheel (TAB) — replaces ox/native wheel
 
-local QBCore = exports['qbx_core']:GetCoreObject()
 local isOpen = false
 local currentWeapons = {}
-local selectedCategory = nil
 local selectedWeapon = nil
 
--- Get weapons from ox_inventory
+local function normName(name)
+    return string.lower(tostring(name or ''))
+end
+
+local function isWeaponItem(item)
+    if type(item) ~= 'table' or type(item.name) ~= 'string' then return false end
+    local n = item.name
+    if n:sub(1, 7):upper() == 'WEAPON_' then return true end
+    if item.metadata and (item.metadata.weapon or item.metadata.ammo ~= nil) then
+        return n:upper():find('WEAPON_', 1, true) ~= nil
+    end
+    return false
+end
+
+-- Get weapons from ox_inventory (slot map — use pairs, not ipairs)
 local function GetInventoryWeapons()
     local weapons = {}
-    
-    if Config.Integration.useOxInventory then
-        local inventory = exports.ox_inventory:GetPlayerItems()
-        if inventory then
-            for _, item in ipairs(inventory) do
-                if item.metadata and item.metadata.weapon then
-                    table.insert(weapons, {
-                        name = item.name,
-                        label = item.label or item.name,
-                        ammo = item.metadata.ammo or 0,
-                        components = item.metadata.components or {},
-                        tint = item.metadata.tint or 0,
-                    })
-                elseif string.find(item.name, 'WEAPON_') then
-                    table.insert(weapons, {
-                        name = item.name,
-                        label = item.label or item.name,
-                        ammo = item.metadata and item.metadata.ammo or 0,
-                        components = item.metadata and item.metadata.components or {},
-                        tint = item.metadata and item.metadata.tint or 0,
-                    })
-                end
-            end
-        end
-    end
-    
-    -- Also check equipped weapons
-    local ped = PlayerPedId()
-    for _, category in ipairs(Config.Categories) do
-        for _, weaponName in ipairs(category.weapons) do
-            local hash = GetHashKey(weaponName)
-            if HasPedGotWeapon(ped, hash, false) then
-                -- Check if already in inventory list
-                local found = false
-                for _, w in ipairs(weapons) do
-                    if w.name == weaponName then
-                        found = true
-                        break
+    local seen = {}
+
+    if Config.Integration.useOxInventory and GetResourceState('ox_inventory') == 'started' then
+        local ok, inventory = pcall(function()
+            return exports.ox_inventory:GetPlayerItems()
+        end)
+        if ok and inventory then
+            for _, item in pairs(inventory) do
+                if isWeaponItem(item) then
+                    local key = normName(item.name)
+                    if not seen[key] then
+                        seen[key] = true
+                        weapons[#weapons + 1] = {
+                            name = item.name,
+                            label = item.label or item.name,
+                            slot = item.slot,
+                            ammo = item.metadata and item.metadata.ammo or 0,
+                            components = item.metadata and item.metadata.components or {},
+                            tint = item.metadata and item.metadata.tint or 0,
+                        }
                     end
                 end
-                
-                if not found then
-                    local ammo = GetAmmoInPedWeapon(ped, hash)
-                    table.insert(weapons, {
-                        name = weaponName,
-                        label = weaponName:gsub('weapon_', ''):upper(),
-                        ammo = ammo,
-                        components = {},
-                        tint = 0,
-                    })
-                end
             end
         end
     end
-    
+
     return weapons
 end
 
--- Group weapons by category
 local function GroupWeaponsByCategory(weapons)
     local grouped = {}
-    
+
     for _, category in ipairs(Config.Categories) do
         grouped[category.name] = {
             name = category.name,
@@ -79,113 +60,138 @@ local function GroupWeaponsByCategory(weapons)
             color = category.color,
             weapons = {}
         }
-        
+
         for _, weapon in ipairs(weapons) do
+            local wname = normName(weapon.name)
             for _, weaponName in ipairs(category.weapons) do
-                if weapon.name == weaponName or weapon.name == string.lower(weaponName) then
-                    table.insert(grouped[category.name].weapons, weapon)
+                if wname == normName(weaponName) then
+                    grouped[category.name].weapons[#grouped[category.name].weapons + 1] = weapon
                     break
                 end
             end
         end
     end
-    
+
+    -- Bucket uncategorized weapons
+    local known = {}
+    for _, category in ipairs(Config.Categories) do
+        for _, weaponName in ipairs(category.weapons) do
+            known[normName(weaponName)] = true
+        end
+    end
+    local other = {}
+    for _, weapon in ipairs(weapons) do
+        if not known[normName(weapon.name)] then
+            other[#other + 1] = weapon
+        end
+    end
+    if #other > 0 then
+        grouped['Other'] = {
+            name = 'Other',
+            icon = 'other',
+            color = '#AAAAAA',
+            weapons = other,
+        }
+    end
+
     return grouped
 end
 
--- Open weapon wheel
+local function disableNativeWheelThisFrame()
+    if not Config.BlockNativeWheel then return end
+    BlockWeaponWheelThisFrame()
+    DisableControlAction(0, 37, true) -- TAB / weapon wheel
+    DisableControlAction(0, 157, true) -- weapon select 1
+    DisableControlAction(0, 158, true)
+    DisableControlAction(0, 159, true)
+    DisableControlAction(0, 160, true)
+    DisableControlAction(0, 161, true)
+    DisableControlAction(0, 162, true)
+    DisableControlAction(0, 163, true)
+    DisableControlAction(0, 164, true)
+    DisableControlAction(0, 165, true)
+    HideHudComponentThisFrame(19) -- weapon wheel
+end
+
 local function OpenWeaponWheel()
     if isOpen or not Config.Enabled then return end
-    
+    if IsPauseMenuActive() or IsNuiFocused() then return end
+
     isOpen = true
-    
-    -- Get weapons from inventory
+    selectedWeapon = nil
+
     local weapons = GetInventoryWeapons()
     currentWeapons = GroupWeaponsByCategory(weapons)
-    
-    -- Disable controls
-    DisableControlAction(0, 37, true) -- TAB
-    DisableControlAction(0, 1, true) -- Look left/right
-    DisableControlAction(0, 2, true) -- Look up/down
-    DisableControlAction(0, 24, true) -- Attack
-    DisableControlAction(0, 25, true) -- Aim
-    
-    -- Play sound
+
     PlaySoundFrontend(-1, Config.Sounds.open, 'HUD_AMMO_SHOP_SOUNDSET', true)
-    
-    -- Send to NUI
+
     SendNUIMessage({
         action = 'open',
         categories = currentWeapons,
         config = Config.UI,
     })
-    
-    -- Set NUI focus
+
     SetNuiFocus(true, true)
-    
-    print('^2[GTA Weapon Wheel]^7 Weapon wheel opened')
 end
 
--- Close weapon wheel
 local function CloseWeaponWheel()
     if not isOpen then return end
-    
     isOpen = false
-    
-    -- Play sound
+
     PlaySoundFrontend(-1, Config.Sounds.close, 'HUD_AMMO_SHOP_SOUNDSET', true)
-    
-    -- Send to NUI
-    SendNUIMessage({
-        action = 'close',
-    })
-    
-    -- Release NUI focus
+
+    SendNUIMessage({ action = 'close' })
     SetNuiFocus(false, false)
-    
-    -- Equip selected weapon
+
     if selectedWeapon and Config.Integration.autoEquip then
         EquipWeapon(selectedWeapon)
     end
-    
-    print('^2[GTA Weapon Wheel]^7 Weapon wheel closed')
 end
 
--- Equip weapon
 function EquipWeapon(weaponData)
-    local ped = PlayerPedId()
-    local weaponHash = GetHashKey(weaponData.name)
-    
-    if not HasPedGotWeapon(ped, weaponHash, false) then
-        -- Try to use from inventory
-        if Config.Integration.useOxInventory then
-            local inventory = exports.ox_inventory:GetPlayerItems()
-            if inventory then
-                for _, item in ipairs(inventory) do
-                    if item.name == weaponData.name or item.metadata and item.metadata.weapon == weaponData.name then
-                        exports.ox_inventory:useItem(item.slot, nil)
-                        break
-                    end
+    if not weaponData or not weaponData.name then return end
+
+    if Config.Integration.useOxInventory and GetResourceState('ox_inventory') == 'started' then
+        -- Prefer slot from wheel payload
+        if weaponData.slot then
+            pcall(function()
+                exports.ox_inventory:useItem(weaponData.slot)
+            end)
+            PlaySoundFrontend(-1, Config.Sounds.select, 'HUD_AMMO_SHOP_SOUNDSET', true)
+            return
+        end
+
+        local ok, inventory = pcall(function()
+            return exports.ox_inventory:GetPlayerItems()
+        end)
+        if ok and inventory then
+            local target = normName(weaponData.name)
+            for _, item in pairs(inventory) do
+                if type(item) == 'table' and normName(item.name) == target and item.slot then
+                    pcall(function()
+                        exports.ox_inventory:useItem(item.slot)
+                    end)
+                    PlaySoundFrontend(-1, Config.Sounds.select, 'HUD_AMMO_SHOP_SOUNDSET', true)
+                    return
                 end
             end
         end
-    else
-        -- Just equip it
+    end
+
+    local ped = PlayerPedId()
+    local weaponHash = joaat(weaponData.name)
+    if HasPedGotWeapon(ped, weaponHash, false) then
         SetCurrentPedWeapon(ped, weaponHash, true)
     end
-    
-    -- Play sound
     PlaySoundFrontend(-1, Config.Sounds.select, 'HUD_AMMO_SHOP_SOUNDSET', true)
-    
-    print('^2[GTA Weapon Wheel]^7 Equipped: ' .. weaponData.name)
 end
 
--- Handle key press
+-- Always block native wheel; open custom on TAB
 CreateThread(function()
     while true do
-        Wait(0)
-        
         if Config.Enabled then
+            disableNativeWheelThisFrame()
+
             if IsDisabledControlJustPressed(0, Config.OpenKey) then
                 if isOpen then
                     CloseWeaponWheel()
@@ -193,61 +199,63 @@ CreateThread(function()
                     OpenWeaponWheel()
                 end
             end
-            
+
             if isOpen then
-                -- Keep controls disabled
-                DisableControlAction(0, 37, true)
                 DisableControlAction(0, 1, true)
                 DisableControlAction(0, 2, true)
                 DisableControlAction(0, 24, true)
                 DisableControlAction(0, 25, true)
             end
+            Wait(0)
+        else
+            Wait(500)
         end
     end
 end)
 
--- NUI Callbacks
 RegisterNUICallback('selectWeapon', function(data, cb)
-    selectedWeapon = data.weapon
+    selectedWeapon = data and data.weapon or nil
     PlaySoundFrontend(-1, Config.Sounds.select, 'HUD_AMMO_SHOP_SOUNDSET', true)
-    cb({})
+    cb({ ok = true })
 end)
 
-RegisterNUICallback('close', function(data, cb)
+RegisterNUICallback('close', function(_, cb)
     CloseWeaponWheel()
-    cb({})
+    cb({ ok = true })
 end)
 
-RegisterNUICallback('hoverWeapon', function(data, cb)
-    -- Play hover sound if needed
-    cb({})
+RegisterNUICallback('hoverWeapon', function(_, cb)
+    cb({ ok = true })
 end)
 
--- Exports
 exports('OpenWeaponWheel', OpenWeaponWheel)
 exports('CloseWeaponWheel', CloseWeaponWheel)
 exports('ToggleWeaponWheel', function()
-    if isOpen then
-        CloseWeaponWheel()
-    else
-        OpenWeaponWheel()
-    end
+    if isOpen then CloseWeaponWheel() else OpenWeaponWheel() end
 end)
 
--- Command to open weapon wheel
+-- Command only (no RegisterKeyMapping on TAB — that would double-fire with the
+-- control loop below and instantly open+close the wheel).
 RegisterCommand('weaponwheel', function()
-    if isOpen then
-        CloseWeaponWheel()
-    else
-        OpenWeaponWheel()
-    end
+    if isOpen then CloseWeaponWheel() else OpenWeaponWheel() end
 end, false)
 
--- Key mapping
-RegisterKeyMapping('weaponwheel', 'Toggle Weapon Wheel', 'keyboard', 'NUMPAD0')
-
--- Initialize
 CreateThread(function()
-    Wait(1000)
-    print('^2[GTA Weapon Wheel]^7 Resource loaded - Press NUMPAD0 to open weapon wheel')
+    Wait(2000)
+    -- Force ox_inventory off the native wheel so TAB is ours
+    if GetResourceState('ox_inventory') == 'started' then
+        pcall(function() exports.ox_inventory:weaponWheel(false) end)
+        pcall(function() exports.ox_inventory:Weaponsyncdisable(true) end)
+    end
+    print('^2[GTA Weapon Wheel]^7 Custom wheel active — press TAB (native GTA/ox wheel disabled)')
+end)
+
+-- Re-assert after ox_inventory restarts
+AddEventHandler('onClientResourceStart', function(res)
+    if res ~= 'ox_inventory' then return end
+    CreateThread(function()
+        Wait(1500)
+        pcall(function() exports.ox_inventory:weaponWheel(false) end)
+        pcall(function() exports.ox_inventory:Weaponsyncdisable(true) end)
+    end)
 end)

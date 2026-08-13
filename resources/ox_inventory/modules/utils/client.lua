@@ -122,8 +122,8 @@ local rewardTypes = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 7 | 1 << 10
 local weaponWheelOverride = false
 local weaponWheelCache = {}
 
--- Default to GTA weapon wheel enabled (we sync inventory weapons into it).
-EnableWeaponWheel = true
+-- Default to GTA weapon wheel DISABLED — custom `gta_weapon_wheel` owns TAB.
+EnableWeaponWheel = false
 
 function Utils.GetWeaponWheelCache()
     return weaponWheelCache

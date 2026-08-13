@@ -1,10 +1,14 @@
 Config = {}
 
--- Enable/disable the weapon wheel
+-- Enable/disable the custom weapon wheel
 Config.Enabled = true
 
--- Control to open the weapon wheel (default: NUMPAD0)
-Config.OpenKey = 82 -- NUMPAD0 key
+-- TAB (control 37) — replaces ox/native GTA weapon wheel
+Config.OpenKey = 37
+Config.OpenKeyName = 'TAB'
+
+-- Hide/block the native GTA weapon wheel HUD while this resource is active
+Config.BlockNativeWheel = true
 
 -- Weapon categories (GTA-Online style)
 Config.Categories = {
@@ -44,13 +48,12 @@ Config.Categories = {
             'weapon_combatpdw',
             'weapon_machinepistol',
             'weapon_minismg',
-            'weapon_raycarbine',
         }
     },
     {
         name = 'Shotguns',
         icon = 'shotgun',
-        color = '#FF8C00',
+        color = '#4169E1',
         weapons = {
             'weapon_pumpshotgun',
             'weapon_pumpshotgun_mk2',
@@ -67,7 +70,7 @@ Config.Categories = {
     {
         name = 'Assault Rifles',
         icon = 'rifle',
-        color = '#FF4500',
+        color = '#32CD32',
         weapons = {
             'weapon_assaultrifle',
             'weapon_assaultrifle_mk2',
@@ -81,36 +84,18 @@ Config.Categories = {
             'weapon_compactrifle',
             'weapon_militaryrifle',
             'weapon_heavyrifle',
+            'weapon_tacticalrifle',
         }
     },
     {
-        name = 'Light Machine Guns',
-        icon = 'mg',
+        name = 'Heavy Weapons',
+        icon = 'heavy',
         color = '#DC143C',
         weapons = {
             'weapon_mg',
             'weapon_combatmg',
             'weapon_combatmg_mk2',
             'weapon_gusenberg',
-        }
-    },
-    {
-        name = 'Sniper Rifles',
-        icon = 'sniper',
-        color = '#8B0000',
-        weapons = {
-            'weapon_sniperrifle',
-            'weapon_heavysniper',
-            'weapon_heavysniper_mk2',
-            'weapon_marksmanrifle',
-            'weapon_marksmanrifle_mk2',
-        }
-    },
-    {
-        name = 'Heavy Weapons',
-        icon = 'heavy',
-        color = '#9400D3',
-        weapons = {
             'weapon_rpg',
             'weapon_grenadelauncher',
             'weapon_minigun',
@@ -122,9 +107,46 @@ Config.Categories = {
         }
     },
     {
+        name = 'Sniper Rifles',
+        icon = 'sniper',
+        color = '#9400D3',
+        weapons = {
+            'weapon_sniperrifle',
+            'weapon_heavysniper',
+            'weapon_heavysniper_mk2',
+            'weapon_marksmanrifle',
+            'weapon_marksmanrifle_mk2',
+            'weapon_precisionrifle',
+        }
+    },
+    {
+        name = 'Melee',
+        icon = 'melee',
+        color = '#808080',
+        weapons = {
+            'weapon_knife',
+            'weapon_nightstick',
+            'weapon_hammer',
+            'weapon_bat',
+            'weapon_golfclub',
+            'weapon_crowbar',
+            'weapon_bottle',
+            'weapon_dagger',
+            'weapon_hatchet',
+            'weapon_knuckle',
+            'weapon_machete',
+            'weapon_flashlight',
+            'weapon_switchblade',
+            'weapon_poolcue',
+            'weapon_wrench',
+            'weapon_battleaxe',
+            'weapon_stone_hatchet',
+        }
+    },
+    {
         name = 'Thrown',
         icon = 'thrown',
-        color = '#4B0082',
+        color = '#FF8C00',
         weapons = {
             'weapon_grenade',
             'weapon_bzgas',
@@ -140,39 +162,24 @@ Config.Categories = {
     },
 }
 
--- Animation settings
-Config.Animations = {
-    openDuration = 150, -- ms
-    closeDuration = 100, -- ms
-    selectDuration = 50, -- ms
-}
-
--- Sound settings
-Config.Sounds = {
-    open = 'WEAPON_SELECT',
-    select = 'NAV_UP_DOWN',
-    close = 'BACK',
-}
-
--- Integration settings
-Config.Integration = {
-    -- Enable ox_inventory integration
-    useOxInventory = true,
-    
-    -- Enable qbx_core integration
-    useQBXCore = true,
-    
-    -- Sync weapon state with inventory
-    syncWithInventory = true,
-    
-    -- Auto-equip weapon on select
-    autoEquip = true,
-}
-
--- UI Settings
 Config.UI = {
-    wheelSize = 300, -- pixels
-    iconSize = 40, -- pixels
-    categorySize = 50, -- pixels
-    animationSpeed = 0.3, -- seconds
+    radius = 280,
+    itemSize = 64,
+    centerSize = 100,
+    animationSpeed = 200,
+    backgroundColor = 'rgba(0, 0, 0, 0.75)',
+    selectedColor = '#FFD700',
+}
+
+Config.Sounds = {
+    open = 'SELECT',
+    close = 'BACK',
+    select = 'SELECT',
+    hover = 'NAV_UP_DOWN',
+}
+
+Config.Integration = {
+    useOxInventory = true,
+    useQbxCore = true,
+    autoEquip = true,
 }

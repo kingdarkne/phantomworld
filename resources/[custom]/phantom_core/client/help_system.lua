@@ -14,7 +14,7 @@ local helpCategories = {
     {
         name = '🔫 Weapons',
         commands = {
-            { cmd = 'Hold TAB', desc = 'Open GTA Online style weapon wheel' },
+            { cmd = 'Hold TAB / press TAB', desc = 'Open custom GTA Online style weapon wheel' },
             { cmd = 'Keys 1-6', desc = 'Quick switch weapon categories' },
             { cmd = '/ammunation', desc = 'Open weapon store anywhere' },
             { cmd = 'Walk to Ammu-Nation', desc = 'Red gun blips on map - press E to enter' },
