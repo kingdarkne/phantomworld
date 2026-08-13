@@ -37,6 +37,8 @@ Config.Discord = {
     ErrorReporting = GetConvarInt('phantom_dashboard:errorReporting', 1) == 1,
     --- On critical SCRIPT ERROR: warn players, Discord alert, kick, restart (1/0)
     ErrorRestart = GetConvarInt('phantom_dashboard:errorRestart', 1) == 1,
+    --- Automatic restart every N seconds (default 1 hour)
+    HourlyRestart = GetConvarInt('phantom_dashboard:hourlyRestart', 1) == 1,
     --- Watch for stuck players / likely client bugs (1/0)
     StuckWatch = GetConvarInt('phantom_dashboard:stuckWatch', 1) == 1,
 }

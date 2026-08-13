@@ -192,7 +192,7 @@ function mountRelayRoutes(app, client) {
     const entry = req.body || {};
     try {
       const cat = String(entry.category || '').toLowerCase();
-      if (cat === 'error' || cat === 'stuck' || cat === 'critical') {
+      if (cat === 'error' || cat === 'stuck' || cat === 'critical' || cat === 'scheduled_restart') {
         await postErrorTargets(client, entry);
       } else {
         await postNormalEvent(client, entry);

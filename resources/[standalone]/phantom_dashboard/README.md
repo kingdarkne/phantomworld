@@ -70,8 +70,20 @@ Console `SCRIPT ERROR` and similar critical failures are:
 
 Soft noise (missing resources, version checks) is Discord-only and does **not** restart.
 
+## Hourly restart
+
+With `phantom_dashboard:hourlyRestart 1` the server restarts every **3600 seconds** (1 hour).
+Players get a **5 minute** warning (chat + on-screen), then kick + restart. Discord is notified.
+
+```cfg
+set phantom_dashboard:hourlyRestart 1
+set phantom_dashboard:hourlyRestartSeconds 3600
+set phantom_dashboard:hourlyRestartWarnSeconds 300
+```
+
 Disable restart: `set phantom_dashboard:errorRestart 0`  
-Test: console `phantom_testerror` or `phantom_testrestart`
+Disable hourly: `set phantom_dashboard:hourlyRestart 0`  
+Test: console `phantom_testerror`, `phantom_testrestart`, or `phantom_testhourly`
 
 ## Stuck / bug assist
 
