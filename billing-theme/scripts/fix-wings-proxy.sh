@@ -6,6 +6,29 @@ PANEL_ROOT="${PANEL_ROOT:-/var/www/pterodactyl}"
 WINGS_CONF="${WINGS_CONF:-/etc/pterodactyl/config.yml}"
 NGINX_SRC="${NGINX_SRC:-/tmp/nginx-wings.conf}"
 
+# Ensure Connection upgrade map exists (needed when $connection_upgrade is used)
+if ! grep -q 'map \$http_upgrade \$connection_upgrade' /etc/nginx/nginx.conf; then
+  python3 - <<'PY'
+from pathlib import Path
+p = Path("/etc/nginx/nginx.conf")
+t = p.read_text()
+if "map $http_upgrade $connection_upgrade" not in t:
+    t = t.replace(
+        "http {\n",
+        "http {\n"
+        "\tmap $http_upgrade $connection_upgrade {\n"
+        "\t\tdefault upgrade;\n"
+        "\t\t'' close;\n"
+        "\t}\n",
+        1,
+    )
+    p.write_text(t)
+    print("nginx_connection_upgrade_map_added")
+else:
+    print("nginx_connection_upgrade_map_exists")
+PY
+fi
+
 if [[ -f "$NGINX_SRC" ]]; then
   install -o root -g root -m 644 "$NGINX_SRC" /etc/nginx/sites-available/wings
   ln -sfn /etc/nginx/sites-available/wings /etc/nginx/sites-enabled/wings
