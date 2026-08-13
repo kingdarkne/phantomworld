@@ -1,87 +1,130 @@
-local dialogBusy = false
---- After closing the car dialog without picking, offer one automatic reopen (still can use /startercar anytime)
-local carMenuAutoRetryLeft = 1
-
-local function openCarMenu(cars, manual)
-    if type(cars) ~= 'table' or #cars == 0 then return end
-    if dialogBusy then return end
-    dialogBusy = true
-
-    local selectOptions = {}
-    for i = 1, #cars do
-        local c = cars[i]
-        local label = c.label or c.model or ('Car #%s'):format(i)
-        local value = c.model
-        if value then
-            selectOptions[#selectOptions + 1] = {
-                label = label,
-                value = value,
-                description = ('Claim %s as your starter car'):format(value),
-            }
-        end
-    end
-
-    -- ox_lib keeps a global `input` promise; if it was not cleared when the dialog closed (ESC/back),
-    -- the next lib.inputDialog returns nil immediately and never opens. Reset before showing.
-    if lib.closeInputDialog then
-        lib.closeInputDialog()
-    end
-    Wait(0)
-
-    local result
-    local ok, err = pcall(function()
-        result = lib.inputDialog('Choose your starter car', {
-            {
-                type = 'select',
-                label = 'Car',
-                description = 'Pick ONE starter vehicle (scroll or type to search)',
-                options = selectOptions,
-                required = true,
-            }
-        })
-    end)
-    if not ok then
-        if lib and lib.print and lib.print.error then
-            lib.print.error(('[dr-starterpack] inputDialog error: %s'):format(err))
-        end
-    end
-
-    dialogBusy = false
-
-    if not result then
-        if manual then
-            lib.notify({
-                title = 'Starter Car',
-                description = 'Selection cancelled.',
-                type = 'inform'
-            })
-        else
-            lib.notify({
-                title = 'Starter Car',
-                description = 'When you are ready, type /startercar to pick your free vehicle.',
-                type = 'inform',
-                duration = 8000
-            })
-            if carMenuAutoRetryLeft > 0 then
-                carMenuAutoRetryLeft = carMenuAutoRetryLeft - 1
-                SetTimeout(3500, function()
-                    tryOpen(false)
-                end)
-            end
-        end
-        return
-    end
-
-    carMenuAutoRetryLeft = 0
-
-    local model = result[1]
-    if not model or model == '' then return end
-    TriggerServerEvent('dr-starterpack:server:claimCar', model)
-end
-
+local menuOpen = false
 local pendingCars = nil
 local hasSpawned = false
 local outfitFinished = false
+--- New characters open CreateFirstCharacter after OnPlayerLoaded — block prompts until save
+local awaitingFirstOutfit = false
+local promptsArmed = false
+local claimedLocally = false
+local openToken = 0
+
+local function forceCloseUi()
+    menuOpen = false
+    pcall(function()
+        if lib.closeInputDialog then lib.closeInputDialog() end
+    end)
+    pcall(function()
+        if lib.hideContext then lib.hideContext(false) end
+    end)
+    pcall(function()
+        if lib.hideMenu then lib.hideMenu(true) end
+    end)
+    SetNuiFocus(false, false)
+    SetNuiFocusKeepInput(false)
+end
+
+local function otherUiBlocking()
+    if IsPauseMenuActive() then return true end
+    if IsNuiFocused() and not menuOpen then return true end
+    if LocalPlayer and LocalPlayer.state and LocalPlayer.state.invOpen then return true end
+    return false
+end
+
+local function markClaimed()
+    claimedLocally = true
+    pendingCars = nil
+    forceCloseUi()
+end
+
+local function openCarMenu(cars, manual)
+    if claimedLocally then return end
+    if type(cars) ~= 'table' or #cars == 0 then return end
+    if menuOpen then
+        forceCloseUi()
+        Wait(50)
+    end
+    if otherUiBlocking() and not manual then
+        return
+    end
+
+    menuOpen = true
+    openToken = openToken + 1
+    local token = openToken
+
+    -- Safety: never leave NUI focus stuck if something goes wrong
+    SetTimeout(90000, function()
+        if menuOpen and openToken == token then
+            forceCloseUi()
+            lib.notify({
+                title = 'Starter Car',
+                description = 'Menu timed out. Type /startercar when you are ready.',
+                type = 'inform',
+                duration = 8000,
+            })
+        end
+    end)
+
+    local options = {}
+    for i = 1, #cars do
+        local c = cars[i]
+        local model = c and c.model
+        if model and model ~= '' then
+            local label = c.label or model
+            options[#options + 1] = {
+                title = label,
+                description = ('Claim %s as your free starter'):format(model),
+                icon = 'car',
+                onSelect = function()
+                    menuOpen = false
+                    SetNuiFocus(false, false)
+                    if claimedLocally then return end
+                    TriggerServerEvent('dr-starterpack:server:claimCar', model)
+                end,
+            }
+        end
+    end
+
+    if #options == 0 then
+        forceCloseUi()
+        return
+    end
+
+    options[#options + 1] = {
+        title = 'Decide later',
+        description = 'Close this menu. Type /startercar anytime to claim.',
+        icon = 'xmark',
+        onSelect = function()
+            forceCloseUi()
+            lib.notify({
+                title = 'Starter Car',
+                description = 'Type /startercar when you are ready to pick your free vehicle.',
+                type = 'inform',
+                duration = 8000,
+            })
+        end,
+    }
+
+    lib.registerContext({
+        id = 'dr_starter_car_select',
+        title = 'Choose your free starter vehicle',
+        canClose = true,
+        onExit = function()
+            menuOpen = false
+            SetNuiFocus(false, false)
+            if not manual and not claimedLocally then
+                lib.notify({
+                    title = 'Starter Car',
+                    description = 'Type /startercar when you are ready to pick your free vehicle.',
+                    type = 'inform',
+                    duration = 8000,
+                })
+            end
+        end,
+        options = options,
+    })
+
+    lib.showContext('dr_starter_car_select')
+end
 
 local function requestModel(model)
     model = type(model) == 'string' and joaat(model) or model
@@ -98,7 +141,12 @@ local function requestModel(model)
     return model
 end
 
+RegisterNetEvent('dr-starterpack:client:carClaimed', function()
+    markClaimed()
+end)
+
 RegisterNetEvent('dr-starterpack:client:spawnStarterCar', function(model, props)
+    markClaimed()
     model = tostring(model or '')
     if model == '' then return end
 
@@ -163,130 +211,155 @@ RegisterNetEvent('dr-starterpack:client:spawnStarterCar', function(model, props)
     lib.notify({ title = 'Starter Car', description = 'Enjoy your new ride.', type = 'success' })
 end)
 
---- When illenium / fivem-appearance is running, players never close qb-clothing's menu — but qb-clothing
---- may still be `started` on the server, which would block this menu forever without this check.
-local function appearanceUsesQbClothingOnly()
-    if GetResourceState('qb-clothing') ~= 'started' then return false end
-    if GetResourceState('illenium-appearance') == 'started' then return false end
-    if GetResourceState('fivem-appearance') == 'started' then return false end
-    return true
-end
-
---- Wait for outfit when qb-clothing-only, or when illenium / fivem-appearance runs (they replace qb-clothing gating).
-local function mustWaitForOutfit()
-    if GetResourceState('illenium-appearance') == 'started' then return true end
-    if GetResourceState('fivem-appearance') == 'started' then return true end
-    return appearanceUsesQbClothingOnly()
-end
-
 local function canOpenNow()
+    if claimedLocally then return false end
     if not pendingCars then return false end
     if not hasSpawned then return false end
-    if dialogBusy then return false end
-
-    if mustWaitForOutfit() and not outfitFinished then
-        return false
-    end
-
+    if not outfitFinished then return false end
+    if awaitingFirstOutfit then return false end
+    if menuOpen then return false end
     if not IsScreenFadedIn() then return false end
     if IsPauseMenuActive() then return false end
     if not NetworkIsPlayerActive(PlayerId()) then return false end
     if not IsEntityVisible(PlayerPedId()) then return false end
+    if otherUiBlocking() then return false end
     return true
 end
 
 local function tryOpen(manual)
+    if claimedLocally then return end
+    if manual then
+        -- Manual /startercar: force-close any stuck focus, then open
+        forceCloseUi()
+        awaitingFirstOutfit = false
+        outfitFinished = true
+        hasSpawned = true
+        Wait(50)
+        if not pendingCars or #pendingCars == 0 then return end
+        openCarMenu(pendingCars, true)
+        return
+    end
     if not canOpenNow() then return end
-    openCarMenu(pendingCars, manual == true)
+    openCarMenu(pendingCars, false)
 end
+
+--- Fire once after outfit is saved (new) or returning player is fully in the world.
+local function armPostOutfitPrompts()
+    if promptsArmed then return end
+    if awaitingFirstOutfit then return end
+    if claimedLocally then return end
+    promptsArmed = true
+    outfitFinished = true
+    hasSpawned = true
+
+    TriggerEvent('phantom:client:characterReady')
+
+    TriggerServerEvent('dr-starterpack:server:requestCarSelect')
+
+    -- Single delayed open — no auto-retry loops (those stuck players in the old popup)
+    SetTimeout(1200, function()
+        if claimedLocally then return end
+        tryOpen(false)
+    end)
+end
+
+RegisterNetEvent('qb-clothes:client:CreateFirstCharacter', function()
+    awaitingFirstOutfit = true
+    outfitFinished = false
+    promptsArmed = false
+    forceCloseUi()
+end)
+
+RegisterNetEvent('illenium-appearance:client:CreateFirstCharacter', function()
+    awaitingFirstOutfit = true
+    outfitFinished = false
+    promptsArmed = false
+    forceCloseUi()
+end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     hasSpawned = true
-    SetTimeout(2500, function()
-        tryOpen(false)
+    claimedLocally = false
+    promptsArmed = false
+    forceCloseUi()
+    SetTimeout(1500, function()
+        if awaitingFirstOutfit then return end
+        armPostOutfitPrompts()
     end)
-    -- If illenium never fires appearanceLoaded/characterCreated (race or edge case), do not block forever.
-    if mustWaitForOutfit() then
-        SetTimeout(30000, function()
-            if pendingCars and not outfitFinished then
-                outfitFinished = true
-                tryOpen(false)
-            end
-        end)
-    end
 end)
 
 RegisterNetEvent('qb-clothing:client:onMenuClose', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
-    end)
+    awaitingFirstOutfit = false
+    armPostOutfitPrompts()
 end)
 
 RegisterNetEvent('illenium-appearance:client:characterCreated', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
-    end)
-end)
-
--- Returning players: appearance applied from DB (new characters have no row yet — they use characterCreated above)
-RegisterNetEvent('illenium-appearance:client:appearanceLoaded', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
+    awaitingFirstOutfit = false
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
     end)
 end)
 
 RegisterNetEvent('fivem-appearance:client:characterCreated', function()
-    outfitFinished = true
-    SetTimeout(400, function()
-        tryOpen(false)
+    awaitingFirstOutfit = false
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
     end)
 end)
 
--- Illenium applies skin on OnPlayerLoaded; no separate event — allow menu shortly after load.
-RegisterNetEvent('illenium-appearance:client:reloadSkin', function()
-    outfitFinished = true
-end)
-
-CreateThread(function()
-    while true do
-        if hasSpawned and GetResourceState('qb-clothing') ~= 'started'
-            and GetResourceState('illenium-appearance') ~= 'started'
-            and GetResourceState('fivem-appearance') ~= 'started'
-            and not outfitFinished then
-            outfitFinished = true
-        end
-        Wait(1000)
-    end
+RegisterNetEvent('illenium-appearance:client:appearanceLoaded', function()
+    if awaitingFirstOutfit then return end
+    SetTimeout(600, function()
+        armPostOutfitPrompts()
+    end)
 end)
 
 RegisterNetEvent('dr-starterpack:client:openCarSelect', function(cars)
+    if claimedLocally then return end
     pendingCars = cars
-    carMenuAutoRetryLeft = 1
-    SetTimeout(1800, function()
+    SetTimeout(600, function()
+        if claimedLocally then return end
         tryOpen(false)
     end)
-    -- Server may send this before appearance events; ensure menu opens even if outfit gate never clears.
-    if mustWaitForOutfit() then
-        SetTimeout(25000, function()
-            if pendingCars and not outfitFinished then
-                outfitFinished = true
-                tryOpen(false)
-            end
-        end)
-    end
 end)
 
 RegisterCommand('startercar', function()
+    if claimedLocally then
+        lib.notify({
+            title = 'Starter Car',
+            description = 'You already claimed your starter car.',
+            type = 'inform',
+        })
+        return
+    end
     if not pendingCars or #pendingCars == 0 then
         lib.notify({
             title = 'Starter Car',
-            description = 'No starter vehicle selection is available right now.',
-            type = 'error'
+            description = 'Loading starter car list…',
+            type = 'inform',
         })
+        TriggerServerEvent('dr-starterpack:server:requestCarSelect', true)
         return
     end
     tryOpen(true)
 end, false)
+
+--- Emergency escape if NUI focus ever sticks again
+RegisterCommand('closestarter', function()
+    forceCloseUi()
+    lib.notify({
+        title = 'Starter Car',
+        description = 'Menu closed. Use /startercar to open it again.',
+        type = 'success',
+    })
+end, false)
+
+-- If player presses ESC while somehow stuck with focus and no lib menu, release after pause menu
+CreateThread(function()
+    while true do
+        Wait(1000)
+        if menuOpen and IsPauseMenuActive() then
+            forceCloseUi()
+        end
+    end
+end)

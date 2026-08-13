@@ -1,0 +1,478 @@
+/* ============================================================
+   Phantom Hosting — Game Panel Theme
+   Premium ink void + electric teal + champagne (matches billing)
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap");
+
+:root {
+  --ph-ink: #060912;
+  --ph-ink-2: #0b1220;
+  --ph-glass: rgba(10, 16, 28, 0.72);
+  --ph-glass-strong: rgba(8, 12, 22, 0.88);
+  --ph-line: rgba(180, 220, 255, 0.14);
+  --ph-line-strong: rgba(46, 230, 197, 0.35);
+  --ph-teal: #2ee6c5;
+  --ph-teal-deep: #12b89a;
+  --ph-teal-soft: rgba(46, 230, 197, 0.16);
+  --ph-champagne: #e8c47c;
+  --ph-text: #edf2f7;
+  --ph-muted: #9aa8bc;
+  --ph-danger: #ff6b7a;
+  --ph-success: #3dd68c;
+  --ph-radius: 16px;
+  --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ph-font-display: "Syne", "Segoe UI", sans-serif;
+  --ph-font-body: "Sora", "Segoe UI", sans-serif;
+  --ph-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+html,
+body {
+  min-height: 100% !important;
+}
+
+body,
+body.bg-neutral-50,
+body.bg-neutral-800,
+body.bg-neutral-900,
+body.hold-transition {
+  font-family: var(--ph-font-body) !important;
+  color: var(--ph-text) !important;
+  background-color: var(--ph-ink) !important;
+  background-image:
+    radial-gradient(1100px 680px at 10% -8%, rgba(46, 230, 197, 0.2), transparent 55%),
+    radial-gradient(900px 560px at 92% 6%, rgba(232, 196, 124, 0.12), transparent 50%),
+    radial-gradient(700px 480px at 50% 110%, rgba(56, 120, 255, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(6, 9, 18, 0.45), rgba(6, 9, 18, 0.78)),
+    url("/galaxy_bg.webp") !important;
+  background-size: auto, auto, auto, auto, cover !important;
+  background-position: center, center, center, center, center !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.32;
+  background-image:
+    radial-gradient(1.5px 1.5px at 18% 28%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 72% 18%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 42% 78%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 86% 62%, rgba(255, 255, 255, 0.45), transparent);
+  animation: ph-twinkle 9s ease-in-out infinite alternate;
+}
+
+@keyframes ph-twinkle {
+  from { opacity: 0.18; }
+  to { opacity: 0.4; }
+}
+
+#app,
+.wrapper,
+.content-wrapper,
+.main-sidebar,
+.left-side {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Typography ---- */
+h1, h2, h3, h4, h5, h6,
+.logo-lg,
+.main-header .logo,
+[class*="PageContentBlock"] h1,
+[class*="PageContentBlock"] h2 {
+  font-family: var(--ph-font-display) !important;
+  letter-spacing: 0.02em !important;
+  color: #fff !important;
+}
+
+p, label, span, a, li, td, th, input, button, select, textarea {
+  font-family: var(--ph-font-body) !important;
+}
+
+.text-neutral-100,
+.text-neutral-200,
+.text-gray-100,
+.text-gray-200 {
+  color: var(--ph-text) !important;
+}
+
+.text-neutral-300,
+.text-neutral-400,
+.text-gray-300,
+.text-gray-400,
+.text-muted {
+  color: var(--ph-muted) !important;
+}
+
+/* ---- Glass surfaces (React + AdminLTE) ---- */
+#app,
+[class*="AppContainer"],
+[class*="DashboardContainer"],
+[class*="ServerActivityBlock"],
+.content {
+  background: transparent !important;
+}
+
+.bg-neutral-600,
+.bg-neutral-700,
+.bg-neutral-800,
+.bg-neutral-900,
+.bg-gray-600,
+.bg-gray-700,
+.bg-gray-800,
+.bg-gray-900 {
+  background-color: var(--ph-glass) !important;
+}
+
+[class*="ServerRow"],
+[class*="ContentBox"],
+[class*="SettingsPageContainer"],
+[class*="GreyRowBox"],
+[class*="TitledGreyBox"],
+[class*="StatBlock"],
+[class*="ChartBlock"],
+[class*="ServerConsoleContainer"] > div,
+[class*="FileEditContainer"],
+[class*="ScheduleContainer"],
+[class*="UserBox"],
+[class*="PermissionRow"],
+.box,
+.nav-tabs-custom,
+.info-box,
+.modal-content {
+  background: var(--ph-glass) !important;
+  backdrop-filter: blur(16px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+  border: 1px solid var(--ph-line) !important;
+  border-radius: var(--ph-radius) !important;
+  box-shadow: var(--ph-shadow) !important;
+  color: var(--ph-text) !important;
+}
+
+.box {
+  border-top: 3px solid var(--ph-teal) !important;
+}
+
+.box-header,
+.box-footer,
+.nav-tabs-custom > .tab-content,
+.box-body {
+  background: transparent !important;
+  color: var(--ph-text) !important;
+}
+
+/* ---- Navigation / chrome ---- */
+.main-header .navbar,
+.main-header .logo,
+.main-sidebar,
+.left-side,
+.main-footer,
+.content-wrapper {
+  background: rgba(6, 9, 18, 0.62) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.main-header .logo {
+  border-right: 1px solid var(--ph-line) !important;
+}
+
+.main-header .logo img,
+.main-header .logo {
+  filter: drop-shadow(0 0 12px rgba(46, 230, 197, 0.25));
+}
+
+.sidebar-menu > li > a {
+  color: var(--ph-muted) !important;
+  border-left: 3px solid transparent !important;
+  transition: color 0.25s var(--ph-ease), background 0.25s var(--ph-ease), border-color 0.25s var(--ph-ease) !important;
+}
+
+.sidebar-menu > li:hover > a,
+.sidebar-menu > li.active > a {
+  background: var(--ph-teal-soft) !important;
+  color: #fff !important;
+  border-left-color: var(--ph-teal) !important;
+}
+
+.treeview-menu > li > a {
+  color: var(--ph-muted) !important;
+}
+
+.treeview-menu > li.active > a,
+.treeview-menu > li > a:hover {
+  color: var(--ph-teal) !important;
+}
+
+/* React top navigation */
+nav,
+[class*="NavigationBar"],
+[class*="SubNavigation"] {
+  background: rgba(6, 9, 18, 0.7) !important;
+  backdrop-filter: blur(18px) !important;
+  border-bottom: 1px solid var(--ph-line) !important;
+}
+
+/* ---- Buttons ---- */
+.btn-primary,
+.btn-success,
+button.bg-blue-500,
+button.bg-blue-600,
+a.bg-blue-500,
+a.bg-blue-600,
+.bg-blue-500,
+.bg-blue-600,
+[class*="Button"][class*="primary"],
+button[class*="Button"] {
+  background-image: linear-gradient(135deg, var(--ph-teal), var(--ph-teal-deep)) !important;
+  background-color: var(--ph-teal) !important;
+  border-color: transparent !important;
+  color: #061018 !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 28px rgba(46, 230, 197, 0.25) !important;
+  transition: transform 0.2s var(--ph-ease), box-shadow 0.2s var(--ph-ease), filter 0.2s var(--ph-ease) !important;
+}
+
+.btn-primary:hover,
+.btn-success:hover,
+.bg-blue-500:hover,
+.bg-blue-600:hover,
+button[class*="Button"]:hover {
+  filter: brightness(1.08) !important;
+  transform: translateY(-1px);
+  color: #061018 !important;
+}
+
+.btn-danger,
+.bg-red-500,
+.bg-red-600 {
+  background: linear-gradient(135deg, #ff7a88, #e14b5a) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+}
+
+.btn-default,
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--ph-line) !important;
+  color: var(--ph-text) !important;
+  border-radius: 12px !important;
+}
+
+/* ---- Forms ---- */
+.form-control,
+input,
+select,
+textarea,
+.input-group .form-control {
+  background: rgba(5, 8, 15, 0.72) !important;
+  border: 1px solid var(--ph-line) !important;
+  color: var(--ph-text) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--ph-teal) !important;
+  box-shadow: 0 0 0 3px var(--ph-teal-soft) !important;
+}
+
+.form-control::placeholder,
+input::placeholder {
+  color: #6f7d90 !important;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-dropdown {
+  background: var(--ph-ink-2) !important;
+  border-color: var(--ph-line) !important;
+  color: var(--ph-text) !important;
+}
+
+/* ---- Tables ---- */
+.table > thead > tr > th,
+.table > tbody > tr > td,
+table th,
+table td {
+  border-color: var(--ph-line) !important;
+  color: var(--ph-text) !important;
+  background: transparent !important;
+}
+
+.table-hover > tbody > tr:hover,
+tbody tr:hover {
+  background-color: rgba(46, 230, 197, 0.06) !important;
+}
+
+/* ---- Progress / status ---- */
+.progress {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+
+.progress-bar,
+.bg-green-500,
+.bg-emerald-500 {
+  background: linear-gradient(90deg, var(--ph-teal-deep), var(--ph-teal)) !important;
+}
+
+.label-success,
+.badge-success {
+  background: var(--ph-teal-soft) !important;
+  color: var(--ph-teal) !important;
+  border: 1px solid var(--ph-line-strong) !important;
+}
+
+.label-danger,
+.badge-danger {
+  background: rgba(255, 107, 122, 0.16) !important;
+  color: var(--ph-danger) !important;
+}
+
+/* ---- Login / auth polish ---- */
+[class*="LoginFormContainer"],
+[class*="LoginContainer"],
+[class*="ResetPasswordContainer"],
+[class*="ForgotPasswordContainer"] {
+  backdrop-filter: blur(18px) !important;
+}
+
+/* Push login card below the fixed brand header */
+body:has(.ph-login-brand) #app {
+  padding-top: 120px !important;
+}
+
+#app > div {
+  min-height: 100vh;
+}
+
+/* Accent links */
+a {
+  color: var(--ph-teal) !important;
+  transition: color 0.2s var(--ph-ease);
+}
+
+a:hover {
+  color: #7ff3de !important;
+}
+
+.sidebar-menu > li > a,
+.main-header .navbar .nav > li > a,
+.main-header .logo {
+  color: var(--ph-text) !important;
+}
+
+.sidebar-menu > li > a:hover {
+  color: #fff !important;
+}
+
+/* ---- Console terminal ---- */
+[class*="TerminalContainer"],
+.xterm,
+.xterm-viewport {
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+
+/* ---- Scrollbars ---- */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(46, 230, 197, 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- AdminLTE skin override (blue → teal) ---- */
+.skin-blue .main-header .navbar {
+  background: rgba(6, 9, 18, 0.72) !important;
+}
+.skin-blue .main-header .logo {
+  background: rgba(6, 9, 18, 0.85) !important;
+}
+.skin-blue .wrapper,
+.skin-blue .main-sidebar,
+.skin-blue .left-side {
+  background: transparent !important;
+}
+.skin-blue .sidebar-menu > li.active > a {
+  border-left-color: var(--ph-teal) !important;
+}
+.skin-blue .sidebar-menu > li:hover > a,
+.skin-blue .sidebar-menu > li.active > a {
+  background: var(--ph-teal-soft) !important;
+}
+
+/* ---- Small motion ---- */
+[class*="ServerRow"],
+.box,
+.info-box {
+  transition: transform 0.25s var(--ph-ease), border-color 0.25s var(--ph-ease), box-shadow 0.25s var(--ph-ease);
+}
+
+[class*="ServerRow"]:hover,
+.box:hover {
+  border-color: var(--ph-line-strong) !important;
+  transform: translateY(-2px);
+}
+
+/* Top brand strip on client panel */
+body > #app::before {
+  content: "";
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--ph-teal), var(--ph-champagne), var(--ph-teal), transparent);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Hide overly bright default neutrals on cards */
+.border-neutral-700,
+.border-gray-700,
+.border-neutral-600 {
+  border-color: var(--ph-line) !important;
+}
+
+/* SweetAlert / modals */
+.swal-modal,
+.sweet-alert {
+  background: var(--ph-glass-strong) !important;
+  border: 1px solid var(--ph-line) !important;
+  border-radius: 18px !important;
+  color: var(--ph-text) !important;
+}
+
+.swal-title,
+.sweet-alert h2 {
+  color: #fff !important;
+  font-family: var(--ph-font-display) !important;
+}
+
+/* Footer */
+.main-footer {
+  border-top: 1px solid var(--ph-line) !important;
+  color: var(--ph-muted) !important;
+}

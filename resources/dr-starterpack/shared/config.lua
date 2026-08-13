@@ -1,45 +1,48 @@
 Config = Config or {}
 
 -- One-time starter package (first character load)
+-- Tuned for real-world dealership pricing + freeroam (not GTA money-printer).
+-- qbx_core also grants default cash/bank on create (~$500 / $5,000); this ADDS on top.
 Config.Starter = {
-    -- Rank/level
-    Level = 20,
-    XNLRankXP = 92500, -- GTA Online rank 20 threshold (XNLRankBar "driving" XP)
+    -- Start at rank 1 — earn XP in freeroam
+    Level = 1,
+    XNLRankXP = 0,
 
-    -- Money
-    Cash = 25000000, -- 25 million
+    -- Liquid cash on hand
+    Cash = 2000,
 
-    -- Weapons/items (ox_inventory item names)
-    GunItem = 'weapon_pistol',
-    AmmoItem = 'pistol_ammo',
-    AmmoCount = 25,
+    -- Bank deposit (safer than dumping everything as cash)
+    Bank = 8000,
+
+    -- No free firearm — buy/earn weapons in freeroam
+    GunItem = nil,
+    AmmoItem = nil,
+    AmmoCount = 0,
 
     ExtraItems = {
         { name = 'phone', count = 1 },
-        { name = 'sandwich', count = 10 },
-        { name = 'water_bottle', count = 10 },
+        { name = 'sandwich', count = 5 },
+        { name = 'water', count = 5 },
+        { name = 'bandage', count = 5 },
+        { name = 'lockpick', count = 2 },
     },
 
-    -- Car selection (player can pick ONE)
+    -- ONE free economy / used starter (real-price ballpark). Sports/armored cars are dealers only.
     Cars = {
-        -- Models are taken from `qbx_core/shared/vehicles.lua`
-        { label = 'Sultan', model = 'sultan' },
-        { label = 'Buffalo', model = 'buffalo' },
-        { label = 'Blista', model = 'blista' },
-        { label = 'Futo', model = 'futo' },
-        { label = 'Elegy RH8', model = 'elegy' },
-        { label = 'Kuruma', model = 'kuruma' },
-        { label = 'Banshee', model = 'banshee' },
-        { label = 'Granger', model = 'granger' },
+        { label = 'Panto (~$16.5k city runabout)', model = 'panto' },
+        { label = 'Blista (~$22k compact)', model = 'blista' },
+        { label = 'Issi (~$21k hatch)', model = 'issi2' },
+        { label = 'Asea (~$26.5k sedan)', model = 'asea' },
+        { label = 'Premier (~$31k sedan)', model = 'premier' },
+        { label = 'Prairie (~$23k coupe)', model = 'prairie' },
+        { label = 'Seminole (~$38k family SUV)', model = 'seminole' },
+        { label = 'Rebel (~$30k pickup)', model = 'rebel' },
+        { label = 'Sanchez (~$7.5k dirt bike)', model = 'sanchez' },
+        { label = 'Faggio (~$2.8k scooter)', model = 'faggio' },
     },
 
-    -- Also include addon vehicles from other resources (parses vehicles.meta modelName's).
-    -- This will only add models that exist in vehicle handling data and are loaded by the game.
-    -- NOTE: enabling this can create a huge list; keep false unless you really want it.
     IncludeAddonVehicles = false,
 
-    -- Where the chosen car is stored (garage name from your garage system / qbx_vehicles)
-    -- Garage IDs are taken from `qb-garages/config.lua`
-    DefaultGarage = 'pillboxgarage',
+    -- Garage IDs from qbx_garages/config/server.lua
+    DefaultGarage = 'motelgarage',
 }
-

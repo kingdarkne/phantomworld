@@ -1,166 +1,183 @@
 carMenuOpen = false
-RegisterCommand(Config.Menu.Command, function()
-    if IsPedInAnyVehicle(PlayerPedId(), false) then
-        carMenuOpen = not carMenuOpen
-        SetNuiFocus(carMenuOpen, carMenuOpen)
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        local doorData = {}
-        local doorNum = GetVehicleModelNumberOfSeats(GetEntityModel(veh)) - 1
-        for i = 0, doorNum do
-            local opened = false
-            if GetVehicleDoorAngleRatio(veh, i) > 0.0 then
-                opened = true
-            end
-            table.insert(doorData, {
-                doorNum = tostring(i),
-                opened = opened
-            })
+
+local function closeCarMenu()
+    carMenuOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = "openCarMenu", state = false })
+end
+
+local function getPlayerSeat(veh)
+    local maxPassengers = GetVehicleMaxNumberOfPassengers(veh)
+    for seat = -1, maxPassengers - 1 do
+        if GetPedInVehicleSeat(veh, seat) == PlayerPedId() then
+            return seat
         end
-        local mySeat = nil
-        if doorNum > 10 then
-            for i = -1, doorNum do
-                if GetPedInVehicleSeat(veh, i) == 0 then
-                else
-                    mySeat = i
-                end
-            end
-        elseif doorNum == 1 then
-            for i = -1, doorNum - 1 do
-                if GetPedInVehicleSeat(veh, i) == 0 then
-                else
-                    mySeat = i
-                end
-            end
-        elseif doorNum == 0 then
-            for i = -1, doorNum + 1 do
-                if GetPedInVehicleSeat(veh, i) == 0 then
-                else
-                    mySeat = i
-                end
-            end
-        else
-            for i = -1, doorNum - 2 do
-                if GetPedInVehicleSeat(veh, i) == 0 then
-                else
-                    mySeat = i
-                end
-            end
-        end
-        local retval, lights, highbeams = GetVehicleLightsState(veh)
-        local hoodOpen = false
-        if GetVehicleDoorAngleRatio(veh, 4) > 0.0 then
-            hoodOpen = true
-        end
-        local trunkOpen = false
-        if GetVehicleDoorAngleRatio(veh, 5) > 0.0 then
-            trunkOpen = true
-        end
-        local indicatorState = GetVehicleIndicatorLights(veh)
-        while mySeat == nil do Citizen.Wait(0) end
-        SendNUIMessage({
-            action = "openCarMenu", resourceName = GetCurrentResourceName(), state = carMenuOpen, align = Config.Menu.Align, styleType = Config.Menu.StyleType, carData = {
-                doorNum = GetVehicleModelNumberOfSeats(GetEntityModel(veh)),
-                doorData = doorData,
-                vehConvertible = IsVehicleAConvertible(veh, false),
-                vehConvertibleState = GetConvertibleRoofState(veh),
-                engineState = GetIsVehicleEngineRunning(veh),
-                playerSeat = mySeat,
-                intLightState = IsVehicleInteriorLightOn(veh),
-                lightsOn = lights,
-                highbeamsOn = highbeams,
-                trunk = trunkOpen,
-                hood = hoodOpen,
-                indicatorState = indicatorState
-            }
-        })
     end
+    return -1
+end
+
+local function openCarMenu()
+    local ped = PlayerPedId()
+    if not IsPedInAnyVehicle(ped, false) then
+        return
+    end
+
+    local veh = GetVehiclePedIsIn(ped, false)
+    if veh == 0 then
+        return
+    end
+
+    local mySeat = getPlayerSeat(veh)
+    local doorData = {}
+    local seatCount = GetVehicleModelNumberOfSeats(GetEntityModel(veh))
+    local doorNum = math.max(seatCount - 1, 0)
+
+    for i = 0, doorNum do
+        doorData[#doorData + 1] = {
+            doorNum = tostring(i),
+            opened = GetVehicleDoorAngleRatio(veh, i) > 0.0,
+        }
+    end
+
+    local _, lights, highbeams = GetVehicleLightsState(veh)
+
+    carMenuOpen = true
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = "openCarMenu",
+        resourceName = GetCurrentResourceName(),
+        state = true,
+        align = Config.Menu.Align,
+        styleType = Config.Menu.StyleType,
+        carData = {
+            doorNum = seatCount,
+            doorData = doorData,
+            vehConvertible = IsVehicleAConvertible(veh, false),
+            vehConvertibleState = GetConvertibleRoofState(veh),
+            engineState = GetIsVehicleEngineRunning(veh) and 1 or 0,
+            playerSeat = mySeat,
+            intLightState = IsVehicleInteriorLightOn(veh) and 1 or 0,
+            lightsOn = lights,
+            highbeamsOn = highbeams,
+            trunk = GetVehicleDoorAngleRatio(veh, 5) > 0.0,
+            hood = GetVehicleDoorAngleRatio(veh, 4) > 0.0,
+            indicatorState = GetVehicleIndicatorLights(veh),
+        },
+    })
+end
+
+RegisterCommand(Config.Menu.Command, function()
+    if carMenuOpen then
+        closeCarMenu()
+        return
+    end
+    openCarMenu()
 end)
 
-RegisterNUICallback('callback', function(data)
-    if data.action == "nuiFocus" then
-        carMenuOpen = false
-        SetNuiFocus(false, false)
-    elseif data.action == "convertVeh" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+-- Escape hatch if focus ever sticks (/closecarmenu or toggle /carmenu again)
+RegisterCommand('closecarmenu', function()
+    closeCarMenu()
+end)
+
+RegisterNUICallback('callback', function(data, cb)
+    local action = data and data.action
+    if action == "nuiFocus" then
+        closeCarMenu()
+        cb('ok')
+        return
+    end
+
+    local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+    if veh == 0 then
+        cb('ok')
+        return
+    end
+
+    if action == "convertVeh" then
         if data.state == false then
             RaiseConvertibleRoof(veh, false)
         else
             LowerConvertibleRoof(veh, false)
         end
-    elseif data.action == "window" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        local num = data.num - 1
+    elseif action == "window" then
+        local num = (tonumber(data.num) or 1) - 1
         if data.state == true then
             RollDownWindow(veh, num)
         else
             RollUpWindow(veh, num)
         end
-    elseif data.action == "changeSeat" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+    elseif action == "changeSeat" then
         if data.num == "driver" then
             if IsVehicleSeatFree(veh, -1) then
                 SetPedIntoVehicle(PlayerPedId(), veh, -1)
             end
         else
             local num = tonumber(data.num)
-            if IsVehicleSeatFree(veh, num) then
+            if num ~= nil and IsVehicleSeatFree(veh, num) then
                 SetPedIntoVehicle(PlayerPedId(), veh, num)
             end
         end
-    elseif data.action == "engine" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        if GetPedInVehicleSeat(veh, -1) == PlayerPedId() then 
-            SetVehicleEngineOn(veh, data.state, false, true)
+    elseif action == "engine" then
+        if GetPedInVehicleSeat(veh, -1) == PlayerPedId() then
+            SetVehicleEngineOn(veh, data.state and true or false, false, true)
         end
-    elseif data.action == "alarm" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        SetVehicleAlarm(veh, data.state)
+    elseif action == "alarm" then
+        SetVehicleAlarm(veh, data.state and true or false)
         if data.state == true then
             StartVehicleAlarm(veh)
             SetVehicleAlarmTimeLeft(veh, Config.AlarmDuration)
-            Citizen.Wait(Config.AlarmDuration)
-            SendNUIMessage({action = "closeAlarm"})
+            CreateThread(function()
+                Wait(Config.AlarmDuration)
+                SendNUIMessage({ action = "closeAlarm" })
+            end)
         end
-    elseif data.action == "intLight" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        SetVehicleInteriorlight(veh, data.state)
-    elseif data.action == "lights" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+    elseif action == "intLight" then
+        SetVehicleInteriorlight(veh, data.state and true or false)
+    elseif action == "lights" then
         if data.name == "normal" then
             SetVehicleLights(veh, 1)
-            Citizen.Wait(500)
+            Wait(500)
             SetVehicleLights(veh, 3)
+            SetVehicleFullbeam(veh, false)
         elseif data.name == "highbeams" then
             SetVehicleLights(veh, 1)
-            Citizen.Wait(500)
+            Wait(500)
             SetVehicleLights(veh, 3)
             SetVehicleFullbeam(veh, true)
         end
-    elseif data.action == "door" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        if data.state == true then
-            if data.number == "trunk" then
-                SetVehicleDoorOpen(veh, 5, false, false)
-            elseif data.number == "hood" then
-                SetVehicleDoorOpen(veh, 4, false, false)
-            else
-                SetVehicleDoorOpen(veh, tonumber(data.number), false, false)
-            end
+    elseif action == "door" then
+        local doorId = data.number
+        if doorId == "trunk" then
+            doorId = 5
+        elseif doorId == "hood" then
+            doorId = 4
         else
-            if data.number == "trunk" then
-                SetVehicleDoorShut(veh, 5, false)
-            elseif data.number == "hood" then
-                SetVehicleDoorShut(veh, 4, false)
+            doorId = tonumber(doorId)
+        end
+        if doorId ~= nil then
+            if data.state == true then
+                SetVehicleDoorOpen(veh, doorId, false, false)
             else
-                SetVehicleDoorShut(veh, tonumber(data.number), false)
+                SetVehicleDoorShut(veh, doorId, false)
             end
         end
-    elseif data.action == "indicator" then
-        local veh = GetVehiclePedIsIn(PlayerPedId(), false)
-        SetVehicleIndicatorLights(veh, data.name, data.state)
+    elseif action == "indicator" then
+        SetVehicleIndicatorLights(veh, tonumber(data.name) or 0, data.state and true or false)
     end
+
+    cb('ok')
 end)
 
 RegisterNetEvent('dr-carcontrol:openMenu', function()
-    ExecuteCommand(Config.Menu.Command)
+    if carMenuOpen then
+        closeCarMenu()
+    else
+        openCarMenu()
+    end
+end)
+
+AddEventHandler('onResourceStop', function(res)
+    if res == GetCurrentResourceName() and carMenuOpen then
+        SetNuiFocus(false, false)
+    end
 end)
