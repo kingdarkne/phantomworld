@@ -30,7 +30,7 @@ discord-bot/bot.pid
 **/.yarn/
 **/.cache/
 
-# Secrets not in repo (mysql.cfg + secrets.cfg ARE tracked — private repo)
+# Secrets — keep examples only; real files are gitignored
 .env
 .env.*
 !.env.example
@@ -57,3 +57,9 @@ resources/FiveM Vehicle Pack/
 resources/cars2/
 resources/Audio_Pack/
 resources/\[Newmaps\]/\[qb\]/
+secrets.cfg
+mysql.cfg
+phantom_dashboard.secrets.cfg
+**/phantom_dashboard.secrets.cfg
+discord-bot/.env
+discord-bot/env.host

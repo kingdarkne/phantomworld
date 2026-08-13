@@ -26,7 +26,7 @@ set steam_webApiKey none
 sets tags "dracula, nopixel4, illegal, qbcore"
 
 ## You MAY edit the following:
-sv_licenseKey "cfxk_1J1J2AwrgCrYJnUOC4Ifx_4ZbEb6"
+sv_licenseKey "YOUR_CFX_LICENSE_KEY_HERE"
 # Server name (shows in FiveM server list / browser)
 sv_hostname "PHANTOM WORLD"
 # Project title and short description (used in some in-game/server UIs)
@@ -42,7 +42,7 @@ exec mysql.cfg
 # Access / whitelist for % or that server IP, then save. Do not commit mysql.cfg to public repos.
 #
 # Local PC only (same machine as MySQL): comment the line above and use:
-# set mysql_connection_string "host=127.0.0.1;user=root;password=Eax2323$$;database=9903ef012b;port=3306;charset=utf8mb4"
+# set mysql_connection_string "host=YOUR_HOST;user=YOUR_USER;password=YOUR_PASSWORD;database=YOUR_DATABASE;port=3306;charset=utf8mb4"
 # One-time DB: run `resources/npwd/import.sql` in HeidiSQL / MySQL Workbench (creates npwd_* tables). QBX `players` needs `phone_number` (qbx_core / qbx_npwd).
 # `vehicle_financing` for qbx_vehicleshop is auto-created on resource start; you can still run `resources/qbx_vehicleshop/vehshop.sql` manually if needed.
 
