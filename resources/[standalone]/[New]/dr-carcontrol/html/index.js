@@ -1,5 +1,6 @@
 resourceName = null;
 deathScreenOpen = false;
+carMenuOpen = false;
 const isOdd = number => number % 2 !== 0;
 vehData = [];
 vehData.windows = [];
@@ -13,12 +14,46 @@ alignData = {
     ["bottom-right"]: {right: 0, bottom: 6},
     ["bottom-center"]: {right: 0, left: 0, bottom: 3}
 };
+
+function el(id) {
+    return document.getElementById(id);
+}
+
+function setDisplay(id, value) {
+    const node = el(id);
+    if (node) node.style.display = value;
+}
+
+function postCallback(payload) {
+    const name = resourceName || 'dr-carcontrol';
+    fetch(`https://${name}/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+        body: JSON.stringify(payload),
+    }).catch(() => {});
+}
+
+function closeCarMenuUi() {
+    carMenuOpen = false;
+    const main = el('mainDiv');
+    if (main) main.style.display = 'none';
+    postCallback({ action: 'nuiFocus' });
+}
+
+document.addEventListener('keyup', function (data) {
+    if ((data.key === 'Escape' || data.which === 27) && carMenuOpen) {
+        closeCarMenuUi();
+    }
+});
+
 window.addEventListener('message', function(event) {
     ed = event.data;
 	if (ed.action === "openCarMenu") {
 		if (ed.state === true) {
             var sheets = document.getElementsByTagName('link'); 
-            sheets[0].href = ed.styleType + ".css"; 
+            if (sheets[0] && ed.styleType) {
+                sheets[0].href = ed.styleType + ".css";
+            }
             if (alignData[ed.align]) {
                 if (alignData[ed.align].left) {
                 } else {
@@ -95,10 +130,13 @@ window.addEventListener('message', function(event) {
                 appendHtml(document.getElementById("MDDBottomDivSeats"), seatsHTML);
             };
             vehData.mySeat = ed.carData.playerSeat;
-            document.getElementById("MDDBDDivSeat-" + ed.carData.playerSeat).classList.remove("MDDBDDivDefault");
-            document.getElementById("MDDBDDivSeat-" + ed.carData.playerSeat).classList.remove("MDDBDDivDeactive");
-            document.getElementById("MDDBDDivSeat-" + ed.carData.playerSeat).classList.add("MDDBDDivActive");
-            topLeft("change", "MDDBDDTopLeftDivSeat-" + ed.carData.playerSeat);
+            const seatEl = el("MDDBDDivSeat-" + ed.carData.playerSeat);
+            if (seatEl) {
+                seatEl.classList.remove("MDDBDDivDefault");
+                seatEl.classList.remove("MDDBDDivDeactive");
+                seatEl.classList.add("MDDBDDivActive");
+                topLeft("change", "MDDBDDTopLeftDivSeat-" + ed.carData.playerSeat);
+            }
             // Doors
             vehData.doorData["trunk"] = ed.carData.trunk;
             vehData.doorData["hood"] = ed.carData.hood;
@@ -174,16 +212,18 @@ window.addEventListener('message', function(event) {
 		} else {
 			carMenuOpen = false;
             document.getElementById("mainDiv").style.display = "none";
+            return;
 		}
+        if (!ed.carData) return;
         if (ed.carData.engineState === 1) {
             vehData.engineState = true;
-            document.getElementById("MDDBDDEngineOn").style.display = "block";
-            document.getElementById("MDDBDDEngineOff").style.display = "none";
+            setDisplay("MDDBDDEngineOn", "block");
+            setDisplay("MDDBDDEngineOff", "none");
             topLeft('change', 'MDDBDDTopLeftDivEngine');
         } else {
             vehData.engineState = false;
-            document.getElementById("MDDBDDEngineOn").style.display = "none";
-            document.getElementById("MDDBDDEngineOff").style.display = "block";
+            setDisplay("MDDBDDEngineOn", "none");
+            setDisplay("MDDBDDEngineOff", "block");
             topLeft('default', 'MDDBDDTopLeftDivEngine');
         }
         if (ed.carData.intLightState === 1) {
@@ -294,16 +334,6 @@ window.addEventListener('message', function(event) {
         document.getElementById("MDDBDDivAlarm").classList.remove("MDDBDDivAlarm");
         topLeft("default", "MDDBDDTopLeftDivAlarm");
     }
-    document.onkeyup = function(data) {
-		if (data.which == 27 && carMenuOpen) {
-            carMenuOpen = false;
-            document.getElementById("mainDiv").style.display = "none";
-			var xhr = new XMLHttpRequest();
-			xhr.open("POST", `https://${resourceName}/callback`, true);
-			xhr.setRequestHeader('Content-Type', 'application/json');
-			xhr.send(JSON.stringify({action: "nuiFocus"}));
-		}
-	}
 })
 
 function clFunc(name1, name2) {
@@ -392,25 +422,18 @@ function clFunc(name1, name2) {
         document.getElementById("MDDBDDivSeat-" + vehData.mySeat).classList.add("MDDBDDivActive");
         topLeft("change", "MDDBDDTopLeftDivSeat-" + vehData.mySeat);
     } else if (name1 === "engine") {
-        console.log(vehData.mySeat)
         if (Number(vehData.mySeat) === -1) {
             if (vehData.engineState === false) {
                 vehData.engineState = true;
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", `https://${resourceName}/callback`, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.send(JSON.stringify({action: "engine", state: true}));
-                document.getElementById("MDDBDDEngineOn").style.display = "block";
-                document.getElementById("MDDBDDEngineOff").style.display = "none";
+                postCallback({action: "engine", state: true});
+                setDisplay("MDDBDDEngineOn", "block");
+                setDisplay("MDDBDDEngineOff", "none");
                 topLeft('change', 'MDDBDDTopLeftDivEngine');
             } else {
                 vehData.engineState = false;
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", `https://${resourceName}/callback`, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.send(JSON.stringify({action: "engine", state: false}));
-                document.getElementById("MDDBDDEngineOn").style.display = "none";
-                document.getElementById("MDDBDDEngineOff").style.display = "block";
+                postCallback({action: "engine", state: false});
+                setDisplay("MDDBDDEngineOn", "none");
+                setDisplay("MDDBDDEngineOff", "block");
                 topLeft('default', 'MDDBDDTopLeftDivEngine');
             }
         }
@@ -551,11 +574,13 @@ function appendHtml(el, str) {
 }
 
 function topLeft(action, div) {
+    const node = el(div);
+    if (!node) return;
     if (action === "change") {
-        document.getElementById(div).classList.remove("MDDBDDTopLeftDivRed");
-        document.getElementById(div).classList.add("MDDBDDTopLeftDivGreen");
+        node.classList.remove("MDDBDDTopLeftDivRed");
+        node.classList.add("MDDBDDTopLeftDivGreen");
     } else {
-        document.getElementById(div).classList.add("MDDBDDTopLeftDivRed");
-        document.getElementById(div).classList.remove("MDDBDDTopLeftDivGreen");
+        node.classList.add("MDDBDDTopLeftDivRed");
+        node.classList.remove("MDDBDDTopLeftDivGreen");
     }
 }
