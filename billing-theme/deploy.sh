@@ -136,7 +136,7 @@ chown www-data:www-data \
   app/Notifications/ResetPasswordNotification.php
 sudo -u www-data php -l bootstrap/helpers.php
 [ -f public/galaxy_bg.webp ] && chown www-data:www-data public/galaxy_bg.webp
-chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh /tmp/fix-admin-customer-link.sh /tmp/install-panel-theme.sh
+chmod +x /tmp/fix-billing-currency.sh /tmp/fix-billing-free-limit.sh /tmp/fix-billing-fivem-egg.sh /tmp/install-discord-bot-eggs.sh /tmp/attach-all-eggs-to-plans.sh /tmp/ensure-main-node-and-games.sh /tmp/brand-billing-emails.sh /tmp/fix-admin-customer-link.sh /tmp/install-panel-theme.sh /tmp/fix-wings-proxy.sh
 bash /tmp/fix-billing-currency.sh
 bash /tmp/fix-billing-free-limit.sh
 bash /tmp/fix-billing-fivem-egg.sh || true
@@ -146,6 +146,7 @@ bash /tmp/ensure-main-node-and-games.sh || true
 bash /tmp/fix-admin-customer-link.sh || true
 OVERRIDES=/tmp/panel-email-overrides bash /tmp/brand-billing-emails.sh || true
 OVERRIDES=/tmp/panel-email-overrides THEME_SRC=/tmp/panel-theme bash /tmp/install-panel-theme.sh || true
+NGINX_SRC=/tmp/nginx-wings.conf bash /tmp/fix-wings-proxy.sh || true
 # Ensure owner gets purchase alerts
 if ! grep -q '^OWNER_EMAIL=' /var/www/billing/.env; then
   echo 'OWNER_EMAIL=ericaxavier897@gmail.com' >> /var/www/billing/.env
