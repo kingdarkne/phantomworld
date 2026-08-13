@@ -5,7 +5,7 @@ Config.Debug = false
 
 -- Weapon Wheel Settings (GTA Online style)
 Config.WeaponWheel = {
-    -- Disabled: server uses `ox_inventory` weapon wheel integration instead.
+    -- Disabled: custom `gta_weapon_wheel` owns TAB (not ox/native).
     enabled = false,
     holdKey = 37, -- Tab key
     quickSwitchKeys = { 157, 158, 160, 164, 165, 159 }, -- 1-6 keys
