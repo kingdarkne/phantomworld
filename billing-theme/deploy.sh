@@ -71,6 +71,8 @@ upload "$ROOT/panel-theme/phantom-panel.css" "/tmp/panel-theme/phantom-panel.css
 upload "$ROOT/scripts/install-panel-theme.sh" "/tmp/install-panel-theme.sh"
 upload "$ROOT/resources/views/layouts/client/nav.blade.php" "/var/www/billing/resources/views/layouts/client/nav.blade.php"
 upload "$ROOT/nginx-billing.conf" "/tmp/nginx-billing.conf"
+upload "$ROOT/nginx-wings.conf" "/tmp/nginx-wings.conf"
+upload "$ROOT/scripts/fix-wings-proxy.sh" "/tmp/fix-wings-proxy.sh"
 upload "$ROOT/scripts/fix-currency.sh" "/tmp/fix-billing-currency.sh"
 upload "$ROOT/scripts/fix-free-limit.sh" "/tmp/fix-billing-free-limit.sh"
 upload "$ROOT/scripts/fix-fivem-egg.sh" "/tmp/fix-billing-fivem-egg.sh"
