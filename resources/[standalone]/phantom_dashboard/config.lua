@@ -31,4 +31,8 @@ Config.Discord = {
     OwnerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', ''),
     --- Post join/leave/resource/txAdmin/combat alerts
     AlertAllEvents = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1,
+    --- Optional dedicated webhook for SCRIPT ERROR / console failures
+    ErrorWebhook = GetConvar('phantom_dashboard:errorWebhook', ''),
+    --- Capture FX console errors and post to Discord (1/0)
+    ErrorReporting = GetConvarInt('phantom_dashboard:errorReporting', 1) == 1,
 }

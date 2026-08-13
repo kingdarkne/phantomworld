@@ -23,6 +23,7 @@ server_scripts {
     'server/main.lua',
     'server/discord_dm.lua',
     'server/alerts.lua',
+    'server/errors.lua',
     'server/discord.lua',
     'server/http.lua',
 }

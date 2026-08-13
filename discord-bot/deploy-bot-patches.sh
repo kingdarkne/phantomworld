@@ -13,6 +13,7 @@ RSYNC=(sshpass -e rsync -avz -e "ssh -o StrictHostKeyChecking=no")
 
 "${RSYNC[@]}" "${ROOT}/src/interactions/" "${USER}@${HOST}:${BOT_PATH}/src/interactions/"
 "${RSYNC[@]}" "${ROOT}/src/commands/" "${USER}@${HOST}:${BOT_PATH}/src/commands/"
+"${RSYNC[@]}" "${ROOT}/aio-bridge/" "${USER}@${HOST}:${BOT_PATH}/aio-bridge/"
 sshpass -e scp -o StrictHostKeyChecking=no \
   "${ROOT}/src/handlers/components/embed.js" \
   "${ROOT}/src/handlers/loaders/event.js" \

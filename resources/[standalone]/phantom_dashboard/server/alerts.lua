@@ -134,6 +134,26 @@ local function postBotRelayWithRetries(entry, attempts)
     end)
 end
 
+local errorWebhook = GetConvar('phantom_dashboard:errorWebhook', '')
+
+local function postErrorWebhook(payload)
+    local url = (errorWebhook and errorWebhook ~= '') and errorWebhook or webhook
+    if not url or url == '' then
+        print('[phantom_dashboard] no webhook for errors — set phantom_dashboard:webhook or :errorWebhook')
+        return
+    end
+    PerformHttpRequest(url, function(statusCode, responseText)
+        if statusCode ~= 200 and statusCode ~= 204 then
+            print(('[phantom_dashboard] error webhook failed HTTP %s: %s'):format(
+                tostring(statusCode),
+                responseText and responseText:sub(1, 200) or 'no body'
+            ))
+        end
+    end, 'POST', json.encode(payload), {
+        ['Content-Type'] = 'application/json',
+    })
+end
+
 --- Public emit for other resources
 function PhantomDashboardEmit(category, title, description, color)
     if not alertAll then return end
@@ -154,6 +174,44 @@ function PhantomDashboardEmit(category, title, description, color)
     PhantomDashboardDmOwner(entry)
     postBotRelay(entry)
 end
+
+--- Always-on path for SCRIPT ERROR / console failures (ignores alertAll / min players).
+function PhantomDashboardEmitError(title, description, color)
+    local entry = {
+        category = 'error',
+        title = title or 'FXServer Error',
+        description = description or '',
+        color = color or 15548997,
+        time = os.date('%Y-%m-%d %H:%M:%S'),
+        timestamp = os.time(),
+        players = playerCount(),
+        maxPlayers = GetConvarInt('sv_maxclients', 48),
+    }
+
+    pushLog(entry)
+    postErrorWebhook(embedPayload(entry.title, entry.description, entry.color))
+    PhantomDashboardDmOwner(entry)
+    -- Prefer relay so the Discord bot can route to #errors / errorLogs webhook
+    if botRelay and botRelay ~= '' then
+        local headers = { ['Content-Type'] = 'application/json' }
+        if relayToken and relayToken ~= '' then
+            headers['Authorization'] = 'Bearer ' .. relayToken
+            headers['X-Phantom-Token'] = relayToken
+        end
+        PerformHttpRequest(botRelay, function(statusCode, responseText)
+            if statusCode == 0 or (statusCode and statusCode >= 300) then
+                print(('[phantom_dashboard] error relay failed (%s)'):format(tostring(statusCode)))
+                if responseText then
+                    print(('[phantom_dashboard] relay response: %s'):format(responseText:sub(1, 120)))
+                end
+            end
+        end, 'POST', json.encode(entry), headers)
+    end
+end
+
+exports('EmitError', function(title, message, color)
+    PhantomDashboardEmitError(title, message, color)
+end)
 
 --- Lifecycle alerts: always webhook; retry bot relay (bot may start after FXServer).
 function PhantomDashboardEmitLifecycle(category, title, description, color)

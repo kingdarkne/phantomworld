@@ -23,6 +23,9 @@ const guildId = process.env.DISCORD_GUILD_ID;
 function statusChannelId() {
   return process.env.DISCORD_STATUS_CHANNEL_ID || '';
 }
+function errorChannelId() {
+  return process.env.DISCORD_ERROR_CHANNEL_ID || process.env.DISCORD_STATUS_CHANNEL_ID || '';
+}
 const ownerUserId = process.env.DISCORD_OWNER_USER_ID;
 const fivemUrl = (process.env.FIVEM_SERVER_URL || 'http://127.0.0.1:30120').replace(/\/$/, '');
 const pollMinutes = Number(process.env.STATUS_POLL_MINUTES || 0);
@@ -102,7 +105,8 @@ function startRelayServer() {
     const entry = req.body || {};
     try {
       await notifyOwnerEvent(entry);
-      const mirrorChannelId = statusChannelId();
+      const isError = String(entry.category || '').toLowerCase() === 'error';
+      const mirrorChannelId = isError ? errorChannelId() : statusChannelId();
       if (mirrorChannelId) {
         const channel = await client.channels.fetch(mirrorChannelId);
         if (channel?.isTextBased()) {
@@ -116,12 +120,35 @@ function startRelayServer() {
     }
   });
 
+  app.post('/errors', async (req, res) => {
+    const auth = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-phantom-token'];
+    if (relaySecret && auth !== relaySecret) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+    const entry = { category: 'error', ...(req.body || {}) };
+    try {
+      await notifyOwnerEvent(entry);
+      const mirrorChannelId = errorChannelId();
+      if (mirrorChannelId) {
+        const channel = await client.channels.fetch(mirrorChannelId);
+        if (channel?.isTextBased()) {
+          await channel.send({ embeds: [eventEmbed(entry)] });
+        }
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn('Error relay failed:', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get('/health', (_req, res) => {
     res.json({ ok: true, bot: client.user?.tag || 'starting' });
   });
 
   app.listen(relayPort, '127.0.0.1', () => {
-    console.log(`Event relay listening on http://127.0.0.1:${relayPort}/events`);
+    console.log(`Event relay listening on http://127.0.0.1:${relayPort}/events (+ /errors)`);
   });
 }
 
