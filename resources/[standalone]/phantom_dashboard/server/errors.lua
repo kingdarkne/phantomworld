@@ -1,4 +1,4 @@
---- Capture FXServer console errors and forward to Discord via phantom_dashboard alerts/relay.
+--- Capture FXServer console errors → Discord + optional critical restart protocol.
 
 local ENABLED = GetConvarInt('phantom_dashboard:errorReporting', 1) == 1
 local DEBOUNCE_MS = math.max(5, tonumber(GetConvar('phantom_dashboard:errorDebounceSeconds', '45')) or 45) * 1000
@@ -20,22 +20,31 @@ local IGNORE_SUBSTRINGS = {
     'creating script environments for',
     'started resource ',
     'stopping resource ',
+    'restart protocol',
+    'error reporting online',
+    'phantom_dashboard]',
 }
 
-local MATCH_PATTERNS = {
+-- Soft errors: Discord only (no restart)
+local SOFT_PATTERNS = {
+    "couldn't find resource",
+    'failed to fetch',
+    'unable to determine',
+}
+
+-- Critical: Discord + restart protocol
+local CRITICAL_PATTERNS = {
     'script error',
     'unknown column',
     'access denied for user',
-    'oxmysql',
-    'unhandledpromiserejection',
     'attempt to index',
     'attempt to call',
     'nil value',
     'error during',
-    "couldn't find resource",
-    'failed to load',
-    'failed to start',
+    'failed to load script',
+    'failed to start resource',
     'invocation error',
+    'unhandledpromiserejection',
 }
 
 local function stripAnsi(s)
@@ -51,21 +60,29 @@ local function shouldIgnore(lower)
     return false
 end
 
-local function isErrorLine(lower)
-    for i = 1, #MATCH_PATTERNS do
-        if lower:find(MATCH_PATTERNS[i], 1, true) then
+local function isSoft(lower)
+    for i = 1, #SOFT_PATTERNS do
+        if lower:find(SOFT_PATTERNS[i], 1, true) then
             return true
         end
-    end
-    -- generic "error:" but not "0 error"
-    if lower:find('error:', 1, true) or lower:find('^%s*%[.*error', 1) then
-        return true
     end
     return false
 end
 
+local function isCritical(lower)
+    for i = 1, #CRITICAL_PATTERNS do
+        if lower:find(CRITICAL_PATTERNS[i], 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function isErrorLine(lower)
+    return isCritical(lower) or isSoft(lower) or lower:find('error:', 1, true) ~= nil
+end
+
 local function fingerprint(msg)
-    -- collapse numbers / citizenids to reduce spam variants
     local f = msg:lower()
     f = f:gsub('%d+', '#')
     f = f:gsub('%s+', ' ')
@@ -73,21 +90,13 @@ local function fingerprint(msg)
 end
 
 local function extractResource(msg)
-    local r = msg:match('%[script:([%w%-_]+)%]')
-        or msg:match('%[%-?%s*script:([%w%-_]+)%]')
+    return msg:match('%[script:([%w%-_]+)%]')
         or msg:match("SCRIPT ERROR:%s*@([%w%-_]+)/")
         or msg:match("SCRIPT ERROR in resource ([%w%-_]+)")
-    return r
 end
 
-local function severityColor(lower)
-    if lower:find('script error', 1, true) or lower:find('unknown column', 1, true) then
-        return 15548997 -- red
-    end
-    if lower:find("couldn't find", 1, true) then
-        return 15105570 -- orange
-    end
-    return 15158332 -- soft red
+local function severityColor(critical)
+    return critical and 15548997 or 15105570
 end
 
 local function reportError(channel, message)
@@ -101,6 +110,8 @@ local function reportError(channel, message)
     local lower = clean:lower()
     if shouldIgnore(lower) or not isErrorLine(lower) then return end
 
+    local critical = isCritical(lower) and not isSoft(lower)
+
     local fp = fingerprint(clean)
     local now = GetGameTimer()
     local prev = recent[fp]
@@ -113,7 +124,6 @@ local function reportError(channel, message)
     local repeats = prev and prev.count or 0
     recent[fp] = { at = now, count = 1 }
 
-    -- prune old fingerprints occasionally
     if (now % 50) == 0 then
         for k, v in pairs(recent) do
             if (now - v.at) > (DEBOUNCE_MS * 4) then
@@ -123,7 +133,10 @@ local function reportError(channel, message)
     end
 
     local resName = extractResource(clean)
-    local title = resName and ('FXServer Error — `%s`'):format(resName) or 'FXServer Console Error'
+    local title = critical
+        and (resName and ('CRITICAL Script Error — `%s`'):format(resName) or 'CRITICAL Script Error')
+        or (resName and ('FXServer Warning — `%s`'):format(resName) or 'FXServer Console Warning')
+
     local body = ('```\n%s\n```'):format(clean:sub(1, MAX_MSG))
     if channel and channel ~= '' then
         body = ('Channel: `%s`\n%s'):format(tostring(channel), body)
@@ -131,12 +144,24 @@ local function reportError(channel, message)
     if repeats > 0 then
         body = body .. ('\n_Suppressed **%s** repeat(s) in the last window_'):format(repeats)
     end
+    if critical then
+        body = body .. '\n\n_This is classified as **critical** — restart protocol may start._'
+    end
 
-    PhantomDashboardEmitError(title, body, severityColor(lower))
+    PhantomDashboardEmitError(title, body, severityColor(critical), {
+        category = critical and 'critical' or 'error',
+    })
+
+    if critical and PhantomDashboardNoteCriticalError then
+        PhantomDashboardNoteCriticalError(
+            resName and ('script:' .. resName) or 'script_error',
+            body
+        )
+    end
 end
 
 CreateThread(function()
-    Wait(1500)
+    Wait(2000)
     if not ENABLED then
         print('[phantom_dashboard] error reporting disabled (phantom_dashboard:errorReporting 0)')
         return
@@ -144,7 +169,6 @@ CreateThread(function()
 
     local ok, err = pcall(function()
         RegisterConsoleListener(function(channel, message)
-            -- Some builds pass only message
             if message == nil and type(channel) == 'string' then
                 reportError('', channel)
                 return
@@ -154,7 +178,7 @@ CreateThread(function()
     end)
 
     if ok then
-        print(('[phantom_dashboard] error reporting online (debounce %ss, boot grace %ss)'):format(
+        print(('[phantom_dashboard] full error reporting online (debounce %ss, boot grace %ss)'):format(
             math.floor(DEBOUNCE_MS / 1000),
             math.floor(BOOT_GRACE_MS / 1000)
         ))
@@ -163,19 +187,23 @@ CreateThread(function()
     end
 end)
 
---- Manual report from other resources
-exports('ReportError', function(title, message)
+exports('ReportError', function(title, message, critical)
     if PhantomDashboardEmitError then
-        PhantomDashboardEmitError(title or 'Server Error', message or '', 15548997)
+        PhantomDashboardEmitError(title or 'Server Error', message or '', 15548997, {
+            category = critical and 'critical' or 'error',
+        })
+    end
+    if critical and PhantomDashboardNoteCriticalError then
+        PhantomDashboardNoteCriticalError(title or 'export', message or '')
     end
 end)
 
 RegisterCommand('phantom_testerror', function(src)
     if src ~= 0 then return end
-    PhantomDashboardEmitError(
-        'FXServer Error — test',
-        '```\nSCRIPT ERROR: @phantom_dashboard/server/errors.lua:0: intentional test error\n```',
-        15548997
-    )
-    print('[phantom_dashboard] sent test error report')
+    local body = '```\nSCRIPT ERROR: @phantom_dashboard/server/errors.lua:0: intentional test error\n```'
+    PhantomDashboardEmitError('CRITICAL Script Error — test', body, 15548997, { category = 'critical' })
+    if PhantomDashboardNoteCriticalError then
+        PhantomDashboardNoteCriticalError('test_script_error', body)
+    end
+    print('[phantom_dashboard] sent critical test error (may start restart protocol)')
 end, true)

@@ -61,6 +61,18 @@ setr qbx_hud:showRank 1
 setr qbx_hud:showJob 1
 ```
 
+## Full bug / error reporting
+
+Console `SCRIPT ERROR` and similar critical failures are:
+1. Posted to Discord (webhook + bot relay)
+2. If `phantom_dashboard:errorRestart 1`: players get an on-screen / chat warning that the server will restart and they will be kicked (rejoin after it is back)
+3. After the countdown, everyone is kicked and FXServer restarts via the bot host endpoint
+
+Soft noise (missing resources, version checks) is Discord-only and does **not** restart.
+
+Disable restart: `set phantom_dashboard:errorRestart 0`  
+Test: console `phantom_testerror` or `phantom_testrestart`
+
 ## Stuck / bug assist
 
 Players can run:

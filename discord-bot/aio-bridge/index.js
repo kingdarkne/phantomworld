@@ -179,15 +179,20 @@ async function postNormalEvent(client, entry) {
 function mountRelayRoutes(app, client) {
   const secret = relaySecret();
 
-  app.post('/events', async (req, res) => {
+  const authOk = (req) => {
     const auth = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-phantom-token'];
-    if (secret && auth !== secret) {
+    return !(secret && auth !== secret);
+  };
+
+  app.post('/events', async (req, res) => {
+    if (!authOk(req)) {
       res.status(401).json({ error: 'unauthorized' });
       return;
     }
     const entry = req.body || {};
     try {
-      if (String(entry.category || '').toLowerCase() === 'error' || String(entry.category || '').toLowerCase() === 'stuck') {
+      const cat = String(entry.category || '').toLowerCase();
+      if (cat === 'error' || cat === 'stuck' || cat === 'critical') {
         await postErrorTargets(client, entry);
       } else {
         await postNormalEvent(client, entry);
@@ -199,8 +204,7 @@ function mountRelayRoutes(app, client) {
   });
 
   app.post('/errors', async (req, res) => {
-    const auth = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-phantom-token'];
-    if (secret && auth !== secret) {
+    if (!authOk(req)) {
       res.status(401).json({ error: 'unauthorized' });
       return;
     }
@@ -213,7 +217,58 @@ function mountRelayRoutes(app, client) {
     }
   });
 
-  console.log('[phantom-fivem] Event relay mounted at POST /events and POST /errors');
+  /**
+   * Called by phantom_dashboard before FXServer quits after a critical error.
+   * Recycles the Pterodactyl game container so players can rejoin.
+   */
+  app.post('/server/restart', async (req, res) => {
+    if (!authOk(req)) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+    res.json({ ok: true, accepted: true });
+
+    const { exec } = require('child_process');
+    const uuid = process.env.FIVEM_SERVER_UUID || '5e6a18d6-d453-4130-b80c-f5f1d7dc82ef';
+    const reason = req.body?.reason || 'critical_script_error';
+    console.warn(`[phantom-fivem] Host restart requested (${reason})`);
+
+    // Notify Discord immediately
+    try {
+      await postErrorTargets(client, {
+        category: 'critical',
+        title: '🔄 Host restarting FiveM now',
+        description: `Bot accepted restart request.\nReason: \`${reason}\`\nPlayers can rejoin once \`info.json\` is up again.`,
+        color: 15548997,
+        timestamp: Math.floor(Date.now() / 1000),
+      });
+    } catch (_) {}
+
+    // Delay so FXServer can quit first, then force-cycle container via Wings token if present
+    setTimeout(() => {
+      const script = [
+        'set -e',
+        `UUID='${uuid}'`,
+        'TOKEN=$(grep -E "^token:" /etc/pterodactyl/config.yml 2>/dev/null | awk "{print \\$2}")',
+        'CID=$(docker ps -aq --filter name=$UUID | head -1)',
+        'if [ -n "$CID" ]; then docker kill "$CID" 2>/dev/null || true; docker rm -f "$CID" 2>/dev/null || true; fi',
+        'sleep 2',
+        'if [ -n "$TOKEN" ]; then',
+        '  curl -sS -m 20 -X POST "http://127.0.0.1:8080/api/servers/${UUID}/power" \\',
+        '    -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
+        '    -d \'{"action":"start"}\' || true',
+        'fi',
+      ].join('\n');
+
+      exec(script, { shell: '/bin/bash' }, (err, stdout, stderr) => {
+        if (err) console.warn('[phantom-fivem] restart script error:', err.message);
+        if (stdout) console.log('[phantom-fivem] restart stdout:', String(stdout).slice(0, 400));
+        if (stderr) console.warn('[phantom-fivem] restart stderr:', String(stderr).slice(0, 400));
+      });
+    }, 4000);
+  });
+
+  console.log('[phantom-fivem] Event relay mounted at POST /events, /errors, /server/restart');
 }
 
 function attachInteractionHandler(client) {

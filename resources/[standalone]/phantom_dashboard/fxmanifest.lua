@@ -18,12 +18,14 @@ client_scripts {
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
     'client/stuck.lua',
+    'client/restart_warn.lua',
 }
 
 server_scripts {
     'server/main.lua',
     'server/discord_dm.lua',
     'server/alerts.lua',
+    'server/restart_protocol.lua',
     'server/errors.lua',
     'server/stuck.lua',
     'server/discord.lua',
