@@ -33,6 +33,7 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+    'locales/*.json',
 }
 
 dependencies {
