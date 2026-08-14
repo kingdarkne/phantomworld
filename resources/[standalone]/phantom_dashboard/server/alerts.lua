@@ -110,6 +110,17 @@ local function staffRoleFor(src)
     return nil
 end
 
+-- Must be defined before maybeAlertStaffJoin (Lua locals are not hoisted).
+local function playerLabel(src)
+    local name = GetPlayerName(src) or ('ID ' .. tostring(src))
+    local discordId = discordIdentifier(src)
+    -- Use backticks (no Discord ping). Mentions were spamming players on every join.
+    if discordId then
+        return ('**%s** (`discord:%s`)'):format(name, discordId)
+    end
+    return ('**%s**'):format(name)
+end
+
 local function maybeAlertStaffJoin(src, context)
     if not staffJoinAlerts or not src then return end
     local role = staffRoleFor(src)
@@ -147,16 +158,6 @@ local function maybeAlertStaffJoin(src, context)
             pingOwner = false,
         }
     )
-end
-
-local function playerLabel(src)
-    local name = GetPlayerName(src) or ('ID ' .. tostring(src))
-    local discordId = discordIdentifier(src)
-    -- Use backticks (no Discord ping). Mentions were spamming players on every join.
-    if discordId then
-        return ('**%s** (`discord:%s`)'):format(name, discordId)
-    end
-    return ('**%s**'):format(name)
 end
 
 local function pushLog(entry)
