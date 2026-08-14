@@ -16,8 +16,10 @@ Config.TourSettings = {
     AutoStart = false, -- Auto-start for new players
     ShowProgress = true,
     
-    -- Audio / narration (browser TTS via NUI)
-    EnableNarration = true,
+    -- Audio / narration
+    -- Browser speechSynthesis in FiveM CEF is robotic and has hard-crashed clients.
+    -- Captions are always shown. Keep TTS off unless you explicitly want it.
+    EnableNarration = false,
     BackgroundMusic = false,
     MusicVolume = 0.3,
     

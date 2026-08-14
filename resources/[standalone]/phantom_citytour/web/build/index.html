@@ -6,10 +6,10 @@
   <title>Phantom World City Tour</title>
   <style>
     :root {
-      --bg: rgba(8, 12, 18, 0.72);
+      --bg: rgba(8, 12, 18, 0.78);
       --line: rgba(255, 255, 255, 0.12);
       --text: #f4f7fb;
-      --muted: rgba(244, 247, 251, 0.72);
+      --muted: rgba(244, 247, 251, 0.78);
       --accent: #5ec8ff;
       --accent-2: #8ef0c3;
     }
@@ -27,6 +27,7 @@
     #app { display: none; width: 100%; height: 100%; position: relative; }
     #app.visible { display: block; }
     #app.ui-hidden .panel,
+    #app.ui-hidden .caption-bar,
     #app.ui-hidden .progress,
     #app.ui-hidden .hints { opacity: 0; pointer-events: none; }
     .panel {
@@ -37,7 +38,7 @@
       width: min(420px, 38vw);
       padding: 22px 24px;
       border-radius: 18px;
-      background: linear-gradient(160deg, rgba(14, 22, 34, 0.88), rgba(8, 12, 18, 0.78));
+      background: linear-gradient(160deg, rgba(14, 22, 34, 0.9), rgba(8, 12, 18, 0.82));
       border: 1px solid var(--line);
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
       backdrop-filter: blur(10px);
@@ -81,6 +82,22 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 13px;
       color: var(--muted);
+    }
+    .caption-bar {
+      position: absolute;
+      left: 50%;
+      bottom: 11vh;
+      transform: translateX(-50%);
+      width: min(760px, 84vw);
+      padding: 14px 20px;
+      border-radius: 14px;
+      background: rgba(6, 10, 16, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.4;
+      color: var(--text);
+      transition: opacity 0.25s ease;
     }
     .progress {
       position: absolute;
@@ -156,7 +173,7 @@
       <div class="welcome-card">
         <div class="eyebrow">Phantom World</div>
         <h2 id="welcomeTitle">City Tour</h2>
-        <p id="welcomeSub" style="color: var(--muted); margin: 0;">Sit back — we’ll show you around.</p>
+        <p id="welcomeSub" style="color: var(--muted); margin: 0;">Sit back — captions guide each stop.</p>
       </div>
     </div>
 
@@ -168,6 +185,8 @@
       <ul class="facts" id="facts"></ul>
       <div class="paused-badge">Paused</div>
     </section>
+
+    <div class="caption-bar" id="captionBar">Welcome to Phantom World</div>
 
     <div class="progress">
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -194,8 +213,13 @@
     const progressPct = document.getElementById('progressPct');
     const progressLabel = document.getElementById('progressLabel');
     const welcomeTitle = document.getElementById('welcomeTitle');
+    const captionBar = document.getElementById('captionBar');
 
-    let speakEnabled = true;
+    // Browser speechSynthesis in FiveM CEF is robotic and has crashed clients.
+    // Default: captions only. Optional TTS uses a carefully picked soft voice.
+    let speakEnabled = false;
+    let preferredVoice = null;
+    let speakTimer = null;
     let welcomeTimer = null;
 
     function stripEmoji(text) {
@@ -205,20 +229,62 @@
         .trim();
     }
 
-    function speak(text) {
-      if (!speakEnabled || !text || !window.speechSynthesis) return;
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(stripEmoji(text));
-        utter.rate = 0.95;
-        utter.pitch = 1.0;
-        utter.volume = 1.0;
-        window.speechSynthesis.speak(utter);
-      } catch (e) {}
+    function pickVoice() {
+      if (!window.speechSynthesis) return null;
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (!voices.length) return null;
+      const prefer = [
+        /aria/i, /jenny/i, /guy neural/i, /natural/i, /samantha/i,
+        /google us english/i, /google uk english female/i, /microsoft.*online/i
+      ];
+      const avoid = [/david/i, /zira/i, /mark/i, /hazel/i, /mobile/i];
+      for (const re of prefer) {
+        const hit = voices.find((v) => re.test(v.name) && !avoid.some((a) => a.test(v.name)));
+        if (hit) return hit;
+      }
+      const en = voices.find((v) => /^en(-|_)/i.test(v.lang) && !avoid.some((a) => a.test(v.name)));
+      return en || null;
+    }
+
+    function refreshVoice() {
+      preferredVoice = pickVoice();
+    }
+
+    if (window.speechSynthesis) {
+      refreshVoice();
+      window.speechSynthesis.onvoiceschanged = refreshVoice;
     }
 
     function stopSpeech() {
-      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+      if (speakTimer) {
+        clearTimeout(speakTimer);
+        speakTimer = null;
+      }
+      try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+
+    function speak(text) {
+      if (!speakEnabled || !text || !window.speechSynthesis) return;
+      const clean = stripEmoji(text).slice(0, 180);
+      if (!clean) return;
+      stopSpeech();
+      // Delay after cancel — immediate re-speak crashes some CEF builds.
+      speakTimer = setTimeout(() => {
+        try {
+          if (!preferredVoice) refreshVoice();
+          // No usable natural voice → stay silent (captions still show).
+          if (!preferredVoice) return;
+          const utter = new SpeechSynthesisUtterance(clean);
+          utter.voice = preferredVoice;
+          utter.rate = 0.9;
+          utter.pitch = 1.0;
+          utter.volume = 0.7;
+          utter.lang = preferredVoice.lang || 'en-US';
+          window.speechSynthesis.speak(utter);
+        } catch (e) {}
+      }, 120);
     }
 
     function setProgress(pct) {
@@ -248,8 +314,14 @@
         progressLabel.textContent = location.name || 'Tour progress';
       }
 
+      const caption = [info.title || location.name, info.subtitle || info.description || location.description]
+        .filter(Boolean)
+        .join(' — ');
+      captionBar.textContent = caption;
+
+      // Prefer short line for optional TTS (title + subtitle only).
       const narration = location.narration
-        || [info.title || location.name, info.subtitle, info.description].filter(Boolean).join('. ');
+        || [info.title || location.name, info.subtitle].filter(Boolean).join('. ');
       speak(narration);
     }
 
@@ -264,8 +336,8 @@
           }
           welcome.classList.add('show');
           clearTimeout(welcomeTimer);
-          welcomeTimer = setTimeout(() => welcome.classList.remove('show'), 2800);
-          if (data.speakEnabled === false) speakEnabled = false;
+          welcomeTimer = setTimeout(() => welcome.classList.remove('show'), 2200);
+          speakEnabled = data.speakEnabled === true;
           if (data.currentLocation && typeof data.currentLocation === 'object') {
             renderLocation(data.currentLocation);
           }

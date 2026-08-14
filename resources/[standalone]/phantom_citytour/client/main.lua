@@ -6,7 +6,27 @@ local cameraHandle = nil
 local playerHandle = nil
 local preMulticharMode = false
 local activeSubtitle = nil
+local tourGeneration = 0
+local tourAnchorCoords = nil
 local KVP_DONE = 'phantom_citytour_done'
+
+local function safeDestroyCam()
+    if not cameraHandle then return end
+    local cam = cameraHandle
+    cameraHandle = nil
+    pcall(function()
+        if DoesCamExist(cam) then
+            SetCamActive(cam, false)
+            DestroyCam(cam, false)
+        end
+    end)
+end
+
+local function safeRenderCams(active, easeMs)
+    pcall(function()
+        RenderScriptCams(active and true or false, (easeMs or 0) > 0, easeMs or 0, true, true)
+    end)
+end
 
 -- Local variables
 local PlayerData = {}
@@ -227,6 +247,7 @@ function StartCityTour()
     currentLocationIndex = 1
     isPaused = false
     tourStartTime = GetGameTimer()
+    tourGeneration = tourGeneration + 1
     activeSubtitle = Config.Language.TourTitle or 'City Tour'
     
     local ok, err = pcall(function()
@@ -236,7 +257,8 @@ function StartCityTour()
         SendNUIMessage({
             action = "showTour",
             tourData = GetTourOverview(),
-            speakEnabled = Config.TourSettings.EnableNarration ~= false,
+            -- Captions only by default — CEF TTS was crashing FiveM + sounded bad.
+            speakEnabled = Config.TourSettings.EnableNarration == true,
             currentLocation = nil
         })
 
@@ -247,11 +269,8 @@ function StartCityTour()
         print(('[phantom_citytour] StartCityTour failed: %s'):format(tostring(err)))
         isTourActive = false
         RestorePlayer()
-        if cameraHandle then
-            RenderScriptCams(false, false, 0, true, true)
-            DestroyCam(cameraHandle, false)
-            cameraHandle = nil
-        end
+        safeRenderCams(false, 0)
+        safeDestroyCam()
         SendNUIMessage({ action = 'hideTour' })
         TriggerEvent('chat:addMessage', {
             color = {255, 0, 0},
@@ -275,6 +294,8 @@ function StopCityTour(markCompleted)
     isPaused = false
     lastTourTime = GetGameTimer()
     activeSubtitle = nil
+    tourGeneration = tourGeneration + 1
+    tourAnchorCoords = nil
 
     if markCompleted then
         tourCompleted = true
@@ -282,11 +303,9 @@ function StopCityTour(markCompleted)
         TriggerServerEvent('phantom_citytour:markCompleted')
     end
     
-    if cameraHandle then
-        RenderScriptCams(false, true, 500, true, true)
-        DestroyCam(cameraHandle, false)
-        cameraHandle = nil
-    end
+    safeRenderCams(false, 400)
+    Wait(50)
+    safeDestroyCam()
     
     -- Restore player
     RestorePlayer()
@@ -316,18 +335,24 @@ function InitializeTour()
     DisplayHud(false)
     DisplayRadar(false)
     
-    -- Set player invincible
-    SetEntityInvincible(PlayerPedId(), true)
-    SetEntityVisible(PlayerPedId(), false, 0)
+    local ped = PlayerPedId()
+    -- Anchor the ped once — teleporting every landmark forces streaming loads that crash clients.
+    tourAnchorCoords = GetEntityCoords(ped)
+    SetEntityInvincible(ped, true)
+    SetEntityVisible(ped, false, false)
+    SetLocalPlayerVisibleLocally(false)
+    NetworkSetEntityInvisibleToNetwork(ped, true)
+    FreezeEntityPosition(ped, true)
     
-    -- Freeze player
-    FreezeEntityPosition(PlayerPedId(), true)
-    
-    -- Set time and weather for first location
-    local firstLocation = TourLocations[1]
-    if firstLocation and firstLocation.effects then
-        ApplyLocationEffects(firstLocation.effects)
-    end
+    -- Stable look for whole tour (no per-stop weather thrash)
+    pcall(function()
+        ClearOverrideWeather()
+        ClearWeatherTypePersist()
+        SetWeatherTypeNow('EXTRASUNNY')
+        SetWeatherTypeNowPersist('EXTRASUNNY')
+        SetOverrideWeather('EXTRASUNNY')
+    end)
+    NetworkOverrideClockTime(12, 0, 0)
 end
 
 function RestorePlayer()
@@ -354,7 +379,7 @@ function RestorePlayer()
     ClearExtraTimecycleModifier()
     
     -- Clear any tasks
-    ClearPedTasks(ped)
+    ClearPedTasksImmediately(ped)
 end
 
 function ProcessLocation(index)
@@ -373,15 +398,17 @@ function ProcessLocation(index)
         return
     end
 
+    local gen = tourGeneration
     local info = location.info or {}
+    -- Short caption/TTS line only — full walls of text were robotic + unstable.
     local narration = table.concat({
         info.title or location.name or '',
-        info.subtitle or '',
-        info.description or location.description or ''
+        info.subtitle or ''
     }, '. ')
 
     -- Captions first — never gate UI on camera/player setup.
     activeSubtitle = info.title or location.name or ('Stop ' .. tostring(index))
+    SendNUIMessage({ action = 'stopSpeak' })
     SendNUIMessage({
         action = "updateLocation",
         location = {
@@ -397,6 +424,7 @@ function ProcessLocation(index)
         }
     })
 
+    -- Soft time of day only — skip weather flips (crash/hitch source).
     local okEffects, errEffects = pcall(ApplyLocationEffects, location.effects)
     if not okEffects then
         print(('[phantom_citytour] effects error @%s: %s'):format(tostring(location.id), tostring(errEffects)))
@@ -407,19 +435,23 @@ function ProcessLocation(index)
         print(('[phantom_citytour] camera error @%s: %s'):format(tostring(location.id), tostring(errCam)))
     end
 
-    -- Player setup must never block the tour (anim dict hangs were freezing players invisible).
+    -- Keep ped parked at anchor — do not stream-teleport across the city each stop.
     CreateThread(function()
-        local okPed, errPed = pcall(SetupPlayer, location.player)
-        if not okPed then
-            print(('[phantom_citytour] player setup error @%s: %s'):format(tostring(location.id), tostring(errPed)))
+        if not isTourActive or gen ~= tourGeneration then return end
+        local ped = PlayerPedId()
+        if tourAnchorCoords then
+            SetEntityCoordsNoOffset(ped, tourAnchorCoords.x, tourAnchorCoords.y, tourAnchorCoords.z, false, false, false)
         end
+        FreezeEntityPosition(ped, true)
+        SetEntityVisible(ped, false, false)
+        SetEntityInvincible(ped, true)
     end)
     
     local duration = (location.camera and tonumber(location.camera.duration)) or 8000
     CreateThread(function()
         Wait(duration)
         
-        if isTourActive and not isPaused and currentLocationIndex == index then
+        if isTourActive and not isPaused and currentLocationIndex == index and gen == tourGeneration then
             NextLocation()
         end
     end)
@@ -430,25 +462,10 @@ function ApplyLocationEffects(effects)
 
     ClearTimecycleModifier()
     
-    -- Time is stored as hour-of-day (0-23), not a fraction of a day.
+    -- Time is stored as hour-of-day (0-23). Avoid weather thrash between stops.
     if effects.time then
         local hour = math.floor(tonumber(effects.time) or 12) % 24
         NetworkOverrideClockTime(hour, 0, 0)
-    end
-    
-    -- Set weather (FiveM: SetOverrideWeather, not SetWeatherTypeOverride)
-    if effects.weather then
-        pcall(function()
-            SetWeatherTypeOvertimePersist(effects.weather, 0.0)
-            SetWeatherTypeNow(effects.weather)
-            SetWeatherTypeNowPersist(effects.weather)
-            SetOverrideWeather(effects.weather)
-        end)
-    end
-    
-    -- Only apply known/requested timecycles that exist in data (optional)
-    if effects.timecycle and effects.timecycle ~= '' and effects.timecycle ~= 'default' then
-        SetTimecycleModifier(effects.timecycle)
     end
 end
 
@@ -456,11 +473,6 @@ function SetupCamera(cameraData)
     if not cameraData or not cameraData.start or not cameraData.target then
         print('[phantom_citytour] SetupCamera missing start/target')
         return
-    end
-    
-    if cameraHandle then
-        DestroyCam(cameraHandle, false)
-        cameraHandle = nil
     end
     
     local start = cameraData.start
@@ -484,52 +496,52 @@ function SetupCamera(cameraData)
 
     RequestCollisionAtCoord(camX, camY, camZ)
     RequestCollisionAtCoord(lookX, lookY, lookZ)
-    local deadline = GetGameTimer() + 1500
-    while GetGameTimer() < deadline and (not HasCollisionLoadedAroundEntity(PlayerPedId())) do
+    -- Short non-blocking collision nudge (do not spin forever).
+    local deadline = GetGameTimer() + 400
+    while GetGameTimer() < deadline do
         RequestCollisionAtCoord(camX, camY, camZ)
         Wait(0)
+        break
     end
 
+    -- Tear down previous cam cleanly before creating another (avoids hard crashes).
+    safeRenderCams(false, 0)
+    safeDestroyCam()
+
+    local fov = cameraData.fov or Config.TourSettings.CameraFOV or 50.0
     cameraHandle = CreateCamWithParams(
         'DEFAULT_SCRIPTED_CAMERA',
         camX, camY, camZ,
         0.0, 0.0, 0.0,
-        cameraData.fov or Config.TourSettings.CameraFOV or 50.0,
+        fov,
         false,
         2
     )
     if not cameraHandle or cameraHandle == 0 then
         cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-        SetCamCoord(cameraHandle, camX, camY, camZ)
-        SetCamFov(cameraHandle, cameraData.fov or Config.TourSettings.CameraFOV or 50.0)
+        if cameraHandle and cameraHandle ~= 0 then
+            SetCamCoord(cameraHandle, camX, camY, camZ)
+            SetCamFov(cameraHandle, fov)
+        end
+    end
+
+    if not cameraHandle or cameraHandle == 0 then
+        print('[phantom_citytour] SetupCamera failed to create cam')
+        cameraHandle = nil
+        return
     end
 
     PointCamAtCoord(cameraHandle, lookX, lookY, lookZ)
     SetCamActive(cameraHandle, true)
-    RenderScriptCams(true, true, 800, true, true)
+    safeRenderCams(true, 600)
 end
 
-function SetupPlayer(playerData)
-    if not playerData or not playerData.coords then return end
-    
+function SetupPlayer(_playerData)
+    -- Intentionally no-op: ped stays at tour anchor. Camera does the sightseeing.
     local ped = PlayerPedId()
-    local x, y, z = playerData.coords.x + 0.0, playerData.coords.y + 0.0, playerData.coords.z + 0.0
-
-    RequestCollisionAtCoord(x, y, z)
-    SetEntityCoordsNoOffset(ped, x, y, z, false, false, false)
-    if playerData.heading then
-        SetEntityHeading(ped, playerData.heading + 0.0)
-    end
     FreezeEntityPosition(ped, true)
     SetEntityVisible(ped, false, false)
     SetEntityInvincible(ped, true)
-
-    -- Animations are optional decoration — never block the cinematic on them.
-    if playerData.animation and playerData.animation.dict and playerData.animation.anim then
-        if LoadAnimDict(playerData.animation.dict, 1500) then
-            TaskPlayAnim(ped, playerData.animation.dict, playerData.animation.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
-        end
-    end
 end
 
 function NextLocation()
@@ -561,7 +573,7 @@ end
 
 function SkipLocation()
     if not isTourActive then return end
-    
+    tourGeneration = tourGeneration + 1
     NextLocation()
 end
 
@@ -571,8 +583,6 @@ function PauseTour()
     isPaused = not isPaused
     
     if isPaused then
-        -- Pause current animations
-        ClearPedTasks(PlayerPedId())
         SendNUIMessage({ action = 'stopSpeak' })
         
         SendNUIMessage({
@@ -580,23 +590,16 @@ function PauseTour()
             isPaused = true
         })
     else
-        -- Resume tour
-        local location = TourLocations[currentLocationIndex]
-        if location and location.player then
-            CreateThread(function()
-                SetupPlayer(location.player)
-            end)
-        end
-        
         SendNUIMessage({
             action = "pauseTour",
             isPaused = false
         })
         
         -- Continue after a short delay
+        local gen = tourGeneration
         CreateThread(function()
             Wait(1000)
-            if isTourActive and not isPaused then
+            if isTourActive and not isPaused and gen == tourGeneration then
                 NextLocation()
             end
         end)
@@ -669,7 +672,8 @@ function GetTourOverview()
     
     -- Calculate total duration
     for _, location in ipairs(TourLocations) do
-        overview.estimatedDuration = overview.estimatedDuration + (location.camera.duration / 1000)
+        local dur = (location.camera and location.camera.duration) or 8000
+        overview.estimatedDuration = overview.estimatedDuration + (dur / 1000)
     end
     
     -- Get unique categories
