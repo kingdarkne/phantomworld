@@ -22,6 +22,18 @@ local function shouldUseBotRelay()
 end
 local alertAll = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1
 local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
+--- Routine join/leave/connect should not DM the owner or @-ping anyone (default off).
+local dmOwnerOnEvents = GetConvarInt('phantom_dashboard:dmOwnerOnEvents', 0) == 1
+local pingOwnerOnWebhook = GetConvarInt('phantom_dashboard:pingOwnerOnWebhook', 0) == 1
+local QUIET_EVENT_CATEGORIES = {
+    connect = true,
+    join = true,
+    loaded = true,
+    leave = true,
+    resource = true,
+    death = true,
+    kill = true,
+}
 
 local IGNORE_RESOURCE_ALERTS = {
     [RESOURCE] = true,
@@ -56,8 +68,9 @@ end
 local function playerLabel(src)
     local name = GetPlayerName(src) or ('ID ' .. tostring(src))
     local discordId = discordIdentifier(src)
+    -- Use backticks (no Discord ping). Mentions were spamming players on every join.
     if discordId then
-        return ('**%s** (<@%s>)'):format(name, discordId)
+        return ('**%s** (`discord:%s`)'):format(name, discordId)
     end
     return ('**%s**'):format(name)
 end
@@ -69,12 +82,13 @@ local function pushLog(entry)
     end
 end
 
-local function embedPayload(title, description, color)
+local function embedPayload(title, description, color, opts)
+    opts = type(opts) == 'table' and opts or {}
     local body = description or ''
-    if ownerDiscordId ~= '' then
+    if opts.pingOwner and ownerDiscordId ~= '' then
         body = body .. '\n\n<@' .. ownerDiscordId .. '>'
     end
-    return {
+    local payload = {
         username = 'Phantom World',
         embeds = {
             {
@@ -84,7 +98,13 @@ local function embedPayload(title, description, color)
                 footer = { text = os.date('%Y-%m-%d %H:%M:%S') },
             },
         },
+        -- Never auto-ping from embed description mentions on routine alerts.
+        allowed_mentions = { parse = {} },
     }
+    if opts.pingOwner and ownerDiscordId ~= '' then
+        payload.allowed_mentions = { parse = {}, users = { ownerDiscordId } }
+    end
+    return payload
 end
 
 local function postWebhook(payload)
@@ -167,11 +187,20 @@ function PhantomDashboardEmit(category, title, description, color)
         timestamp = os.time(),
         players = playerCount(),
         maxPlayers = GetConvarInt('sv_maxclients', 48),
+        dmOwner = false,
     }
 
+    local quiet = QUIET_EVENT_CATEGORIES[entry.category] == true
+    local shouldDm = dmOwnerOnEvents and not quiet
+    entry.dmOwner = shouldDm
+
     pushLog(entry)
-    postWebhook(embedPayload(title, description, color))
-    PhantomDashboardDmOwner(entry)
+    postWebhook(embedPayload(title, description, color, {
+        pingOwner = pingOwnerOnWebhook and not quiet,
+    }))
+    if shouldDm then
+        PhantomDashboardDmOwner(entry)
+    end
     postBotRelay(entry)
 end
 

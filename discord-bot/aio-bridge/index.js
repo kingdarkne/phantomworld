@@ -190,13 +190,34 @@ async function postErrorTargets(client, entry) {
 }
 
 async function postNormalEvent(client, entry) {
-  await dmOwner(client, { embeds: [eventEmbed(entry)] });
+  const cat = String(entry.category || '').toLowerCase();
+  // Routine FX join/leave noise: channel mirror only — no owner DMs, no player pings.
+  const quietCats = new Set([
+    'join',
+    'connect',
+    'loaded',
+    'leave',
+    'resource',
+    'death',
+    'kill',
+    'combat',
+    'info',
+  ]);
+  const quiet = quietCats.has(cat) || entry.dmOwner === false;
+
+  if (!quiet && entry.dmOwner !== false) {
+    await dmOwner(client, { embeds: [eventEmbed(entry)] });
+  }
+
   const mirrorId = statusChannelId();
   if (!mirrorId) return;
   try {
     const channel = await client.channels.fetch(mirrorId);
     if (channel?.isTextBased?.()) {
-      await channel.send({ embeds: [eventEmbed(entry)] });
+      await channel.send({
+        embeds: [eventEmbed(entry)],
+        allowedMentions: { parse: [] },
+      });
     }
   } catch (err) {
     console.warn('[phantom-fivem] status mirror failed:', err.message);

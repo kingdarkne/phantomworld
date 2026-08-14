@@ -2,6 +2,9 @@ const Discord = require('discord.js');
 const roleSchema = require("../../database/models/joinRole");
 
 module.exports = async (client, member) => {
+    // Ignore Discord bots — no auto-role, no join pings/logs spam.
+    if (member?.user?.bot) return;
+
     try {
         const data = await roleSchema.findOne({ Guild: member.guild.id });
         if (data) {
@@ -25,13 +28,14 @@ module.exports = async (client, member) => {
 
         const embedLogs = new Discord.EmbedBuilder()
             .setTitle(`📥 Member Joined`)
-            .setDescription(`${member.user.tag} (${member.user.id}) has joined the server.`)
+            .setDescription(`${member.user.tag} (\`${member.user.id}\`) has joined the server.`)
             .setColor(client.config?.colors?.success || 0x57F287)
             .setTimestamp();
 
         await serverlog.send({
             username: "Server Logs",
             embeds: [embedLogs],
+            allowedMentions: { parse: [] },
         }).catch(() => {});
     } catch (err) {
         console.warn('[guildMemberAdd] webhook failed:', err?.message || err);
