@@ -14,8 +14,8 @@ local helpCategories = {
     {
         name = '🔫 Weapons',
         commands = {
-            { cmd = 'Hold TAB / press TAB', desc = 'Open custom GTA Online style weapon wheel' },
-            { cmd = 'Keys 1-6', desc = 'Quick switch weapon categories' },
+            { cmd = 'Hold TAB', desc = 'Open native GTA weapon wheel (weapons from inventory)' },
+            { cmd = '/freemouse', desc = 'Unstick mouse if UI locks and you cannot move' },
             { cmd = '/ammunation', desc = 'Open weapon store anywhere' },
             { cmd = 'Walk to Ammu-Nation', desc = 'Red gun blips on map - press E to enter' },
             { cmd = 'Walk to Weapon Locker', desc = 'Blue safe blips - press E to store/retrieve' },

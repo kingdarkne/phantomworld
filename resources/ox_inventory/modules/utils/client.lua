@@ -122,8 +122,9 @@ local rewardTypes = 1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 7 | 1 << 10
 local weaponWheelOverride = false
 local weaponWheelCache = {}
 
--- Default to GTA weapon wheel DISABLED — custom `gta_weapon_wheel` owns TAB.
-EnableWeaponWheel = false
+-- Native GTA weapon wheel ON (inventory weapons are seeded onto the ped).
+-- Broken NUI custom wheel removed — it unlocked the mouse and froze movement.
+EnableWeaponWheel = true
 
 function Utils.GetWeaponWheelCache()
     return weaponWheelCache
@@ -155,7 +156,7 @@ local function syncWeaponWheelWeapons()
     end
 
     for _, v in pairs(items) do
-        if type(v) == 'table' and type(v.name) == 'string' and v.slot and v.name:sub(1, 7) == 'WEAPON_' and v.name ~= 'WEAPON_PETROLCAN' then
+        if type(v) == 'table' and type(v.name) == 'string' and v.slot and v.name:upper():sub(1, 7) == 'WEAPON_' and v.name:upper() ~= 'WEAPON_PETROLCAN' then
             local hash = GetHashKey(v.name)
 
             newCache[hash] = {

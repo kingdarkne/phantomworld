@@ -87,9 +87,9 @@ Config.Keybinds = {
     
     -- Combat & Weapons
     WeaponWheel = {
-        key = 'NUMPAD0',
-        description = 'Open GTA-Online Weapon Wheel',
-        scripts = {'gta_weapon_wheel'}
+        key = 'TAB',
+        description = 'Hold TAB — native GTA weapon wheel',
+        scripts = {'gta_weapon_wheel', 'ox_inventory', '3dweaponwheel'}
     },
     
     HandsUp = {
