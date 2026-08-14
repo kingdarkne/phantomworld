@@ -41,14 +41,54 @@ function eventEmbed(entry) {
     .setTimestamp(entry.timestamp ? new Date(entry.timestamp * 1000) : undefined);
 }
 
+async function waitUntilReady(client, timeoutMs = 60000) {
+  if (client?.isReady?.()) return true;
+  if (client?.readyAt) return true;
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      resolve(ok);
+    };
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    const onReady = () => {
+      clearTimeout(timer);
+      finish(true);
+    };
+    // discord.js v14/v15
+    client.once('clientReady', onReady);
+    client.once('ready', onReady);
+  });
+}
+
 async function dmOwner(client, payload) {
   const id = ownerId();
-  if (!id) return;
+  if (!id) {
+    console.warn('[phantom-fivem] Owner DM skipped — OWNER_ID / DISCORD_OWNER_USER_ID not set');
+    return false;
+  }
   try {
+    const ready = await waitUntilReady(client);
+    if (!ready) {
+      console.warn('[phantom-fivem] Owner DM skipped — bot not ready yet');
+      return false;
+    }
+    // Ensure REST has a token (fixes "Expected token to be set…" when bridge loads pre-login).
+    const token =
+      client.token ||
+      process.env.DISCORD_TOKEN ||
+      process.env.DISCORD_BOT_TOKEN ||
+      '';
+    if (token && client.rest && !client.rest.token) {
+      client.rest.setToken(token);
+    }
     const user = await client.users.fetch(id);
     await user.send(payload);
+    return true;
   } catch (err) {
     console.warn('[phantom-fivem] Owner DM failed:', err.message);
+    return false;
   }
 }
 
@@ -264,25 +304,17 @@ async function postErrorTargets(client, entry) {
 
 async function postNormalEvent(client, entry) {
   const cat = String(entry.category || '').toLowerCase();
-  // Routine FX join/leave: keep status-channel alerts, no owner DM spam.
-  // staff_join is intentional and can DM the owner when another admin comes online.
-  const quietCats = new Set([
-    'join',
-    'connect',
-    'loaded',
-    'leave',
-    'resource',
-    'death',
-    'kill',
-    'combat',
-    'info',
-  ]);
-  const quiet = quietCats.has(cat) || entry.dmOwner === false;
+  // Status channel always mirrors. Owner DMs when FX sets dmOwner=true,
+  // plus staff_join / server lifecycle. Join/leave DM only when dmOwner=true.
+  const alwaysDmCats = new Set(['staff_join', 'server', 'lifecycle']);
+  const neverDmCats = new Set(['resource', 'death', 'kill', 'combat', 'info', 'join', 'connect', 'loaded', 'leave']);
+  const shouldDm =
+    entry.dmOwner === true ||
+    (entry.dmOwner !== false && alwaysDmCats.has(cat)) ||
+    (entry.dmOwner !== false && !neverDmCats.has(cat));
 
-  if (cat === 'staff_join' || (!quiet && entry.dmOwner !== false)) {
-    if (entry.dmOwner !== false) {
-      await dmOwner(client, { embeds: [eventEmbed(entry)] });
-    }
+  if (shouldDm) {
+    await dmOwner(client, { embeds: [eventEmbed(entry)] });
   }
 
   const mirrorId = statusChannelId();
@@ -439,15 +471,24 @@ module.exports = function setupPhantomFivem(client) {
 
   attachInteractionHandler(client);
 
-  dmOwner(client, {
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x8b5cf6)
-        .setTitle('Phantom World bot online')
-        .setDescription(
-          'FiveM event relay on `/events` · error reports on `/errors` · `/phantomstatus`',
-        )
-        .setTimestamp(),
-    ],
-  }).catch(() => {});
+  // Defer boot DM until Discord login finishes (bridge loads before ready).
+  const sendOnlineDm = () => {
+    dmOwner(client, {
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x8b5cf6)
+          .setTitle('Phantom World bot online')
+          .setDescription(
+            'FiveM event relay on `/events` · error reports on `/errors` · `/phantomstatus`\nOwner DMs are enabled again.',
+          )
+          .setTimestamp(),
+      ],
+    }).catch(() => {});
+  };
+  if (client?.isReady?.()) {
+    sendOnlineDm();
+  } else {
+    client.once('clientReady', sendOnlineDm);
+    client.once('ready', sendOnlineDm);
+  }
 };

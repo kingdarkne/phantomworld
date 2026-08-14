@@ -31,8 +31,10 @@ Config.Discord = {
     OwnerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', ''),
     --- Post join/leave/resource/txAdmin/combat alerts
     AlertAllEvents = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1,
-    --- DM owner on routine join/leave/connect (0 = channel only — recommended)
+    --- DM owner on routine join/leave/connect (0 = off; use dmOwnerOnJoins for joins)
     DmOwnerOnEvents = GetConvarInt('phantom_dashboard:dmOwnerOnEvents', 0) == 1,
+    --- DM owner on player join/leave/connect/loaded (1 = on)
+    DmOwnerOnJoins = GetConvarInt('phantom_dashboard:dmOwnerOnJoins', 1) == 1,
     --- Append <@owner> ping on routine webhooks (0 = no pings — recommended)
     PingOwnerOnWebhook = GetConvarInt('phantom_dashboard:pingOwnerOnWebhook', 0) == 1,
     --- Optional dedicated webhook for SCRIPT ERROR / console failures

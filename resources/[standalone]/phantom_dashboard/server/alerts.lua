@@ -38,6 +38,8 @@ local alertAll = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1
 local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
 --- Routine join/leave/connect should not DM the owner or @-ping anyone (default off).
 local dmOwnerOnEvents = GetConvarInt('phantom_dashboard:dmOwnerOnEvents', 0) == 1
+--- Owner DMs for player join/leave/connect/loaded (default on — owner asked for these back).
+local dmOwnerOnJoins = GetConvarInt('phantom_dashboard:dmOwnerOnJoins', 1) == 1
 local pingOwnerOnWebhook = GetConvarInt('phantom_dashboard:pingOwnerOnWebhook', 0) == 1
 local inviteIfMissingDiscord = GetConvarInt('phantom_dashboard:inviteIfMissingDiscord', 1) == 1
 local staffJoinAlerts = GetConvarInt('phantom_dashboard:staffJoinAlerts', 1) == 1
@@ -154,7 +156,7 @@ local function maybeAlertStaffJoin(src, context)
         {
             discordId = discordIdentifier(src),
             inviteIfMissing = false,
-            dmOwner = staffJoinDmOwner and role ~= 'owner', -- DM owner when another admin joins
+            dmOwner = staffJoinDmOwner == true, -- DM owner for staff joins (including self)
             pingOwner = false,
         }
     )
@@ -288,7 +290,13 @@ function PhantomDashboardEmit(category, title, description, color, opts)
     }
 
     local quiet = QUIET_EVENT_CATEGORIES[entry.category] == true
-    local shouldDm = (opts.dmOwner == true) or (dmOwnerOnEvents and not quiet)
+    local joinish = entry.category == 'join'
+        or entry.category == 'leave'
+        or entry.category == 'connect'
+        or entry.category == 'loaded'
+    local shouldDm = (opts.dmOwner == true)
+        or (dmOwnerOnEvents and not quiet)
+        or (dmOwnerOnJoins and joinish)
     entry.dmOwner = shouldDm == true
 
     pushLog(entry)
@@ -393,6 +401,7 @@ function PhantomDashboardEmitLifecycle(category, title, description, color)
         timestamp = os.time(),
         players = playerCount(),
         maxPlayers = GetConvarInt('sv_maxclients', 48),
+        dmOwner = true,
     }
 
     pushLog(entry)
