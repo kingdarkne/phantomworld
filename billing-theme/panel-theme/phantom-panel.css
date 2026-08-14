@@ -477,3 +477,50 @@ body > #app::before {
   border-top: 1px solid var(--ph-line) !important;
   color: var(--ph-muted) !important;
 }
+
+/* SFTP folder upload warning (authenticated panel) */
+.ph-sftp-warning {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  margin: 0;
+  padding: 10px 40px 10px 16px;
+  background: linear-gradient(90deg, rgba(232, 196, 124, 0.2), rgba(46, 230, 197, 0.12));
+  border-bottom: 1px solid rgba(232, 196, 124, 0.35);
+  color: #f4f0e4;
+  font-family: var(--ph-font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.ph-sftp-warning strong {
+  color: #ffe2a3;
+  font-weight: 700;
+}
+
+.ph-sftp-warning--files {
+  background: linear-gradient(90deg, rgba(232, 196, 124, 0.34), rgba(46, 230, 197, 0.18));
+  border-bottom-color: rgba(232, 196, 124, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  font-size: 14px;
+}
+
+.ph-sftp-warning__close {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #ffe2a3;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.ph-sftp-warning__close:hover {
+  color: #fff;
+}
+

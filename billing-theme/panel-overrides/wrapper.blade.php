@@ -38,7 +38,7 @@
 
         @include('layouts.scripts')
 
-        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260812b">
+        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260814b">
     </head>
     <body class="{{ $css['body'] ?? 'bg-neutral-900' }}">
         @section('content')
@@ -49,12 +49,37 @@
                     <div style="margin-top:4px;font-family:Sora,Segoe UI,sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#9aa8bc;">Game Panel</div>
                 </div>
             @endif
+
+            @if(!is_null(Auth::user()) && !(request()->is('auth/*') || request()->is('auth')))
+                <div id="ph-sftp-warning" class="ph-sftp-warning" role="status">
+                    <strong>Upload tip:</strong>
+                    Use <strong>SFTP</strong> for folders and large packs (File Manager upload is for small files only).
+                    Open your server → <strong>Settings → SFTP Details</strong> (port usually <strong>2022</strong>).
+                    <button type="button" class="ph-sftp-warning__close" aria-label="Dismiss" onclick="this.parentElement.remove()">×</button>
+                </div>
+            @endif
+
             @yield('above-container')
             @yield('container')
             @yield('below-container')
         @show
         @section('scripts')
             {!! $asset->js('main.js') !!}
+            @if(!is_null(Auth::user()))
+                <script>
+                    (function () {
+                        function syncSftpWarning() {
+                            var el = document.getElementById('ph-sftp-warning');
+                            if (!el) return;
+                            var onFiles = /\/server\/[^/]+\/files/.test(location.pathname);
+                            el.classList.toggle('ph-sftp-warning--files', onFiles);
+                        }
+                        syncSftpWarning();
+                        window.addEventListener('popstate', syncSftpWarning);
+                        setInterval(syncSftpWarning, 800);
+                    })();
+                </script>
+            @endif
         @show
     </body>
 </html>
