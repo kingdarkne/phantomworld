@@ -310,9 +310,14 @@ function TourController:applyLocationEffects(effects)
         NetworkOverrideClockTime(effects.time * 24, 0, 0)
     end
     
-    -- Set weather
+    -- Set weather (FiveM: SetOverrideWeather, not SetWeatherTypeOverride)
     if effects.weather then
-        SetWeatherTypeOverride(effects.weather)
+        pcall(function()
+            SetWeatherTypeOvertimePersist(effects.weather, 0.0)
+            SetWeatherTypeNow(effects.weather)
+            SetWeatherTypeNowPersist(effects.weather)
+            SetOverrideWeather(effects.weather)
+        end)
     end
     
     -- Set timecycle
@@ -439,7 +444,12 @@ function TourController:cleanup()
     FreezeEntityPosition(ped, false)
     
     -- Clear weather and time overrides
-    ClearWeatherTypeOverride()
+    pcall(function()
+        ClearOverrideWeather()
+        ClearWeatherTypePersist()
+        SetWeatherTypeNow('CLEAR')
+        SetWeatherTypeNowPersist('CLEAR')
+    end)
     ClearTimecycleModifier()
     
     -- Clear tasks

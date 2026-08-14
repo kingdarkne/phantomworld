@@ -343,8 +343,13 @@ function RestorePlayer()
     NetworkSetEntityInvisibleToNetwork(ped, false)
     FreezeEntityPosition(ped, false)
     
-    -- Clear weather / look modifiers
-    ClearWeatherTypeOverride()
+    -- Clear weather / look modifiers (FiveM: ClearOverrideWeather, not ClearWeatherTypeOverride)
+    pcall(function()
+        ClearOverrideWeather()
+        ClearWeatherTypePersist()
+        SetWeatherTypeNow('CLEAR')
+        SetWeatherTypeNowPersist('CLEAR')
+    end)
     ClearTimecycleModifier()
     ClearExtraTimecycleModifier()
     
@@ -431,10 +436,14 @@ function ApplyLocationEffects(effects)
         NetworkOverrideClockTime(hour, 0, 0)
     end
     
-    -- Set weather
+    -- Set weather (FiveM: SetOverrideWeather, not SetWeatherTypeOverride)
     if effects.weather then
-        SetWeatherTypeNowPersist(effects.weather)
-        SetWeatherTypeOverride(effects.weather)
+        pcall(function()
+            SetWeatherTypeOvertimePersist(effects.weather, 0.0)
+            SetWeatherTypeNow(effects.weather)
+            SetWeatherTypeNowPersist(effects.weather)
+            SetOverrideWeather(effects.weather)
+        end)
     end
     
     -- Only apply known/requested timecycles that exist in data (optional)
