@@ -38,7 +38,7 @@
 
         @include('layouts.scripts')
 
-        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260814d">
+        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260814e">
     </head>
     <body class="{{ $css['body'] ?? 'bg-neutral-900' }}">
         @section('content')
@@ -359,6 +359,7 @@
                                 credentials: 'same-origin',
                                 headers: {
                                     'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
                                     'X-Requested-With': 'XMLHttpRequest',
                                     'X-CSRF-TOKEN': csrf()
                                 }
@@ -461,15 +462,13 @@
                         function showEggPane(key) {
                             currentEggKey = key || 'generic';
                             var eggTab = document.getElementById('ph-guide-egg-tab');
-                            var label = document.getElementById('ph-guide-egg-label');
                             var title = document.getElementById('ph-guide-title');
 
                             if (eggTab) eggTab.textContent = eggTabLabel(currentEggKey, currentEggName);
-                            if (title) title.textContent = (currentEggName ? currentEggName + ' setup guide' : 'Server setup guide');
-                            if (label) {
-                                label.textContent = currentEggName
-                                    ? ('Detected egg: ' + currentEggName)
-                                    : 'Open a server for an egg-specific guide';
+                            if (title) {
+                                title.textContent = currentEggName
+                                    ? (currentEggName + ' setup guide')
+                                    : 'Server setup guide';
                             }
 
                             renderStartSteps(currentEggKey);
@@ -514,22 +513,39 @@
                         }
 
                         function resolveEggFromFractal(json) {
-                            // Single server: { object, attributes, relationships: { egg: { attributes: { name }}}}
-                            if (json && json.attributes) {
-                                var name = '';
-                                if (json.relationships && json.relationships.egg) {
-                                    var egg = json.relationships.egg;
-                                    if (egg.attributes && egg.attributes.name) name = egg.attributes.name;
-                                    else if (egg.data && egg.data.attributes) name = egg.data.attributes.name;
-                                }
-                                return name;
+                            if (!json) return '';
+                            var egg = null;
+                            if (json.relationships && json.relationships.egg) {
+                                egg = json.relationships.egg;
+                            } else if (json.attributes && json.attributes.relationships && json.attributes.relationships.egg) {
+                                egg = json.attributes.relationships.egg;
+                            } else if (json.egg) {
+                                egg = json.egg;
+                            } else if (json.attributes && json.attributes.egg) {
+                                egg = json.attributes.egg;
+                            }
+                            if (!egg) return '';
+                            if (egg.attributes && egg.attributes.name) return String(egg.attributes.name);
+                            if (egg.name) return String(egg.name);
+                            if (egg.data && egg.data.attributes && egg.data.attributes.name) {
+                                return String(egg.data.attributes.name);
                             }
                             return '';
                         }
 
                         function applyEgg(name) {
                             currentEggName = name || '';
-                            showEggPane(classifyEgg(currentEggName));
+                            var key = classifyEgg(currentEggName);
+                            showEggPane(key);
+                            var label = document.getElementById('ph-guide-egg-label');
+                            if (!label) return;
+                            if (currentEggName) {
+                                label.textContent = 'Detected egg: ' + currentEggName;
+                            } else if (serverIdFromPath()) {
+                                label.textContent = 'Could not detect egg — showing general setup steps.';
+                            } else {
+                                label.textContent = 'Open a server for an egg-specific guide';
+                            }
                         }
 
                         function detectEgg() {
