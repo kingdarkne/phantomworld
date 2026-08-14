@@ -639,6 +639,25 @@ html.ph-guide-open {
   letter-spacing: 0.02em;
 }
 
+.ph-guide__egg-label {
+  margin: 8px 0 0;
+  font-family: var(--ph-font-body);
+  font-size: 12px;
+  color: #9aa8bc;
+}
+
+.ph-guide__egg-label::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #2ee6c5;
+  box-shadow: 0 0 0 3px rgba(46, 230, 197, 0.18);
+  vertical-align: middle;
+}
+
 .ph-guide__close {
   border: 0;
   background: transparent;
