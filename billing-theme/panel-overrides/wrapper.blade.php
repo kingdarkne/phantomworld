@@ -55,7 +55,7 @@
                     <strong>Upload tip:</strong>
                     Use <strong>SFTP</strong> for folders and large packs (File Manager upload is for small files only).
                     Open your server → <strong>Settings → SFTP Details</strong> (port usually <strong>2022</strong>).
-                    <button type="button" class="ph-guide-open ph-sftp-warning__guide" type="button">Setup guide</button>
+                    <button type="button" class="ph-guide-open ph-sftp-warning__guide">Setup guide</button>
                     <button type="button" class="ph-sftp-warning__close" aria-label="Dismiss" onclick="this.parentElement.remove()">×</button>
                 </div>
 
