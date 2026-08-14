@@ -16,15 +16,19 @@ Config.TourSettings = {
     AutoStart = false, -- Auto-start for new players
     ShowProgress = true,
     
-    -- Audio settings
-    BackgroundMusic = true,
+    -- Audio / narration (browser TTS via NUI)
+    EnableNarration = true,
+    BackgroundMusic = false,
     MusicVolume = 0.3,
-    MusicFile = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', -- Replace with actual music
     
     -- Timing
     LocationDisplayTime = 5.0, -- seconds
     InfoDisplayTime = 8.0, -- seconds
     TransitionDelay = 1.5, -- seconds
+
+    -- Camera fallback if start/target share the same XY
+    CameraFallbackDistance = 18.0,
+    CameraFallbackHeight = 8.0,
 }
 
 -- Keybinds
@@ -58,7 +62,9 @@ Config.NewPlayerSettings = {
     ShowPromptOnSpawn = true,
     AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
     RequiredPlayTime = 0, -- minutes before tour can be started again
-    CooldownTime = 30 -- minutes between repeat tours (after first completion)
+    CooldownTime = 30, -- minutes between repeat tours (after first completion)
+    ForceBeforeMultichar = false, -- freeroam should not block character select on tour
+    ForceEveryJoin = false
 }
 
 -- Admin settings

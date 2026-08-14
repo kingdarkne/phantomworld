@@ -15,9 +15,7 @@ shared_scripts {
 }
 
 client_scripts {
-    'client/main.lua',
-    'client/camera.lua',
-    'client/tour_controller.lua'
+    'client/main.lua'
 }
 
 server_scripts {
@@ -25,8 +23,7 @@ server_scripts {
 }
 
 files {
-    'web/build/index.html',
-    'web/build/**/*'
+    'web/build/index.html'
 }
 
 dependencies {
@@ -35,5 +32,6 @@ dependencies {
 }
 
 export 'StartCityTour'
+export 'StartCityTourPreMultichar'
 export 'StopCityTour'
 export 'IsTourActive'

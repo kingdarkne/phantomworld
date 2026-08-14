@@ -4,6 +4,9 @@ local currentLocationIndex = 1
 local isPaused = false
 local cameraHandle = nil
 local playerHandle = nil
+local preMulticharMode = false
+local activeSubtitle = nil
+local KVP_DONE = 'phantom_citytour_done'
 
 -- Local variables
 local PlayerData = {}
@@ -87,6 +90,41 @@ function CheckForNewPlayer()
     end)
 end
 
+function StartCityTourPreMultichar()
+    -- Fast path: freeroam does not gate character select on the cinematic tour.
+    if not Config.NewPlayerSettings.ForceBeforeMultichar then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    if isTourActive then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    local alreadyDone = GetResourceKvpInt(KVP_DONE) == 1
+    if alreadyDone and not Config.NewPlayerSettings.ForceEveryJoin then
+        TriggerEvent('phantom_citytour:client:finished')
+        return
+    end
+
+    preMulticharMode = true
+    CreateThread(function()
+        Wait(400)
+        local ok, err = pcall(StartCityTour)
+        if not ok then
+            print(('[phantom_citytour] tour error: %s'):format(tostring(err)))
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
+            return
+        end
+        if preMulticharMode and not isTourActive then
+            preMulticharMode = false
+            TriggerEvent('phantom_citytour:client:finished')
+        end
+    end)
+end
+
 -- Main tour functions
 function StartCityTour()
     if isTourActive then
@@ -99,7 +137,7 @@ function StartCityTour()
     end
     
     -- Repeat tours only after the player has completed once.
-    if tourCompleted then
+    if not preMulticharMode and tourCompleted then
         local currentTime = GetGameTimer()
         local cooldownMs = Config.NewPlayerSettings.CooldownTime * 60000
 
@@ -122,20 +160,21 @@ function StartCityTour()
     -- Initialize tour
     InitializeTour()
     
-    -- Start first location
-    ProcessLocation(currentLocationIndex)
-    
-    -- Show UI
+    -- Show UI first so captions are ready for location updates
     SendNUIMessage({
         action = "showTour",
         tourData = GetTourOverview(),
-        currentLocation = currentLocationIndex
+        speakEnabled = Config.TourSettings.EnableNarration ~= false,
+        currentLocation = nil
     })
+
+    -- Start first location
+    ProcessLocation(currentLocationIndex)
     
     TriggerEvent('chat:addMessage', {
         color = {0, 255, 0},
         multiline = true,
-        args = {"[Phantom Tour]", "Welcome to " .. Config.Language.TourTitle}
+        args = {"[Phantom Tour]", "Welcome to " .. Config.Language.TourTitle .. " — SPACE skip · F7 stop"}
     })
 end
 
@@ -145,9 +184,11 @@ function StopCityTour(markCompleted)
     isTourActive = false
     isPaused = false
     lastTourTime = GetGameTimer()
+    activeSubtitle = nil
 
     if markCompleted then
         tourCompleted = true
+        SetResourceKvpInt(KVP_DONE, 1)
         TriggerServerEvent('phantom_citytour:markCompleted')
     end
     
@@ -160,10 +201,16 @@ function StopCityTour(markCompleted)
     -- Restore player
     RestorePlayer()
     
-    -- Hide UI
+    -- Hide UI / stop narration
+    SendNUIMessage({ action = "stopSpeak" })
     SendNUIMessage({
         action = "hideTour"
     })
+
+    if preMulticharMode then
+        preMulticharMode = false
+        TriggerEvent('phantom_citytour:client:finished')
+    end
     
     -- Show completion message
     local tourDuration = math.floor((GetGameTimer() - tourStartTime) / 1000)
@@ -189,8 +236,7 @@ function InitializeTour()
     -- Set time and weather for first location
     local firstLocation = TourLocations[1]
     if firstLocation and firstLocation.effects then
-        NetworkOverrideClockTime(firstLocation.effects.time * 24, 0, 0)
-        SetWeatherTypeOverride(firstLocation.effects.weather)
+        ApplyLocationEffects(firstLocation.effects)
     end
 end
 
@@ -204,8 +250,10 @@ function RestorePlayer()
     SetEntityVisible(PlayerPedId(), true, 0)
     FreezeEntityPosition(PlayerPedId(), false)
     
-    -- Clear weather override
+    -- Clear weather / look modifiers
     ClearWeatherTypeOverride()
+    ClearTimecycleModifier()
+    ClearExtraTimecycleModifier()
     
     -- Clear any tasks
     ClearPedTasks(PlayerPedId())
@@ -235,16 +283,28 @@ function ProcessLocation(index)
     
     -- Set up player
     SetupPlayer(location.player)
-    
-    -- Send location info to UI
+
+    local info = location.info or {}
+    local narration = table.concat({
+        info.title or location.name or '',
+        info.subtitle or '',
+        info.description or location.description or ''
+    }, '. ')
+
+    activeSubtitle = info.title or location.name
+
+    -- Send location info to UI (+ narration text)
     SendNUIMessage({
         action = "updateLocation",
         location = {
             id = location.id,
             name = location.name,
             description = location.description,
-            info = location.info,
-            progress = (index / #TourLocations) * 100
+            category = location.category,
+            info = info,
+            progress = (index / #TourLocations) * 100,
+            narration = narration,
+            currentIndex = index
         }
     })
     
@@ -252,7 +312,7 @@ function ProcessLocation(index)
     CreateThread(function()
         Wait(location.camera.duration)
         
-        if isTourActive and not isPaused then
+        if isTourActive and not isPaused and currentLocationIndex == index then
             NextLocation()
         end
     end)
@@ -260,59 +320,60 @@ end
 
 function ApplyLocationEffects(effects)
     if not effects then return end
+
+    ClearTimecycleModifier()
     
-    -- Set time
+    -- Time is stored as hour-of-day (0-23), not a fraction of a day.
     if effects.time then
-        NetworkOverrideClockTime(effects.time * 24, 0, 0)
+        local hour = math.floor(tonumber(effects.time) or 12) % 24
+        NetworkOverrideClockTime(hour, 0, 0)
     end
     
     -- Set weather
     if effects.weather then
+        SetWeatherTypeNowPersist(effects.weather)
         SetWeatherTypeOverride(effects.weather)
     end
     
-    -- Set timecycle
-    if effects.timecycle then
+    -- Only apply known/requested timecycles that exist in data (optional)
+    if effects.timecycle and effects.timecycle ~= '' and effects.timecycle ~= 'default' then
         SetTimecycleModifier(effects.timecycle)
     end
 end
 
 function SetupCamera(cameraData)
-    if not cameraData then return end
+    if not cameraData or not cameraData.start or not cameraData.target then return end
     
     if cameraHandle then
         DestroyCam(cameraHandle, false)
         cameraHandle = nil
     end
     
+    local start = cameraData.start
+    local target = cameraData.target
+    local camX, camY, camZ = start.x, start.y, start.z
+    local lookX, lookY, lookZ = target.x, target.y, target.z
+
+    -- Old data pointed straight down (same XY). Offset the eye so we frame the landmark.
+    local dx = lookX - camX
+    local dy = lookY - camY
+    if (dx * dx + dy * dy) < 25.0 then
+        local heading = start.w or 0.0
+        local rad = math.rad(heading)
+        local dist = cameraData.distance or Config.TourSettings.CameraFallbackDistance or 18.0
+        local height = cameraData.height or Config.TourSettings.CameraFallbackHeight or 8.0
+        camX = lookX - (math.sin(rad) * dist)
+        camY = lookY + (math.cos(rad) * dist)
+        camZ = lookZ + height
+        lookZ = lookZ + 1.5
+    end
+
     cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-    SetCamCoord(cameraHandle, cameraData.start.x, cameraData.start.y, cameraData.start.z)
-    SetCamRot(cameraHandle, cameraData.start.w, 0.0, 0.0)
-    SetCamFov(cameraHandle, cameraData.fov or 50.0)
-    
-    -- Point camera at target
-    PointCamAtCoord(cameraHandle, cameraData.target.x, cameraData.target.y, cameraData.target.z)
-    
-    -- Render camera
-    RenderScriptCams(true, false, 0, true, true)
-    
-    -- Smooth transition
-    CreateThread(function()
-        local startTime = GetGameTimer()
-        local duration = Config.TourSettings.CameraTransitionSpeed * 1000
-        
-        while GetGameTimer() - startTime < duration do
-            local progress = (GetGameTimer() - startTime) / duration
-            local easeProgress = math.sin((progress * math.pi) / 2) -- Ease in-out
-            
-            -- Smooth camera movement
-            if progress < 1.0 then
-                Wait(0)
-            else
-                break
-            end
-        end
-    end)
+    SetCamCoord(cameraHandle, camX, camY, camZ)
+    SetCamFov(cameraHandle, cameraData.fov or Config.TourSettings.CameraFOV or 50.0)
+    PointCamAtCoord(cameraHandle, lookX, lookY, lookZ)
+    SetCamActive(cameraHandle, true)
+    RenderScriptCams(true, true, 800, true, true)
 end
 
 function SetupPlayer(playerData)
@@ -372,6 +433,7 @@ function PauseTour()
     if isPaused then
         -- Pause current animations
         ClearPedTasks(PlayerPedId())
+        SendNUIMessage({ action = 'stopSpeak' })
         
         SendNUIMessage({
             action = "pauseTour",
@@ -398,6 +460,25 @@ function PauseTour()
         end)
     end
 end
+
+-- On-screen fallback caption while the cinematic runs
+CreateThread(function()
+    while true do
+        if isTourActive and activeSubtitle then
+            SetTextFont(4)
+            SetTextScale(0.45, 0.45)
+            SetTextColour(255, 255, 255, 220)
+            SetTextCentre(true)
+            SetTextDropshadow(1, 0, 0, 0, 200)
+            BeginTextCommandDisplayText('STRING')
+            AddTextComponentSubstringPlayerName(activeSubtitle)
+            EndTextCommandDisplayText(0.5, 0.88)
+            Wait(0)
+        else
+            Wait(250)
+        end
+    end
+end)
 
 function GetTourOverview()
     local overview = {
@@ -498,6 +579,7 @@ end)
 
 -- Exports
 exports('StartCityTour', StartCityTour)
+exports('StartCityTourPreMultichar', StartCityTourPreMultichar)
 exports('StopCityTour', StopCityTour)
 exports('IsTourActive', function() return isTourActive end)
 

@@ -1,29 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom World City Tour</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            background: transparent;
-            overflow: hidden;
-        }
-        
-        #root {
-            width: 100vw;
-            height: 100vh;
-            background: transparent;
-        }
-    </style>
-    <script type="module" crossorigin src="./assets/index-D4jK8Q3t.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/index-D4jK8Q3t.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-BOpLlC7M.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phantom World City Tour</title>
+  <style>
+    :root {
+      --bg: rgba(8, 12, 18, 0.72);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f4f7fb;
+      --muted: rgba(244, 247, 251, 0.72);
+      --accent: #5ec8ff;
+      --accent-2: #8ef0c3;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--text);
+      user-select: none;
+    }
+    #app { display: none; width: 100%; height: 100%; position: relative; }
+    #app.visible { display: block; }
+    #app.ui-hidden .panel,
+    #app.ui-hidden .progress,
+    #app.ui-hidden .hints { opacity: 0; pointer-events: none; }
+    .panel {
+      position: absolute;
+      left: 2.5vw;
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(420px, 38vw);
+      padding: 22px 24px;
+      border-radius: 18px;
+      background: linear-gradient(160deg, rgba(14, 22, 34, 0.88), rgba(8, 12, 18, 0.78));
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      transition: opacity 0.25s ease;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 700;
+    }
+    .subtitle {
+      margin: 0 0 14px;
+      color: var(--accent-2);
+      font-size: 15px;
+    }
+    .desc {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .facts {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .facts li {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .progress {
+      position: absolute;
+      left: 50%;
+      bottom: 4.5vh;
+      transform: translateX(-50%);
+      width: min(520px, 70vw);
+      transition: opacity 0.25s ease;
+    }
+    .progress-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.45s ease;
+    }
+    .progress-meta {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .hints {
+      position: absolute;
+      right: 2.5vw;
+      bottom: 4.5vh;
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      transition: opacity 0.25s ease;
+    }
+    .welcome {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
+    }
+    .welcome.show { display: flex; }
+    .welcome-card {
+      text-align: center;
+      padding: 28px 36px;
+      border-radius: 18px;
+      background: rgba(8, 12, 18, 0.8);
+      border: 1px solid var(--line);
+    }
+    .welcome-card h2 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+    .paused-badge {
+      display: none;
+      margin-top: 12px;
+      color: #ffd166;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    #app.paused .paused-badge { display: block; }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
+  <div id="app">
+    <div class="welcome" id="welcome">
+      <div class="welcome-card">
+        <div class="eyebrow">Phantom World</div>
+        <h2 id="welcomeTitle">City Tour</h2>
+        <p id="welcomeSub" style="color: var(--muted); margin: 0;">Sit back — we’ll show you around.</p>
+      </div>
+    </div>
+
+    <section class="panel" id="panel">
+      <div class="eyebrow" id="category">Location</div>
+      <h1 id="title">—</h1>
+      <p class="subtitle" id="subtitle"></p>
+      <p class="desc" id="description"></p>
+      <ul class="facts" id="facts"></ul>
+      <div class="paused-badge">Paused</div>
+    </section>
+
+    <div class="progress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-meta">
+        <span id="progressLabel">Tour progress</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+
+    <div class="hints">
+      SPACE skip · F7 stop · H hide UI
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    const welcome = document.getElementById('welcome');
+    const titleEl = document.getElementById('title');
+    const subtitleEl = document.getElementById('subtitle');
+    const descriptionEl = document.getElementById('description');
+    const factsEl = document.getElementById('facts');
+    const categoryEl = document.getElementById('category');
+    const progressFill = document.getElementById('progressFill');
+    const progressPct = document.getElementById('progressPct');
+    const progressLabel = document.getElementById('progressLabel');
+    const welcomeTitle = document.getElementById('welcomeTitle');
+
+    let speakEnabled = true;
+    let welcomeTimer = null;
+
+    function stripEmoji(text) {
+      return String(text || '')
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function speak(text) {
+      if (!speakEnabled || !text || !window.speechSynthesis) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(stripEmoji(text));
+        utter.rate = 0.95;
+        utter.pitch = 1.0;
+        utter.volume = 1.0;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
+    function stopSpeech() {
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    }
+
+    function setProgress(pct) {
+      const value = Math.max(0, Math.min(100, Number(pct) || 0));
+      progressFill.style.width = value + '%';
+      progressPct.textContent = Math.round(value) + '%';
+    }
+
+    function renderLocation(location) {
+      if (!location) return;
+      const info = location.info || {};
+      titleEl.textContent = info.title || location.name || 'Location';
+      subtitleEl.textContent = info.subtitle || '';
+      descriptionEl.textContent = info.description || location.description || '';
+      categoryEl.textContent = location.category || 'Location';
+
+      factsEl.innerHTML = '';
+      const facts = Array.isArray(info.facts) ? info.facts : [];
+      facts.slice(0, 4).forEach((fact) => {
+        const li = document.createElement('li');
+        li.textContent = fact;
+        factsEl.appendChild(li);
+      });
+
+      if (typeof location.progress === 'number') {
+        setProgress(location.progress);
+        progressLabel.textContent = location.name || 'Tour progress';
+      }
+
+      const narration = location.narration
+        || [info.title || location.name, info.subtitle, info.description].filter(Boolean).join('. ');
+      speak(narration);
+    }
+
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+      switch (data.action) {
+        case 'showTour': {
+          app.classList.add('visible');
+          app.classList.remove('ui-hidden', 'paused');
+          if (data.tourData && data.tourData.title) {
+            welcomeTitle.textContent = data.tourData.title;
+          }
+          welcome.classList.add('show');
+          clearTimeout(welcomeTimer);
+          welcomeTimer = setTimeout(() => welcome.classList.remove('show'), 2800);
+          if (data.speakEnabled === false) speakEnabled = false;
+          if (data.currentLocation && typeof data.currentLocation === 'object') {
+            renderLocation(data.currentLocation);
+          }
+          break;
+        }
+        case 'hideTour': {
+          app.classList.remove('visible', 'paused', 'ui-hidden');
+          welcome.classList.remove('show');
+          stopSpeech();
+          break;
+        }
+        case 'updateLocation': {
+          app.classList.add('visible');
+          renderLocation(data.location);
+          break;
+        }
+        case 'updateProgress': {
+          setProgress(data.progress);
+          break;
+        }
+        case 'pauseTour': {
+          app.classList.toggle('paused', !!data.isPaused);
+          if (data.isPaused) stopSpeech();
+          break;
+        }
+        case 'toggleUI': {
+          app.classList.toggle('ui-hidden');
+          break;
+        }
+        case 'speak': {
+          speak(data.text);
+          break;
+        }
+        case 'stopSpeak': {
+          stopSpeech();
+          break;
+        }
+      }
+    });
+  </script>
 </body>
 </html>
