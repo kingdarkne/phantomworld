@@ -30,6 +30,9 @@ local SOFT_PATTERNS = {
     "couldn't find resource",
     'failed to fetch',
     'unable to determine',
+    -- Never let dashboard bugs nuke the whole city (alert only).
+    '@phantom_dashboard/',
+    'script:phantom_dashboard',
 }
 
 -- Critical: Discord + restart protocol
