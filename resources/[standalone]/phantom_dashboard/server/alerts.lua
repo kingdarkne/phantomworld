@@ -176,11 +176,13 @@ function PhantomDashboardEmit(category, title, description, color)
 end
 
 --- Always-on path for SCRIPT ERROR / console failures (ignores alertAll / min players).
---- opts: { discordId, category, pingPlayer, invitePlayer }
+--- opts: { discordId, category, pingPlayer, invitePlayer, dmOwner }
 function PhantomDashboardEmitError(title, description, color, opts)
     opts = type(opts) == 'table' and opts or {}
     local discordId = opts.discordId and tostring(opts.discordId) or ''
     discordId = discordId:gsub('discord:', '')
+    -- Default: DM owner for real errors. Stuck auto-reports pass dmOwner=false.
+    local shouldDmOwner = opts.dmOwner ~= false
 
     local entry = {
         category = opts.category or 'error',
@@ -194,6 +196,7 @@ function PhantomDashboardEmitError(title, description, color, opts)
         discordId = discordId ~= '' and discordId or nil,
         pingPlayer = opts.pingPlayer == true,
         invitePlayer = opts.invitePlayer == true,
+        dmOwner = shouldDmOwner,
     }
 
     pushLog(entry)
@@ -209,7 +212,9 @@ function PhantomDashboardEmitError(title, description, color, opts)
         payload.allowed_mentions = { parse = {}, users = users }
     end
     postErrorWebhook(payload)
-    PhantomDashboardDmOwner(entry)
+    if shouldDmOwner then
+        PhantomDashboardDmOwner(entry)
+    end
     -- Prefer relay so the Discord bot can route + DM the player an invite
     if botRelay and botRelay ~= '' then
         local headers = { ['Content-Type'] = 'application/json' }

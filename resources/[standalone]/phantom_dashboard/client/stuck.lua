@@ -1,18 +1,20 @@
 --- Detect stuck players / likely client bugs and offer /unstuck + Discord report.
+--- Auto-detection is conservative: intentional freezes (city tour, menus, cams)
+--- must not spam players or Discord.
 
 local ENABLED = GetConvarInt('phantom_dashboard:stuckWatch', 1) == 1
-local MOVE_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckMoveSeconds', '25')) or 25
-local NUI_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckNuiSeconds', '120')) or 120
-local FADE_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckFadeSeconds', '75')) or 75
-local COOLDOWN_SEC = tonumber(GetConvar('phantom_dashboard:stuckCooldownSeconds', '180')) or 180
-local PROMPT_INTERVAL_SEC = tonumber(GetConvar('phantom_dashboard:stuckPromptSeconds', '90')) or 90
+local AUTO_REPORT = GetConvarInt('phantom_dashboard:stuckAutoReport', 0) == 1 -- off by default (prompts only)
+local MOVE_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckMoveSeconds', '120')) or 120
+local NUI_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckNuiSeconds', '180')) or 180
+local FADE_STUCK_SEC = tonumber(GetConvar('phantom_dashboard:stuckFadeSeconds', '120')) or 120
+local COOLDOWN_SEC = tonumber(GetConvar('phantom_dashboard:stuckCooldownSeconds', '900')) or 900
+local PROMPT_INTERVAL_SEC = tonumber(GetConvar('phantom_dashboard:stuckPromptSeconds', '300')) or 300
 
 local lastPromptAt = 0
 local lastReportAt = 0
 local moveStuckSince = nil
 local nuiStuckSince = nil
 local fadeStuckSince = nil
-local watching = false
 
 local function playerReady()
     return LocalPlayer.state.isLoggedIn == true
@@ -28,13 +30,35 @@ local function isDeadOrDown()
     return false
 end
 
+local function cityTourActive()
+    if GetResourceState('phantom_citytour') ~= 'started' then return false end
+    local ok, active = pcall(function()
+        return exports.phantom_citytour:IsTourActive()
+    end)
+    return ok and active == true
+end
+
+--- Situations where "can't move" is expected — never treat as stuck.
+local function shouldIgnoreWatch()
+    local ped = cache.ped
+    if not ped or ped == 0 then return true end
+    if IsPauseMenuActive() then return true end
+    if IsEntityPositionFrozen(ped) then return true end
+    if not IsPlayerControlOn(PlayerId()) then return true end
+    if IsCutsceneActive() then return true end
+    if GetRenderingCam() ~= -1 then return true end
+    if IsCinematicCamRendering and IsCinematicCamRendering() then return true end
+    if cityTourActive() then return true end
+    -- Loading / network fade transitions
+    if IsPlayerSwitchInProgress and IsPlayerSwitchInProgress() then return true end
+    return false
+end
+
 local function tryingToMove()
-    -- WASD / analog move
-    return IsControlPressed(0, 32) -- W
-        or IsControlPressed(0, 33) -- S
-        or IsControlPressed(0, 34) -- A
-        or IsControlPressed(0, 35) -- D
-        or IsControlPressed(0, 21) -- sprint (still implies want to move)
+    return IsControlPressed(0, 32)
+        or IsControlPressed(0, 33)
+        or IsControlPressed(0, 34)
+        or IsControlPressed(0, 35)
 end
 
 local function horizontalSpeed(ped)
@@ -78,13 +102,13 @@ local function maybePrompt(reason)
     if (now - lastPromptAt) < (PROMPT_INTERVAL_SEC * 1000) then return end
     lastPromptAt = now
 
-    notify(('You look stuck (%s). Try /unstuck — or /reportstuck if it keeps happening.'):format(reason), 'error')
+    notify(('You look stuck (%s). Try /unstuck — or /reportstuck if it keeps happening.'):format(reason), 'inform')
 
     if lib and lib.alertDialog then
         CreateThread(function()
             local choice = lib.alertDialog({
                 header = 'Stuck / possible bug?',
-                content = ('Detected: **%s**\n\nUse **/unstuck** to free yourself.\nUse **/reportstuck** to alert staff on Discord.'):format(reason),
+                content = ('Detected: **%s**\n\nUse **/unstuck** to free yourself.\nUse **/reportstuck** only if you still need staff help.'):format(reason),
                 centered = true,
                 cancel = true,
                 labels = { confirm = 'Unstuck now', cancel = 'Dismiss' },
@@ -94,6 +118,14 @@ local function maybePrompt(reason)
             end
         end)
     end
+end
+
+local function maybeAutoReport(reason)
+    if not AUTO_REPORT then return end
+    local now = GetGameTimer()
+    if (now - lastReportAt) < (COOLDOWN_SEC * 1000) then return end
+    lastReportAt = now
+    TriggerServerEvent('phantom_dashboard:stuck:auto', reasonPayload(reason))
 end
 
 local function doUnstuckLocal()
@@ -107,7 +139,6 @@ local function doUnstuckLocal()
         DoScreenFadeIn(500)
     end
 
-    -- Soft nudge: lift slightly and place on ground
     local c = GetEntityCoords(ped)
     local found, groundZ = GetGroundZFor_3dCoord(c.x, c.y, c.z + 50.0, false)
     local z = found and (groundZ + 1.0) or (c.z + 1.0)
@@ -129,7 +160,7 @@ RegisterCommand('unstuck', function()
         return
     end
     doUnstuckLocal()
-    TriggerServerEvent('phantom_dashboard:stuck:unstuckUsed', reasonPayload('manual_unstuck'))
+    -- Local-only: do not ping Discord for every /unstuck
 end, false)
 
 RegisterCommand('stuck', function()
@@ -163,8 +194,8 @@ CreateThread(function()
     end
 
     while true do
-        Wait(1000)
-        if not playerReady() or isDeadOrDown() then
+        Wait(1500)
+        if not playerReady() or isDeadOrDown() or shouldIgnoreWatch() then
             moveStuckSince, nuiStuckSince, fadeStuckSince = nil, nil, nil
             goto continue
         end
@@ -173,33 +204,34 @@ CreateThread(function()
         local now = GetGameTimer()
 
         -- 1) Trying to move but barely moving (collision / freeze / anim lock)
-        if tryingToMove() and not IsPauseMenuActive() and horizontalSpeed(ped) < 0.35 then
-            -- ignore if ragdolling briefly
-            if not IsPedRagdoll(ped) then
-                moveStuckSince = moveStuckSince or now
-                if (now - moveStuckSince) >= (MOVE_STUCK_SEC * 1000) then
-                    maybePrompt('cannot move')
-                    if (now - lastReportAt) >= (COOLDOWN_SEC * 1000) then
-                        lastReportAt = now
-                        TriggerServerEvent('phantom_dashboard:stuck:auto', reasonPayload('cannot_move'))
-                    end
-                    moveStuckSince = now -- reset window so we don't spam every second
-                end
+        -- Ignore vehicles (traffic / parking) — too many false positives.
+        if tryingToMove()
+            and not IsPedInAnyVehicle(ped, false)
+            and not IsPedRagdoll(ped)
+            and horizontalSpeed(ped) < 0.25
+        then
+            moveStuckSince = moveStuckSince or now
+            if (now - moveStuckSince) >= (MOVE_STUCK_SEC * 1000) then
+                maybePrompt('cannot move')
+                maybeAutoReport('cannot_move')
+                moveStuckSince = now
             end
         else
             moveStuckSince = nil
         end
 
-        -- 2) NUI focus stuck (menu closed poorly)
+        -- 2) NUI focus stuck (menu closed poorly) — skip ox_lib dialogs briefly via length
         if IsNuiFocused() and not IsPauseMenuActive() then
-            nuiStuckSince = nuiStuckSince or now
-            if (now - nuiStuckSince) >= (NUI_STUCK_SEC * 1000) then
-                maybePrompt('menu focus stuck')
-                if (now - lastReportAt) >= (COOLDOWN_SEC * 1000) then
-                    lastReportAt = now
-                    TriggerServerEvent('phantom_dashboard:stuck:auto', reasonPayload('nui_focus_stuck'))
+            local keepInput = IsNuiFocusKeepingInput and IsNuiFocusKeepingInput()
+            if not keepInput then
+                nuiStuckSince = nuiStuckSince or now
+                if (now - nuiStuckSince) >= (NUI_STUCK_SEC * 1000) then
+                    maybePrompt('menu focus stuck')
+                    maybeAutoReport('nui_focus_stuck')
+                    nuiStuckSince = now
                 end
-                nuiStuckSince = now
+            else
+                nuiStuckSince = nil
             end
         else
             nuiStuckSince = nil
@@ -210,10 +242,7 @@ CreateThread(function()
             fadeStuckSince = fadeStuckSince or now
             if (now - fadeStuckSince) >= (FADE_STUCK_SEC * 1000) then
                 maybePrompt('black screen')
-                if (now - lastReportAt) >= (COOLDOWN_SEC * 1000) then
-                    lastReportAt = now
-                    TriggerServerEvent('phantom_dashboard:stuck:auto', reasonPayload('screen_faded_out'))
-                end
+                maybeAutoReport('screen_faded_out')
                 fadeStuckSince = now
             end
         else
@@ -224,6 +253,6 @@ CreateThread(function()
     end
 end)
 
-print(('[phantom_dashboard] stuck watch ready (move %ss / nui %ss / fade %ss)'):format(
-    MOVE_STUCK_SEC, NUI_STUCK_SEC, FADE_STUCK_SEC
+print(('[phantom_dashboard] stuck watch ready (move %ss / nui %ss / fade %ss / autoReport=%s)'):format(
+    MOVE_STUCK_SEC, NUI_STUCK_SEC, FADE_STUCK_SEC, AUTO_REPORT and 'on' or 'off'
 ))

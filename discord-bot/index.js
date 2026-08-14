@@ -85,7 +85,19 @@ async function dmOwner(contentOrPayload) {
 }
 
 async function notifyOwnerEvent(entry) {
+  if (entry?.dmOwner === false) return;
   await dmOwner({ embeds: [eventEmbed(entry)] });
+}
+
+const stuckDmCooldownMs = Number(process.env.STUCK_DM_COOLDOWN_MS || 30 * 60 * 1000);
+const lastStuckDmAt = new Map();
+function stuckDmAllowed(discordId) {
+  if (!discordId) return false;
+  const now = Date.now();
+  const prev = lastStuckDmAt.get(discordId) || 0;
+  if (now - prev < stuckDmCooldownMs) return false;
+  lastStuckDmAt.set(discordId, now);
+  return true;
 }
 
 function botInviteUrl(clientId) {

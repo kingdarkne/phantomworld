@@ -1,7 +1,10 @@
 --- Server: stuck / possible bug reports → Discord error pipeline.
+--- Auto detections stay quiet (staff log only, no player/owner spam).
+--- Manual /reportstuck can notify staff + optional player invite DM.
 
 local lastBySrc = {}
-local COOLDOWN = tonumber(GetConvar('phantom_dashboard:stuckCooldownSeconds', '180')) or 180
+local COOLDOWN = tonumber(GetConvar('phantom_dashboard:stuckCooldownSeconds', '900')) or 900
+local AUTO_COOLDOWN = tonumber(GetConvar('phantom_dashboard:stuckAutoCooldownSeconds', '1800')) or 1800
 
 local function playerLabel(src)
     local name = GetPlayerName(src) or ('ID ' .. tostring(src))
@@ -37,10 +40,11 @@ local function formatReport(src, kind, data)
     return table.concat(lines, '\n')
 end
 
-local function allowed(src)
+local function allowed(src, seconds)
     local now = os.time()
     local prev = lastBySrc[src]
-    if prev and (now - prev) < COOLDOWN then
+    local need = seconds or COOLDOWN
+    if prev and (now - prev) < need then
         return false
     end
     lastBySrc[src] = now
@@ -53,41 +57,50 @@ local function discordIdOf(src)
     return id:gsub('discord:', '')
 end
 
-local function emitStuck(src, kind, data)
+--- Quiet auto path: staff webhook/channel only — no player DM, no owner DM spam.
+local function emitAutoStuck(src, data)
     if not PhantomDashboardEmitError then return end
-    local title = ('Player Stuck / Possible Bug — %s'):format(kind or 'stuck')
+    local title = ('Player Stuck (auto) — %s'):format(tostring(data and data.reason or 'stuck'))
+    PhantomDashboardEmitError(title, formatReport(src, 'auto', data), 15105570, {
+        discordId = discordIdOf(src),
+        category = 'stuck',
+        pingPlayer = false,
+        invitePlayer = false,
+        dmOwner = false,
+    })
+end
+
+--- Manual report: notify staff; one help DM to the player.
+local function emitPlayerReport(src, data)
+    if not PhantomDashboardEmitError then return end
     local did = discordIdOf(src)
-    PhantomDashboardEmitError(title, formatReport(src, kind, data), 15105570, {
+    local title = 'Player Stuck / Possible Bug — player_report'
+    PhantomDashboardEmitError(title, formatReport(src, 'player_report', data), 15105570, {
         discordId = did,
         category = 'stuck',
-        pingPlayer = did ~= nil,
-        invitePlayer = true,
+        pingPlayer = false,
+        invitePlayer = did ~= nil,
+        dmOwner = true,
     })
 
-    if did then
-        TriggerClientEvent('ox_lib:notify', src, {
-            title = 'Phantom Assist',
-            description = 'Staff were notified. Check your Discord DMs for an invite so we can help.',
-            type = 'inform',
-        })
-    else
-        TriggerClientEvent('ox_lib:notify', src, {
-            title = 'Phantom Assist',
-            description = 'Link Discord in FiveM settings, then join discord.gg/phantomworld for help.',
-            type = 'inform',
-        })
-    end
+    TriggerClientEvent('ox_lib:notify', src, {
+        title = 'Phantom Assist',
+        description = did
+            and 'Staff were notified. Check Discord if we send a help invite.'
+            or 'Staff were notified. Link Discord in FiveM settings for faster help.',
+        type = 'inform',
+    })
 end
 
 RegisterNetEvent('phantom_dashboard:stuck:auto', function(data)
     local src = source
-    if not allowed(src) then return end
-    emitStuck(src, 'auto', data)
+    if not allowed(('auto:%s'):format(src), AUTO_COOLDOWN) then return end
+    emitAutoStuck(src, data)
 end)
 
 RegisterNetEvent('phantom_dashboard:stuck:report', function(data)
     local src = source
-    if not allowed(src) then
+    if not allowed(('report:%s'):format(src), COOLDOWN) then
         TriggerClientEvent('ox_lib:notify', src, {
             title = 'Phantom Assist',
             description = 'Report cooldown — try again shortly.',
@@ -95,34 +108,16 @@ RegisterNetEvent('phantom_dashboard:stuck:report', function(data)
         })
         return
     end
-    emitStuck(src, 'player_report', data)
+    emitPlayerReport(src, data)
 end)
 
+--- Kept for backwards compatibility; client no longer fires this on every /unstuck.
 RegisterNetEvent('phantom_dashboard:stuck:unstuckUsed', function(data)
-    local src = source
-    -- Lighter touch: log unstuck usage less often (separate cooldown bucket)
-    local key = ('u:%s'):format(src)
-    local now = os.time()
-    if lastBySrc[key] and (now - lastBySrc[key]) < COOLDOWN then return end
-    lastBySrc[key] = now
-    -- Only Discord-notify unstuck if it followed an auto/manual stuck context with odd flags
-    data = type(data) == 'table' and data or {}
-    if data.faded or data.nuiFocused or data.frozen or (data.reason == 'manual_unstuck') then
-        -- soft info via error pipeline so staff sees patterns
-        if PhantomDashboardEmitError then
-            PhantomDashboardEmitError(
-                'Player used /unstuck',
-                formatReport(src, 'unstuck', data),
-                15844367
-            )
-        end
-    end
+    -- Intentionally no Discord emit — /unstuck is a local self-help tool.
 end)
 
---- Admin: force unstuck on a player
 RegisterCommand('forceunstuck', function(src, args)
     if src ~= 0 then
-        -- require ace if used in-game
         if not IsPlayerAceAllowed(src, 'command.forceunstuck') and not IsPlayerAceAllowed(src, 'admin') then
             return
         end
@@ -137,7 +132,8 @@ RegisterCommand('forceunstuck', function(src, args)
         PhantomDashboardEmitError(
             'Admin force-unstuck',
             ('Admin `%s` unstuck player %s'):format(src == 0 and 'console' or playerLabel(src), playerLabel(target)),
-            3447003
+            3447003,
+            { category = 'stuck', dmOwner = false, invitePlayer = false, pingPlayer = false }
         )
     end
 end, true)
@@ -145,5 +141,7 @@ end, true)
 AddEventHandler('playerDropped', function()
     local src = source
     lastBySrc[src] = nil
+    lastBySrc[('auto:%s'):format(src)] = nil
+    lastBySrc[('report:%s'):format(src)] = nil
     lastBySrc[('u:%s'):format(src)] = nil
 end)

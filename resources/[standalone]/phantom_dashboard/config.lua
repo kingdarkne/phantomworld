@@ -41,4 +41,6 @@ Config.Discord = {
     HourlyRestart = GetConvarInt('phantom_dashboard:hourlyRestart', 1) == 1,
     --- Watch for stuck players / likely client bugs (1/0)
     StuckWatch = GetConvarInt('phantom_dashboard:stuckWatch', 1) == 1,
+    --- Auto Discord reports from heuristics (0=prompts only, recommended)
+    StuckAutoReport = GetConvarInt('phantom_dashboard:stuckAutoReport', 0) == 1,
 }

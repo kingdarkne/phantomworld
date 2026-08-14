@@ -78,10 +78,28 @@ function extractDiscordId(entry) {
   return m ? m[1] : '';
 }
 
+/** Per-user debounce so stuck false-positives cannot spam DMs. */
+const stuckDmCooldownMs = Number(process.env.STUCK_DM_COOLDOWN_MS || 30 * 60 * 1000);
+const lastStuckDmAt = new Map();
+
+function stuckDmAllowed(discordId) {
+  if (!discordId) return false;
+  const now = Date.now();
+  const prev = lastStuckDmAt.get(discordId) || 0;
+  if (now - prev < stuckDmCooldownMs) {
+    console.log(`[phantom-fivem] Skipping stuck DM (cooldown) for ${discordId}`);
+    return false;
+  }
+  lastStuckDmAt.set(discordId, now);
+  return true;
+}
+
 async function dmPlayerHelpInvite(client, entry) {
   const discordId = extractDiscordId(entry);
   if (!discordId) return;
-  if (entry.invitePlayer === false) return;
+  // Only when explicitly requested (manual /reportstuck). Never for auto heuristics.
+  if (entry.invitePlayer !== true) return;
+  if (!stuckDmAllowed(discordId)) return;
 
   const invite = discordInviteUrl(client);
   const embed = new EmbedBuilder()
@@ -89,14 +107,12 @@ async function dmPlayerHelpInvite(client, entry) {
     .setTitle('Need help on Phantom World?')
     .setDescription(
       [
-        'Hey — we detected a **stuck / possible bug** on the FiveM server.',
+        'Hey — you asked for help with a **stuck / possible bug** on the FiveM server.',
         '',
         'Join our Discord so staff can help you fix it:',
         invite,
         '',
         'In-game you can also try: `/unstuck`',
-        '',
-        '_If you already used /reportstuck, staff can see your report._',
       ].join('\n'),
     )
     .setFooter({ text: 'Phantom World Support' })
@@ -154,10 +170,21 @@ async function postErrorTargets(client, entry) {
     }
   }
 
-  await dmOwner(client, { embeds: [embed] });
+  // Skip owner spam for quiet stuck auto-reports (dmOwner:false from FXServer).
+  if (entry.dmOwner !== false) {
+    const cat = String(entry.category || '').toLowerCase();
+    if (cat === 'stuck') {
+      const owner = ownerId();
+      if (owner && stuckDmAllowed(`owner:${owner}:${cat}`)) {
+        await dmOwner(client, { embeds: [embed] });
+      }
+    } else {
+      await dmOwner(client, { embeds: [embed] });
+    }
+  }
 
-  // Stuck / bug reports: DM the player a Discord invite for help
-  if (String(entry.category || '').toLowerCase() === 'stuck' || entry.invitePlayer) {
+  // Stuck help DMs only when invitePlayer is explicitly true (manual report).
+  if (entry.invitePlayer === true) {
     await dmPlayerHelpInvite(client, entry);
   }
 }
