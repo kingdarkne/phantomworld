@@ -9,6 +9,12 @@ Config.TourSettings = {
     CameraTransitionSpeed = 2.0, -- seconds
     CameraFOV = 50.0,
     CameraHeight = 15.0,
+
+    -- AMD amdxx64.dll crashes are common with RenderScriptCams + heavy streaming.
+    -- When false: fade + gameplay overlook teleport (no script cams). Safer default.
+    UseScriptCams = false,
+    StreamWaitMs = 900, -- wait after focus/collision before showing a stop
+    FadeMs = 350,
     
     -- UI settings
     ShowControls = true,
@@ -16,15 +22,21 @@ Config.TourSettings = {
     AutoStart = false, -- Auto-start for new players
     ShowProgress = true,
     
-    -- Audio settings
-    BackgroundMusic = true,
+    -- Audio / narration
+    -- Uses pre-rendered neural voice clips (Jenny) via NUI <audio> — not browser speechSynthesis.
+    EnableNarration = true,
+    NarrationVolume = 0.85,
+    BackgroundMusic = false,
     MusicVolume = 0.3,
-    MusicFile = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', -- Replace with actual music
     
     -- Timing
     LocationDisplayTime = 5.0, -- seconds
     InfoDisplayTime = 8.0, -- seconds
     TransitionDelay = 1.5, -- seconds
+
+    -- Camera fallback if start/target share the same XY
+    CameraFallbackDistance = 18.0,
+    CameraFallbackHeight = 8.0,
 }
 
 -- Keybinds
@@ -38,7 +50,11 @@ Config.Keybinds = {
 -- Language settings
 Config.Language = {
     TourTitle = 'Phantom World City Tour',
-    WelcomeMessage = 'Welcome to Phantom World! Let us show you around our amazing city.',
+    WelcomeMessage = 'Welcome to Phantom World! Want a quick guided tour of the city?',
+    TourPromptHeader = 'Phantom World City Tour',
+    TourPromptStart = 'Start Tour',
+    TourPromptSkip = 'Skip',
+    TourSkipped = 'Tour skipped — press F7 anytime to start it.',
     LocationInfo = 'Location Information',
     NextLocation = 'Next Location',
     SkipLocation = 'Skip',
@@ -54,11 +70,17 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    AutoStartOnFirstJoin = true,
+    -- Ask with ox_lib dialog (Start Tour / Skip). Do not silent-autoplay.
+    AutoStartOnFirstJoin = false,
+    AskDialogOnFirstJoin = true,
     ShowPromptOnSpawn = true,
-    AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
+    AutoStartDelay = 8, -- seconds after spawn before the tour prompt
     RequiredPlayTime = 0, -- minutes before tour can be started again
-    CooldownTime = 30 -- minutes between repeat tours (after first completion)
+    CooldownTime = 30, -- minutes between repeat tours (after first completion)
+    ForceBeforeMultichar = false, -- freeroam should not block character select on tour
+    ForceEveryJoin = false,
+    -- Skip marks tour completed so the prompt does not spam every reconnect (F7 still works).
+    MarkCompletedOnSkip = true,
 }
 
 -- Admin settings
