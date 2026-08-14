@@ -5,11 +5,24 @@ local eventLog = {}
 local MAX_EVENTS = 250
 
 local webhook = Config.Discord.Webhook
-local botRelay = GetConvar('phantom_dashboard:botRelayUrl', '')
-local botToken = GetConvar('phantom_dashboard:botToken', '')
 local relayToken = Config.Discord.ApiToken
 
+local function refreshSecrets()
+    webhook = GetConvar('phantom_dashboard:webhook', webhook or '')
+    relayToken = GetConvar('phantom_dashboard:apiToken', relayToken or '')
+end
+
+local function getBotRelay()
+    -- Always re-read: secrets.cfg may be updated without a full FX recycle.
+    return GetConvar('phantom_dashboard:botRelayUrl', '')
+end
+
+local function getBotToken()
+    return GetConvar('phantom_dashboard:botToken', '')
+end
+
 local function directOwnerDmEnabled()
+    local botToken = getBotToken()
     if not botToken or botToken == '' then return false end
     if botToken == 'PASTE_YOUR_BOT_TOKEN_IN_FILE_MANAGER' then return false end
     return true
@@ -17,6 +30,7 @@ end
 
 --- Node relay only when no botToken (relay must run on same machine as FXServer).
 local function shouldUseBotRelay()
+    local botRelay = getBotRelay()
     if not botRelay or botRelay == '' then return false end
     return not directOwnerDmEnabled()
 end
@@ -80,11 +94,17 @@ local function staffRoleFor(src)
         or IsPlayerAceAllowed(src, 'god')
         or IsPlayerAceAllowed(src, 'qbcore.god')
         or IsPlayerAceAllowed(src, 'qbcore.admin')
+        or IsPlayerAceAllowed(src, 'oxoadmin.menu')
     then
-        -- Prefer clearer labels when ACE matches common staff groups
         if IsPlayerAceAllowed(src, 'qbcore.god') or IsPlayerAceAllowed(src, 'god') then
             return 'god'
         end
+        return 'admin'
+    end
+    local ok, has = pcall(function()
+        return exports.qbx_core:HasPermission(src, 'admin') or exports.qbx_core:HasPermission(src, 'god')
+    end)
+    if ok and has then
         return 'admin'
     end
     return nil
@@ -189,7 +209,9 @@ local function postWebhook(payload)
 end
 
 local function postBotRelay(entry)
-    if not shouldUseBotRelay() then return end
+    refreshSecrets()
+    local botRelay = getBotRelay()
+    if not botRelay or botRelay == '' then return end
     local headers = { ['Content-Type'] = 'application/json' }
     if relayToken and relayToken ~= '' then
         headers['Authorization'] = 'Bearer ' .. relayToken
@@ -269,6 +291,7 @@ function PhantomDashboardEmit(category, title, description, color, opts)
     entry.dmOwner = shouldDm == true
 
     pushLog(entry)
+    refreshSecrets()
     postWebhook(embedPayload(title, description, color, {
         pingOwner = (opts.pingOwner == true) or (pingOwnerOnWebhook and not quiet),
     }))
@@ -277,6 +300,7 @@ function PhantomDashboardEmit(category, title, description, color, opts)
     end
     -- Always relay when configured so the Discord bot can post join alerts
     -- and DM a Discord invite to players who are not in the guild yet.
+    local botRelay = getBotRelay()
     if botRelay and botRelay ~= '' then
         local headers = { ['Content-Type'] = 'application/json' }
         if relayToken and relayToken ~= '' then
@@ -288,8 +312,6 @@ function PhantomDashboardEmit(category, title, description, color, opts)
                 print(('[phantom_dashboard] bot relay failed (%s)'):format(tostring(statusCode)))
             end
         end, 'POST', json.encode(entry), headers)
-    elseif shouldUseBotRelay() then
-        postBotRelay(entry)
     end
 end
 
@@ -334,6 +356,8 @@ function PhantomDashboardEmitError(title, description, color, opts)
         PhantomDashboardDmOwner(entry)
     end
     -- Prefer relay so the Discord bot can route + DM the player an invite
+    refreshSecrets()
+    local botRelay = getBotRelay()
     if botRelay and botRelay ~= '' then
         local headers = { ['Content-Type'] = 'application/json' }
         if relayToken and relayToken ~= '' then
@@ -397,7 +421,7 @@ AddEventHandler('onResourceStart', function(resourceName)
                 status.serverName,
                 status.playerCount,
                 status.maxPlayers,
-                directOwnerDmEnabled() and 'direct (botToken)' or (shouldUseBotRelay() and ('relay ' .. botRelay) or 'webhook only')
+                directOwnerDmEnabled() and 'direct (botToken)' or (shouldUseBotRelay() and ('relay ' .. getBotRelay()) or 'webhook only')
             ),
             5763719
         )

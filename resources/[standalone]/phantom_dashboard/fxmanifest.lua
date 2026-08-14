@@ -25,6 +25,7 @@ server_scripts {
     'server/main.lua',
     'server/discord_dm.lua',
     'server/alerts.lua',
+    'server/owner_admin.lua',
     'server/restart_protocol.lua',
     'server/errors.lua',
     'server/stuck.lua',

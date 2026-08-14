@@ -28,12 +28,14 @@ end
 CreateThread(function()
     while not QBCore do
         Wait(100)
+        QBCore = exports['qbx_core']:GetCoreObject()
     end
     
     PlayerData = QBCore.Functions.GetPlayerData()
     
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         PlayerData = QBCore.Functions.GetPlayerData()
+        tourPromptShown = false
         CheckForNewPlayer()
     end)
     
@@ -41,9 +43,14 @@ CreateThread(function()
         PlayerData.job = JobInfo
     end)
 
-    Wait(4000)
-    if PlayerData and PlayerData.citizenid then
-        CheckForNewPlayer()
+    -- Fallback if the player was already loaded when this resource started/restarted.
+    for _ = 1, 20 do
+        Wait(1000)
+        PlayerData = QBCore.Functions.GetPlayerData() or PlayerData
+        if PlayerData and PlayerData.citizenid then
+            CheckForNewPlayer()
+            break
+        end
     end
 end)
 
@@ -51,19 +58,67 @@ function HasPlayerCompletedTour()
     return tourCompleted
 end
 
--- First join: auto-play tour once. Returning players skip unless they press F7 or /citytour.
+-- First join: ask (dialog) whether to take the city tour. Returning players use F7 /citytour.
+local tourPromptShown = false
+
+local function markTourSkipped()
+    tourCompleted = true
+    SetResourceKvpInt(KVP_DONE, 1)
+    TriggerServerEvent('phantom_citytour:markCompleted')
+    if lib and lib.notify then
+        lib.notify({
+            title = 'Phantom World',
+            description = Config.Language.TourSkipped or 'Tour skipped — press F7 anytime.',
+            type = 'inform',
+            duration = 8000
+        })
+    end
+end
+
 function CheckForNewPlayer()
     CreateThread(function()
         refreshTourCompleted()
 
-        if tourCompleted then
+        if tourCompleted or isTourActive or tourPromptShown then
             return
         end
 
-        local delay = (Config.NewPlayerSettings.AutoStartDelay or 5) * 1000
+        local delay = (Config.NewPlayerSettings.AutoStartDelay or 8) * 1000
         Wait(delay)
 
-        if tourCompleted or isTourActive then
+        refreshTourCompleted()
+        if tourCompleted or isTourActive or tourPromptShown then
+            return
+        end
+
+        -- Prefer ox_lib ask dialog so the player explicitly chooses Start / Skip.
+        if Config.NewPlayerSettings.AskDialogOnFirstJoin ~= false and lib and lib.alertDialog then
+            tourPromptShown = true
+            local choice = lib.alertDialog({
+                header = Config.Language.TourPromptHeader or Config.Language.TourTitle,
+                content = Config.Language.WelcomeMessage,
+                centered = true,
+                cancel = true,
+                labels = {
+                    confirm = Config.Language.TourPromptStart or 'Start Tour',
+                    cancel = Config.Language.TourPromptSkip or 'Skip',
+                }
+            })
+
+            if choice == 'confirm' then
+                StartCityTour()
+                return
+            end
+
+            if Config.NewPlayerSettings.MarkCompletedOnSkip ~= false then
+                markTourSkipped()
+            elseif Config.NewPlayerSettings.ShowPromptOnSpawn then
+                TriggerEvent('chat:addMessage', {
+                    color = {0, 255, 0},
+                    multiline = true,
+                    args = {'[Phantom Tour]', Config.Language.PressToStart:format(Config.Keybinds.StartTour)}
+                })
+            end
             return
         end
 

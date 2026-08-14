@@ -42,7 +42,11 @@ Config.Keybinds = {
 -- Language settings
 Config.Language = {
     TourTitle = 'Phantom World City Tour',
-    WelcomeMessage = 'Welcome to Phantom World! Let us show you around our amazing city.',
+    WelcomeMessage = 'Welcome to Phantom World! Want a quick guided tour of the city?',
+    TourPromptHeader = 'Phantom World City Tour',
+    TourPromptStart = 'Start Tour',
+    TourPromptSkip = 'Skip',
+    TourSkipped = 'Tour skipped — press F7 anytime to start it.',
     LocationInfo = 'Location Information',
     NextLocation = 'Next Location',
     SkipLocation = 'Skip',
@@ -58,13 +62,17 @@ Config.Language = {
 
 -- New player settings
 Config.NewPlayerSettings = {
-    AutoStartOnFirstJoin = true,
+    -- Ask with ox_lib dialog (Start Tour / Skip). Do not silent-autoplay.
+    AutoStartOnFirstJoin = false,
+    AskDialogOnFirstJoin = true,
     ShowPromptOnSpawn = true,
-    AutoStartDelay = 5, -- seconds after spawn before first-time tour begins
+    AutoStartDelay = 8, -- seconds after spawn before the tour prompt
     RequiredPlayTime = 0, -- minutes before tour can be started again
     CooldownTime = 30, -- minutes between repeat tours (after first completion)
     ForceBeforeMultichar = false, -- freeroam should not block character select on tour
-    ForceEveryJoin = false
+    ForceEveryJoin = false,
+    -- Skip marks tour completed so the prompt does not spam every reconnect (F7 still works).
+    MarkCompletedOnSkip = true,
 }
 
 -- Admin settings
