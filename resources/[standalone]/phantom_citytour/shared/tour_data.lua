@@ -18,11 +18,7 @@ TourLocations = {
 
         player = {
             coords = vector3(-1037.0, -2738.0, 13.8),
-            heading = 150.0,
-            animation = {
-                dict = 'amb@world_human_tourist_map@male@base',
-                anim = 'base'
-            }
+            heading = 150.0
         },
 
         info = {
@@ -59,11 +55,7 @@ TourLocations = {
 
         player = {
             coords = vector3(428.0, -982.0, 30.7),
-            heading = 270.0,
-            animation = {
-                dict = 'amb@world_human_cop_idles@male@base',
-                anim = 'base'
-            }
+            heading = 270.0
         },
 
         info = {
@@ -100,11 +92,7 @@ TourLocations = {
 
         player = {
             coords = vector3(307.0, -589.0, 43.3),
-            heading = 340.0,
-            animation = {
-                dict = 'amb@world_human_clipboard@male@base',
-                anim = 'base'
-            }
+            heading = 340.0
         },
 
         info = {
@@ -141,11 +129,7 @@ TourLocations = {
 
         player = {
             coords = vector3(-545.0, -204.0, 38.2),
-            heading = 25.0,
-            animation = {
-                dict = 'amb@world_human_clipboard@male@base',
-                anim = 'base'
-            }
+            heading = 25.0
         },
 
         info = {
@@ -182,11 +166,7 @@ TourLocations = {
 
         player = {
             coords = vector3(149.0, -1040.0, 29.4),
-            heading = 340.0,
-            animation = {
-                dict = 'amb@world_human_stand_impatient@male@no_sign@base',
-                anim = 'base'
-            }
+            heading = 340.0
         },
 
         info = {
@@ -223,11 +203,7 @@ TourLocations = {
 
         player = {
             coords = vector3(814.0, -2157.0, 29.6),
-            heading = 270.0,
-            animation = {
-                dict = 'amb@world_human_guard_patrol@male@base',
-                anim = 'base'
-            }
+            heading = 270.0
         },
 
         info = {
@@ -264,11 +240,7 @@ TourLocations = {
 
         player = {
             coords = vector3(-1155.0, -2007.0, 13.2),
-            heading = 140.0,
-            animation = {
-                dict = 'amb@world_human_welding@male@base',
-                anim = 'base'
-            }
+            heading = 140.0
         },
 
         info = {
@@ -305,11 +277,7 @@ TourLocations = {
 
         player = {
             coords = vector3(1839.0, 3672.0, 34.3),
-            heading = 210.0,
-            animation = {
-                dict = 'amb@world_human_clipboard@male@base',
-                anim = 'base'
-            }
+            heading = 210.0
         },
 
         info = {
@@ -346,11 +314,7 @@ TourLocations = {
 
         player = {
             coords = vector3(686.0, 48.0, 83.1),
-            heading = 340.0,
-            animation = {
-                dict = 'amb@world_human_tourist_map@female@base',
-                anim = 'base'
-            }
+            heading = 340.0
         },
 
         info = {
@@ -387,11 +351,7 @@ TourLocations = {
 
         player = {
             coords = vector3(-1037.0, -2738.0, 13.8),
-            heading = 45.0,
-            animation = {
-                dict = 'amb@world_human_tourist_map@male@base',
-                anim = 'base'
-            }
+            heading = 45.0
         },
 
         info = {

@@ -200,9 +200,9 @@ function StartCityTour()
     -- Repeat tours only after the player has completed once.
     if not preMulticharMode and tourCompleted then
         local currentTime = GetGameTimer()
-        local cooldownMs = Config.NewPlayerSettings.CooldownTime * 60000
+        local cooldownMs = (Config.NewPlayerSettings.CooldownTime or 30) * 60000
 
-        if currentTime - lastTourTime < cooldownMs then
+        if lastTourTime > 0 and currentTime - lastTourTime < cooldownMs then
             local remainingTime = math.ceil((cooldownMs - (currentTime - lastTourTime)) / 60000)
             TriggerEvent('chat:addMessage', {
                 color = {255, 165, 0},
@@ -212,25 +212,54 @@ function StartCityTour()
             return
         end
     end
+
+    if type(TourLocations) ~= 'table' or #TourLocations < 1 then
+        print('[phantom_citytour] TourLocations missing — aborting')
+        TriggerEvent('chat:addMessage', {
+            color = {255, 0, 0},
+            multiline = true,
+            args = {'[Phantom Tour]', 'Tour data failed to load. Try again later.'}
+        })
+        return
+    end
     
     isTourActive = true
     currentLocationIndex = 1
     isPaused = false
     tourStartTime = GetGameTimer()
+    activeSubtitle = Config.Language.TourTitle or 'City Tour'
     
-    -- Initialize tour
-    InitializeTour()
-    
-    -- Show UI first so captions are ready for location updates
-    SendNUIMessage({
-        action = "showTour",
-        tourData = GetTourOverview(),
-        speakEnabled = Config.TourSettings.EnableNarration ~= false,
-        currentLocation = nil
-    })
+    local ok, err = pcall(function()
+        InitializeTour()
 
-    -- Start first location
-    ProcessLocation(currentLocationIndex)
+        -- Show UI first so captions / hints appear even if a later step fails.
+        SendNUIMessage({
+            action = "showTour",
+            tourData = GetTourOverview(),
+            speakEnabled = Config.TourSettings.EnableNarration ~= false,
+            currentLocation = nil
+        })
+
+        ProcessLocation(currentLocationIndex)
+    end)
+
+    if not ok then
+        print(('[phantom_citytour] StartCityTour failed: %s'):format(tostring(err)))
+        isTourActive = false
+        RestorePlayer()
+        if cameraHandle then
+            RenderScriptCams(false, false, 0, true, true)
+            DestroyCam(cameraHandle, false)
+            cameraHandle = nil
+        end
+        SendNUIMessage({ action = 'hideTour' })
+        TriggerEvent('chat:addMessage', {
+            color = {255, 0, 0},
+            multiline = true,
+            args = {'[Phantom Tour]', 'Tour failed to start — you should be visible again.'}
+        })
+        return
+    end
     
     TriggerEvent('chat:addMessage', {
         color = {0, 255, 0},
@@ -307,9 +336,12 @@ function RestorePlayer()
     DisplayRadar(true)
     
     -- Restore player
-    SetEntityInvincible(PlayerPedId(), false)
-    SetEntityVisible(PlayerPedId(), true, 0)
-    FreezeEntityPosition(PlayerPedId(), false)
+    local ped = PlayerPedId()
+    SetEntityInvincible(ped, false)
+    SetEntityVisible(ped, true, false)
+    SetLocalPlayerVisibleLocally(true)
+    NetworkSetEntityInvisibleToNetwork(ped, false)
+    FreezeEntityPosition(ped, false)
     
     -- Clear weather / look modifiers
     ClearWeatherTypeOverride()
@@ -317,7 +349,7 @@ function RestorePlayer()
     ClearExtraTimecycleModifier()
     
     -- Clear any tasks
-    ClearPedTasks(PlayerPedId())
+    ClearPedTasks(ped)
 end
 
 function ProcessLocation(index)
@@ -335,15 +367,6 @@ function ProcessLocation(index)
         NextLocation()
         return
     end
-    
-    -- Apply effects
-    ApplyLocationEffects(location.effects)
-    
-    -- Set up camera
-    SetupCamera(location.camera)
-    
-    -- Set up player
-    SetupPlayer(location.player)
 
     local info = location.info or {}
     local narration = table.concat({
@@ -352,9 +375,8 @@ function ProcessLocation(index)
         info.description or location.description or ''
     }, '. ')
 
-    activeSubtitle = info.title or location.name
-
-    -- Send location info to UI (+ narration text)
+    -- Captions first — never gate UI on camera/player setup.
+    activeSubtitle = info.title or location.name or ('Stop ' .. tostring(index))
     SendNUIMessage({
         action = "updateLocation",
         location = {
@@ -365,13 +387,32 @@ function ProcessLocation(index)
             info = info,
             progress = (index / #TourLocations) * 100,
             narration = narration,
-            currentIndex = index
+            currentIndex = index,
+            totalLocations = #TourLocations
         }
     })
-    
-    -- Wait for location duration
+
+    local okEffects, errEffects = pcall(ApplyLocationEffects, location.effects)
+    if not okEffects then
+        print(('[phantom_citytour] effects error @%s: %s'):format(tostring(location.id), tostring(errEffects)))
+    end
+
+    local okCam, errCam = pcall(SetupCamera, location.camera)
+    if not okCam then
+        print(('[phantom_citytour] camera error @%s: %s'):format(tostring(location.id), tostring(errCam)))
+    end
+
+    -- Player setup must never block the tour (anim dict hangs were freezing players invisible).
     CreateThread(function()
-        Wait(location.camera.duration)
+        local okPed, errPed = pcall(SetupPlayer, location.player)
+        if not okPed then
+            print(('[phantom_citytour] player setup error @%s: %s'):format(tostring(location.id), tostring(errPed)))
+        end
+    end)
+    
+    local duration = (location.camera and tonumber(location.camera.duration)) or 8000
+    CreateThread(function()
+        Wait(duration)
         
         if isTourActive and not isPaused and currentLocationIndex == index then
             NextLocation()
@@ -403,7 +444,10 @@ function ApplyLocationEffects(effects)
 end
 
 function SetupCamera(cameraData)
-    if not cameraData or not cameraData.start or not cameraData.target then return end
+    if not cameraData or not cameraData.start or not cameraData.target then
+        print('[phantom_citytour] SetupCamera missing start/target')
+        return
+    end
     
     if cameraHandle then
         DestroyCam(cameraHandle, false)
@@ -412,8 +456,8 @@ function SetupCamera(cameraData)
     
     local start = cameraData.start
     local target = cameraData.target
-    local camX, camY, camZ = start.x, start.y, start.z
-    local lookX, lookY, lookZ = target.x, target.y, target.z
+    local camX, camY, camZ = start.x + 0.0, start.y + 0.0, start.z + 0.0
+    local lookX, lookY, lookZ = target.x + 0.0, target.y + 0.0, target.z + 0.0
 
     -- Old data pointed straight down (same XY). Offset the eye so we frame the landmark.
     local dx = lookX - camX
@@ -429,27 +473,53 @@ function SetupCamera(cameraData)
         lookZ = lookZ + 1.5
     end
 
-    cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-    SetCamCoord(cameraHandle, camX, camY, camZ)
-    SetCamFov(cameraHandle, cameraData.fov or Config.TourSettings.CameraFOV or 50.0)
+    RequestCollisionAtCoord(camX, camY, camZ)
+    RequestCollisionAtCoord(lookX, lookY, lookZ)
+    local deadline = GetGameTimer() + 1500
+    while GetGameTimer() < deadline and (not HasCollisionLoadedAroundEntity(PlayerPedId())) do
+        RequestCollisionAtCoord(camX, camY, camZ)
+        Wait(0)
+    end
+
+    cameraHandle = CreateCamWithParams(
+        'DEFAULT_SCRIPTED_CAMERA',
+        camX, camY, camZ,
+        0.0, 0.0, 0.0,
+        cameraData.fov or Config.TourSettings.CameraFOV or 50.0,
+        false,
+        2
+    )
+    if not cameraHandle or cameraHandle == 0 then
+        cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
+        SetCamCoord(cameraHandle, camX, camY, camZ)
+        SetCamFov(cameraHandle, cameraData.fov or Config.TourSettings.CameraFOV or 50.0)
+    end
+
     PointCamAtCoord(cameraHandle, lookX, lookY, lookZ)
     SetCamActive(cameraHandle, true)
     RenderScriptCams(true, true, 800, true, true)
 end
 
 function SetupPlayer(playerData)
-    if not playerData then return end
+    if not playerData or not playerData.coords then return end
     
     local ped = PlayerPedId()
-    
-    -- Set player position
-    SetEntityCoords(ped, playerData.coords.x, playerData.coords.y, playerData.coords.z, false, false, false, false)
-    SetEntityHeading(ped, playerData.heading)
-    
-    -- Apply animation
-    if playerData.animation then
-        LoadAnimDict(playerData.animation.dict)
-        TaskPlayAnim(ped, playerData.animation.dict, playerData.animation.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
+    local x, y, z = playerData.coords.x + 0.0, playerData.coords.y + 0.0, playerData.coords.z + 0.0
+
+    RequestCollisionAtCoord(x, y, z)
+    SetEntityCoordsNoOffset(ped, x, y, z, false, false, false)
+    if playerData.heading then
+        SetEntityHeading(ped, playerData.heading + 0.0)
+    end
+    FreezeEntityPosition(ped, true)
+    SetEntityVisible(ped, false, false)
+    SetEntityInvincible(ped, true)
+
+    -- Animations are optional decoration — never block the cinematic on them.
+    if playerData.animation and playerData.animation.dict and playerData.animation.anim then
+        if LoadAnimDict(playerData.animation.dict, 1500) then
+            TaskPlayAnim(ped, playerData.animation.dict, playerData.animation.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
+        end
     end
 end
 
@@ -504,7 +574,9 @@ function PauseTour()
         -- Resume tour
         local location = TourLocations[currentLocationIndex]
         if location and location.player then
-            SetupPlayer(location.player)
+            CreateThread(function()
+                SetupPlayer(location.player)
+            end)
         end
         
         SendNUIMessage({
@@ -522,24 +594,61 @@ function PauseTour()
     end
 end
 
--- On-screen fallback caption while the cinematic runs
+-- Keep script cam alive + native controls/captions (NUI alone is not enough).
 CreateThread(function()
     while true do
-        if isTourActive and activeSubtitle then
-            SetTextFont(4)
-            SetTextScale(0.45, 0.45)
-            SetTextColour(255, 255, 255, 220)
-            SetTextCentre(true)
-            SetTextDropshadow(1, 0, 0, 0, 200)
-            BeginTextCommandDisplayText('STRING')
-            AddTextComponentSubstringPlayerName(activeSubtitle)
-            EndTextCommandDisplayText(0.5, 0.88)
+        if isTourActive then
+            if cameraHandle and DoesCamExist(cameraHandle) then
+                if not IsCamActive(cameraHandle) then
+                    SetCamActive(cameraHandle, true)
+                end
+                RenderScriptCams(true, false, 0, true, true)
+            end
+
+            DisableControlAction(0, 30, true) -- move LR
+            DisableControlAction(0, 31, true) -- move UD
+            DisableControlAction(0, 21, true) -- sprint
+            DisableControlAction(0, 22, true) -- jump / space
+            DisableControlAction(0, 24, true)
+            DisableControlAction(0, 25, true)
+            DisableControlAction(0, 37, true)
+
+            -- SPACE skip (works even when keybind conflicts)
+            if IsDisabledControlJustPressed(0, 22) or IsControlJustPressed(0, 22) then
+                SkipLocation()
+            end
+
+            if activeSubtitle then
+                SetTextFont(4)
+                SetTextScale(0.55, 0.55)
+                SetTextColour(255, 255, 255, 255)
+                SetTextCentre(true)
+                SetTextDropshadow(2, 0, 0, 0, 255)
+                SetTextOutline()
+                BeginTextCommandDisplayText('STRING')
+                AddTextComponentSubstringPlayerName(activeSubtitle)
+                EndTextCommandDisplayText(0.5, 0.82)
+
+                SetTextFont(4)
+                SetTextScale(0.35, 0.35)
+                SetTextColour(200, 220, 255, 220)
+                SetTextCentre(true)
+                BeginTextCommandDisplayText('STRING')
+                AddTextComponentSubstringPlayerName(('SPACE skip  ·  F7 stop  ·  %s/%s'):format(
+                    currentLocationIndex,
+                    #TourLocations
+                ))
+                EndTextCommandDisplayText(0.5, 0.88)
+            end
+
             Wait(0)
         else
             Wait(250)
         end
     end
 end)
+
+-- On-screen fallback caption while the cinematic runs (legacy duplicate removed — handled above)
 
 function GetTourOverview()
     local overview = {
@@ -567,11 +676,20 @@ function GetTourOverview()
 end
 
 -- Utility functions
-function LoadAnimDict(dict)
+function LoadAnimDict(dict, timeoutMs)
+    if not dict or dict == '' then return false end
+    if HasAnimDictLoaded(dict) then return true end
+    RequestAnimDict(dict)
+    local deadline = GetGameTimer() + (timeoutMs or 1500)
     while not HasAnimDictLoaded(dict) do
+        if GetGameTimer() >= deadline then
+            print(('[phantom_citytour] anim dict timeout: %s'):format(tostring(dict)))
+            return false
+        end
         RequestAnimDict(dict)
-        Wait(5)
+        Wait(10)
     end
+    return true
 end
 
 RegisterCommand('+phantom_citytour_toggle', function()
