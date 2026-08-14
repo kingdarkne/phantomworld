@@ -20,6 +20,12 @@ local function refreshTourCompleted()
     end)
     if ok then
         tourCompleted = completed == true
+        -- Keep client KVP in sync with server so skips/resets behave correctly.
+        if tourCompleted then
+            SetResourceKvpInt(KVP_DONE, 1)
+        else
+            SetResourceKvpInt(KVP_DONE, 0)
+        end
     end
     return tourCompleted
 end
