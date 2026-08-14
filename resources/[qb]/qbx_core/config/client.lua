@@ -55,28 +55,28 @@ return {
     },
 
     discord = {
-        enabled = true, -- This will enable or disable the built in discord rich presence.
+        enabled = false, -- phantom_discord_presence owns Discord Rich Presence branding
 
-        appId = '1024981890798731345', -- This is the Application ID (Replace this with you own)
+        appId = '849173210838466561',
 
-        largeIcon = { -- To set this up, visit https://forum.cfx.re/t/how-to-updated-discord-rich-presence-custom-image/157686
-            icon = 'duck', -- Here you will have to put the image name for the 'large' icon.
-            text = 'Qbox Ducky', -- Here you can add hover text for the 'large' icon.
+        largeIcon = {
+            icon = 'phantom',
+            text = 'Phantom World',
         },
 
         smallIcon = {
-            icon = 'logo_name', -- Here you will have to put the image name for the 'small' icon.
-            text = 'This is a small icon with text', -- Here you can add hover text for the 'small' icon.
+            icon = 'phantom',
+            text = 'Join the city',
         },
 
         firstButton = {
-            text = 'Qbox Discord',
-            link = 'https://discord.gg/Z6Whda5hHA',
+            text = 'Join Game',
+            link = 'https://cfx.re/join/3m87mo',
         },
 
         secondButton = {
-            text = 'Main Website',
-            link = 'https://www.qbox.re/',
+            text = 'Discord',
+            link = 'https://discord.gg/phantomworld',
         }
     },
 

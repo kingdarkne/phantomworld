@@ -19,8 +19,11 @@ Config = {
     lockpickTries = GetConvarInt("core:lockpickTries", 3)
 }
 
--- Discord rich presence.
+-- Discord rich presence (disabled — phantom_discord_presence owns branding).
 CreateThread(function()
+    if GetConvarInt('core:discordPresence', 0) ~= 1 then
+        return
+    end
     SetDiscordAppId(Config.discordAppId)
     SetDiscordRichPresenceAsset(Config.discordAsset)
     SetDiscordRichPresenceAssetSmall(Config.discordAssetSmall)
