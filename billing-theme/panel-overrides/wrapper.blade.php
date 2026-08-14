@@ -38,7 +38,7 @@
 
         @include('layouts.scripts')
 
-        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260814e">
+        <link rel="stylesheet" href="/themes/phantom/phantom-panel.css?v=20260814f">
     </head>
     <body class="{{ $css['body'] ?? 'bg-neutral-900' }}">
         @section('content')

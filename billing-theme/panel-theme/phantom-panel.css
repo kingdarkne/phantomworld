@@ -357,8 +357,19 @@ body:has(.ph-login-brand) #app {
   padding-top: 120px !important;
 }
 
-#app > div {
+/* Do NOT target every #app > div — ProgressBar is a fixed 2px sibling and
+   min-height:100vh on it covers the whole UI and blocks Start/Stop clicks. */
+#app {
   min-height: 100vh;
+}
+
+/* Route progress strip (Pterodactyl ProgressBar) — visual only */
+#app > div[style*="2px"],
+[class*="ProgressBar"] {
+  min-height: 0 !important;
+  max-height: 2px !important;
+  pointer-events: none !important;
+  z-index: 50 !important;
 }
 
 /* Accent links */
