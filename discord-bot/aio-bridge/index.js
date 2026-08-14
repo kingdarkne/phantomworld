@@ -74,13 +74,19 @@ function discordInviteUrl(client) {
 function extractDiscordId(entry) {
   if (entry?.discordId) return String(entry.discordId).replace(/^discord:/, '');
   const desc = String(entry?.description || '');
-  const m = desc.match(/<@!?(\d{16,20})>/);
+  const m = desc.match(/discord:(\d{16,20})/) || desc.match(/<@!?(\d{16,20})>/);
   return m ? m[1] : '';
 }
 
 /** Per-user debounce so stuck false-positives cannot spam DMs. */
 const stuckDmCooldownMs = Number(process.env.STUCK_DM_COOLDOWN_MS || 30 * 60 * 1000);
 const lastStuckDmAt = new Map();
+
+/** Missing-Discord-guild invite DMs (players in FiveM but not in Discord). */
+const missingGuildInviteCooldownMs = Number(
+  process.env.MISSING_GUILD_INVITE_COOLDOWN_MS || 7 * 24 * 60 * 60 * 1000,
+);
+const lastMissingGuildInviteAt = new Map();
 
 function stuckDmAllowed(discordId) {
   if (!discordId) return false;
@@ -92,6 +98,73 @@ function stuckDmAllowed(discordId) {
   }
   lastStuckDmAt.set(discordId, now);
   return true;
+}
+
+function missingGuildInviteAllowed(discordId) {
+  if (!discordId) return false;
+  const now = Date.now();
+  const prev = lastMissingGuildInviteAt.get(discordId) || 0;
+  if (now - prev < missingGuildInviteCooldownMs) {
+    console.log(`[phantom-fivem] Skipping guild-invite DM (cooldown) for ${discordId}`);
+    return false;
+  }
+  lastMissingGuildInviteAt.set(discordId, now);
+  return true;
+}
+
+async function isInPhantomGuild(client, discordId) {
+  const gid = guildId();
+  if (!gid || !discordId) return null;
+  try {
+    const guild = client.guilds.cache.get(gid) || (await client.guilds.fetch(gid));
+    await guild.members.fetch(discordId);
+    return true;
+  } catch (err) {
+    // Unknown Member
+    if (err?.code === 10007 || err?.status === 404) return false;
+    console.warn('[phantom-fivem] guild member lookup failed:', err.message);
+    return null;
+  }
+}
+
+async function dmMissingGuildInvite(client, entry) {
+  if (entry.inviteIfMissing !== true) return;
+  const discordId = extractDiscordId(entry);
+  if (!discordId) return;
+
+  const inGuild = await isInPhantomGuild(client, discordId);
+  if (inGuild !== false) return; // already in guild, or lookup failed
+  if (!missingGuildInviteAllowed(discordId)) return;
+
+  const invite = discordInviteUrl(client);
+  const serverName = process.env.PHANTOM_SERVER_NAME || 'Phantom World';
+  const embed = new EmbedBuilder()
+    .setColor(0x8b5cf6)
+    .setTitle(`Welcome to ${serverName} 🌆`)
+    .setDescription(
+      [
+        `Hey! You’re connected to **${serverName}** on FiveM — nice.`,
+        '',
+        'We noticed you’re **not in our Discord yet**. Join so you can:',
+        '• get help from staff',
+        '• see events & announcements',
+        '• meet the community',
+        '',
+        `**Discord:** ${invite}`,
+        '',
+        '_This is an automatic welcome invite — you won’t get spammed._',
+      ].join('\n'),
+    )
+    .setFooter({ text: `${serverName} · see you in the city` })
+    .setTimestamp();
+
+  try {
+    const user = await client.users.fetch(discordId);
+    await user.send({ embeds: [embed] });
+    console.log(`[phantom-fivem] Sent Discord guild invite DM to ${discordId}`);
+  } catch (err) {
+    console.warn('[phantom-fivem] Guild invite DM failed:', err.message);
+  }
 }
 
 async function dmPlayerHelpInvite(client, entry) {
@@ -191,7 +264,7 @@ async function postErrorTargets(client, entry) {
 
 async function postNormalEvent(client, entry) {
   const cat = String(entry.category || '').toLowerCase();
-  // Routine FX join/leave noise: channel mirror only — no owner DMs, no player pings.
+  // Routine FX join/leave: keep status-channel alerts, no owner DM spam.
   const quietCats = new Set([
     'join',
     'connect',
@@ -210,17 +283,23 @@ async function postNormalEvent(client, entry) {
   }
 
   const mirrorId = statusChannelId();
-  if (!mirrorId) return;
-  try {
-    const channel = await client.channels.fetch(mirrorId);
-    if (channel?.isTextBased?.()) {
-      await channel.send({
-        embeds: [eventEmbed(entry)],
-        allowedMentions: { parse: [] },
-      });
+  if (mirrorId) {
+    try {
+      const channel = await client.channels.fetch(mirrorId);
+      if (channel?.isTextBased?.()) {
+        await channel.send({
+          embeds: [eventEmbed(entry)],
+          allowedMentions: { parse: [] },
+        });
+      }
+    } catch (err) {
+      console.warn('[phantom-fivem] status mirror failed:', err.message);
     }
-  } catch (err) {
-    console.warn('[phantom-fivem] status mirror failed:', err.message);
+  }
+
+  // Player in FiveM but not in Discord → friendly invite DM (cooldown).
+  if (cat === 'join' || cat === 'loaded') {
+    await dmMissingGuildInvite(client, entry);
   }
 }
 

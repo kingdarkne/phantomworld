@@ -47,4 +47,6 @@ Config.Discord = {
     StuckWatch = GetConvarInt('phantom_dashboard:stuckWatch', 1) == 1,
     --- Auto Discord reports from heuristics (0=prompts only, recommended)
     StuckAutoReport = GetConvarInt('phantom_dashboard:stuckAutoReport', 0) == 1,
+    --- When a FiveM player is not in Discord, bot DMs a server invite (via relay)
+    InviteIfMissingDiscord = GetConvarInt('phantom_dashboard:inviteIfMissingDiscord', 1) == 1,
 }

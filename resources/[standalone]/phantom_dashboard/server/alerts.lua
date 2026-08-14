@@ -25,6 +25,8 @@ local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
 --- Routine join/leave/connect should not DM the owner or @-ping anyone (default off).
 local dmOwnerOnEvents = GetConvarInt('phantom_dashboard:dmOwnerOnEvents', 0) == 1
 local pingOwnerOnWebhook = GetConvarInt('phantom_dashboard:pingOwnerOnWebhook', 0) == 1
+local inviteIfMissingDiscord = GetConvarInt('phantom_dashboard:inviteIfMissingDiscord', 1) == 1
+
 local QUIET_EVENT_CATEGORIES = {
     connect = true,
     join = true,
@@ -175,8 +177,16 @@ local function postErrorWebhook(payload)
 end
 
 --- Public emit for other resources
-function PhantomDashboardEmit(category, title, description, color)
+--- opts: { discordId, inviteIfMissing, dmOwner, pingOwner }
+function PhantomDashboardEmit(category, title, description, color, opts)
     if not alertAll then return end
+    opts = type(opts) == 'table' and opts or {}
+
+    local discordId = opts.discordId and tostring(opts.discordId) or nil
+    if discordId then
+        discordId = discordId:gsub('discord:', '')
+        if discordId == '' then discordId = nil end
+    end
 
     local entry = {
         category = category or 'info',
@@ -187,21 +197,38 @@ function PhantomDashboardEmit(category, title, description, color)
         timestamp = os.time(),
         players = playerCount(),
         maxPlayers = GetConvarInt('sv_maxclients', 48),
+        discordId = discordId,
+        inviteIfMissing = opts.inviteIfMissing == true,
         dmOwner = false,
     }
 
     local quiet = QUIET_EVENT_CATEGORIES[entry.category] == true
-    local shouldDm = dmOwnerOnEvents and not quiet
-    entry.dmOwner = shouldDm
+    local shouldDm = (opts.dmOwner == true) or (dmOwnerOnEvents and not quiet)
+    entry.dmOwner = shouldDm == true
 
     pushLog(entry)
     postWebhook(embedPayload(title, description, color, {
-        pingOwner = pingOwnerOnWebhook and not quiet,
+        pingOwner = (opts.pingOwner == true) or (pingOwnerOnWebhook and not quiet),
     }))
     if shouldDm then
         PhantomDashboardDmOwner(entry)
     end
-    postBotRelay(entry)
+    -- Always relay when configured so the Discord bot can post join alerts
+    -- and DM a Discord invite to players who are not in the guild yet.
+    if botRelay and botRelay ~= '' then
+        local headers = { ['Content-Type'] = 'application/json' }
+        if relayToken and relayToken ~= '' then
+            headers['Authorization'] = 'Bearer ' .. relayToken
+            headers['X-Phantom-Token'] = relayToken
+        end
+        PerformHttpRequest(botRelay, function(statusCode, responseText)
+            if statusCode == 0 or (statusCode and statusCode >= 300) then
+                print(('[phantom_dashboard] bot relay failed (%s)'):format(tostring(statusCode)))
+            end
+        end, 'POST', json.encode(entry), headers)
+    elseif shouldUseBotRelay() then
+        postBotRelay(entry)
+    end
 end
 
 --- Always-on path for SCRIPT ERROR / console failures (ignores alertAll / min players).
@@ -361,7 +388,11 @@ AddEventHandler('playerJoining', function()
             playerCount(),
             GetConvarInt('sv_maxclients', 48)
         ),
-        5763719
+        5763719,
+        {
+            discordId = discordIdentifier(src),
+            inviteIfMissing = inviteIfMissingDiscord,
+        }
     )
 end)
 
@@ -382,7 +413,31 @@ AddEventHandler('QBCore:Server:PlayerLoaded', function(player)
             playerCount(),
             GetConvarInt('sv_maxclients', 48)
         ),
-        5763719
+        5763719,
+        {
+            discordId = discordIdentifier(src),
+            inviteIfMissing = inviteIfMissingDiscord,
+        }
+    )
+end)
+
+-- Qbox may use this event name instead of / alongside QBCore compat
+AddEventHandler('qbx_core:server:playerLoggedIn', function(player)
+    if not shouldAlert() then return end
+    local src = type(player) == 'table' and (player.PlayerData and player.PlayerData.source or player.source) or source
+    if not src then return end
+    PhantomDashboardEmit(
+        'loaded',
+        '✅ Player Loaded',
+        playerLabel(src) .. ('\n(%s/%s online)'):format(
+            playerCount(),
+            GetConvarInt('sv_maxclients', 48)
+        ),
+        5763719,
+        {
+            discordId = discordIdentifier(src),
+            inviteIfMissing = inviteIfMissingDiscord,
+        }
     )
 end)
 
