@@ -173,7 +173,7 @@
       <div class="welcome-card">
         <div class="eyebrow">Phantom World</div>
         <h2 id="welcomeTitle">City Tour</h2>
-        <p id="welcomeSub" style="color: var(--muted); margin: 0;">Sit back — captions guide each stop.</p>
+        <p id="welcomeSub" style="color: var(--muted); margin: 0;">Guided tour with voice + captions.</p>
       </div>
     </div>
 
@@ -201,6 +201,8 @@
     </div>
   </div>
 
+  <audio id="narrator" preload="auto"></audio>
+
   <script>
     const app = document.getElementById('app');
     const welcome = document.getElementById('welcome');
@@ -214,77 +216,46 @@
     const progressLabel = document.getElementById('progressLabel');
     const welcomeTitle = document.getElementById('welcomeTitle');
     const captionBar = document.getElementById('captionBar');
+    const narrator = document.getElementById('narrator');
 
-    // Browser speechSynthesis in FiveM CEF is robotic and has crashed clients.
-    // Default: captions only. Optional TTS uses a carefully picked soft voice.
-    let speakEnabled = false;
-    let preferredVoice = null;
-    let speakTimer = null;
+    // Pre-rendered neural voice clips (not buggy CEF speechSynthesis).
+    let speakEnabled = true;
+    let narrationVolume = 0.85;
     let welcomeTimer = null;
+    let audioManifest = null;
 
-    function stripEmoji(text) {
-      return String(text || '')
-        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function pickVoice() {
-      if (!window.speechSynthesis) return null;
-      const voices = window.speechSynthesis.getVoices() || [];
-      if (!voices.length) return null;
-      const prefer = [
-        /aria/i, /jenny/i, /guy neural/i, /natural/i, /samantha/i,
-        /google us english/i, /google uk english female/i, /microsoft.*online/i
-      ];
-      const avoid = [/david/i, /zira/i, /mark/i, /hazel/i, /mobile/i];
-      for (const re of prefer) {
-        const hit = voices.find((v) => re.test(v.name) && !avoid.some((a) => a.test(v.name)));
-        if (hit) return hit;
+    async function loadManifest() {
+      if (audioManifest) return audioManifest;
+      try {
+        const res = await fetch('audio/manifest.json');
+        audioManifest = await res.json();
+      } catch (e) {
+        audioManifest = {};
       }
-      const en = voices.find((v) => /^en(-|_)/i.test(v.lang) && !avoid.some((a) => a.test(v.name)));
-      return en || null;
+      return audioManifest;
     }
-
-    function refreshVoice() {
-      preferredVoice = pickVoice();
-    }
-
-    if (window.speechSynthesis) {
-      refreshVoice();
-      window.speechSynthesis.onvoiceschanged = refreshVoice;
-    }
+    loadManifest();
 
     function stopSpeech() {
-      if (speakTimer) {
-        clearTimeout(speakTimer);
-        speakTimer = null;
-      }
       try {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        narrator.pause();
+        narrator.removeAttribute('src');
+        narrator.load();
       } catch (e) {}
     }
 
-    function speak(text) {
-      if (!speakEnabled || !text || !window.speechSynthesis) return;
-      const clean = stripEmoji(text).slice(0, 180);
-      if (!clean) return;
+    function playClip(locationId) {
+      if (!speakEnabled || !locationId) return;
       stopSpeech();
-      // Delay after cancel — immediate re-speak crashes some CEF builds.
-      speakTimer = setTimeout(() => {
-        try {
-          if (!preferredVoice) refreshVoice();
-          // No usable natural voice → stay silent (captions still show).
-          if (!preferredVoice) return;
-          const utter = new SpeechSynthesisUtterance(clean);
-          utter.voice = preferredVoice;
-          utter.rate = 0.9;
-          utter.pitch = 1.0;
-          utter.volume = 0.7;
-          utter.lang = preferredVoice.lang || 'en-US';
-          window.speechSynthesis.speak(utter);
-        } catch (e) {}
-      }, 120);
+      const src = 'audio/' + locationId + '.mp3';
+      try {
+        narrator.volume = Math.max(0, Math.min(1, narrationVolume));
+        narrator.src = src;
+        const playPromise = narrator.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      } catch (e) {}
     }
 
     function setProgress(pct) {
@@ -319,10 +290,7 @@
         .join(' — ');
       captionBar.textContent = caption;
 
-      // Prefer short line for optional TTS (title + subtitle only).
-      const narration = location.narration
-        || [info.title || location.name, info.subtitle].filter(Boolean).join('. ');
-      speak(narration);
+      playClip(location.id);
     }
 
     window.addEventListener('message', (event) => {
@@ -337,7 +305,11 @@
           welcome.classList.add('show');
           clearTimeout(welcomeTimer);
           welcomeTimer = setTimeout(() => welcome.classList.remove('show'), 2200);
-          speakEnabled = data.speakEnabled === true;
+          speakEnabled = data.speakEnabled !== false;
+          if (typeof data.narrationVolume === 'number') {
+            narrationVolume = data.narrationVolume;
+          }
+          loadManifest();
           if (data.currentLocation && typeof data.currentLocation === 'object') {
             renderLocation(data.currentLocation);
           }
@@ -360,7 +332,11 @@
         }
         case 'pauseTour': {
           app.classList.toggle('paused', !!data.isPaused);
-          if (data.isPaused) stopSpeech();
+          if (data.isPaused) {
+            try { narrator.pause(); } catch (e) {}
+          } else if (speakEnabled && narrator.src) {
+            try { narrator.play().catch(() => {}); } catch (e) {}
+          }
           break;
         }
         case 'toggleUI': {
@@ -368,7 +344,8 @@
           break;
         }
         case 'speak': {
-          speak(data.text);
+          // Legacy: play by id if provided, otherwise ignore free-text TTS.
+          if (data.id) playClip(data.id);
           break;
         }
         case 'stopSpeak': {

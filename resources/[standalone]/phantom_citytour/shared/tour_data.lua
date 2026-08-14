@@ -12,7 +12,7 @@ TourLocations = {
         camera = {
             start = vector4(-1048.0, -2710.0, 32.0, 200.0),
             target = vector4(-1037.0, -2738.0, 14.5, 0.0),
-            duration = 9000,
+            duration = 15780,
             fov = 55.0
         },
 
@@ -49,7 +49,7 @@ TourLocations = {
         camera = {
             start = vector4(408.0, -950.0, 42.0, 200.0),
             target = vector4(428.0, -982.0, 31.5, 0.0),
-            duration = 8000,
+            duration = 14724,
             fov = 50.0
         },
 
@@ -86,7 +86,7 @@ TourLocations = {
         camera = {
             start = vector4(270.0, -560.0, 52.0, 220.0),
             target = vector4(307.0, -589.0, 44.0, 0.0),
-            duration = 8000,
+            duration = 13524,
             fov = 48.0
         },
 
@@ -123,7 +123,7 @@ TourLocations = {
         camera = {
             start = vector4(-520.0, -230.0, 55.0, 40.0),
             target = vector4(-545.0, -204.0, 40.0, 0.0),
-            duration = 8000,
+            duration = 14412,
             fov = 50.0
         },
 
@@ -160,7 +160,7 @@ TourLocations = {
         camera = {
             start = vector4(130.0, -1020.0, 38.0, 200.0),
             target = vector4(150.0, -1040.0, 29.5, 0.0),
-            duration = 7000,
+            duration = 14364,
             fov = 48.0
         },
 
@@ -197,7 +197,7 @@ TourLocations = {
         camera = {
             start = vector4(828.0, -2140.0, 38.0, 230.0),
             target = vector4(814.0, -2157.0, 29.8, 0.0),
-            duration = 7000,
+            duration = 12252,
             fov = 50.0
         },
 
@@ -234,7 +234,7 @@ TourLocations = {
         camera = {
             start = vector4(-1135.0, -1985.0, 26.0, 200.0),
             target = vector4(-1155.0, -2007.0, 14.0, 0.0),
-            duration = 7000,
+            duration = 14772,
             fov = 55.0
         },
 
@@ -271,7 +271,7 @@ TourLocations = {
         camera = {
             start = vector4(1815.0, 3655.0, 48.0, 40.0),
             target = vector4(1839.0, 3672.0, 35.0, 0.0),
-            duration = 8000,
+            duration = 13092,
             fov = 50.0
         },
 
@@ -308,7 +308,7 @@ TourLocations = {
         camera = {
             start = vector4(655.0, 25.0, 95.0, 35.0),
             target = vector4(690.0, 55.0, 80.0, 0.0),
-            duration = 9000,
+            duration = 14124,
             fov = 55.0
         },
 
@@ -345,7 +345,7 @@ TourLocations = {
         camera = {
             start = vector4(-990.0, -2765.0, 35.0, 240.0),
             target = vector4(-1037.0, -2738.0, 16.0, 0.0),
-            duration = 8000,
+            duration = 14916,
             fov = 60.0
         },
 

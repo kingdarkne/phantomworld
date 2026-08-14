@@ -1,0 +1,52 @@
+{
+  "start": {
+    "file": "audio/start.mp3",
+    "text": "Welcome to Phantom World. Your Adventure Begins Here. Phantom World is a vibrant roleplay community where your story matters. From jobs and businesses to heists and friendships, every moment counts.",
+    "voice": "en-US-JennyNeural"
+  },
+  "police_dept": {
+    "file": "audio/police_dept.mp3",
+    "text": "Los Santos Police Department. Protect & Serve. Our dedicated police force ensures the safety of all citizens. Join the force or report crimes at our headquarters.",
+    "voice": "en-US-JennyNeural"
+  },
+  "hospital": {
+    "file": "audio/hospital.mp3",
+    "text": "Pillbox Hill Medical Center. Health & Wellness. Our medical center provides comprehensive healthcare services, from emergency treatment to routine check-ups.",
+    "voice": "en-US-JennyNeural"
+  },
+  "city_hall": {
+    "file": "audio/city_hall.mp3",
+    "text": "Los Santos City Hall. Civic Services. City Hall is your gateway to government services, job applications, property registration, and legal documentation.",
+    "voice": "en-US-JennyNeural"
+  },
+  "bank": {
+    "file": "audio/bank.mp3",
+    "text": "Fleeca Bank. Financial Services. Manage your finances with our secure banking system. From daily transactions to major investments, we have you covered.",
+    "voice": "en-US-JennyNeural"
+  },
+  "ammunation": {
+    "file": "audio/ammunation.mp3",
+    "text": "Ammunation. Armed & Ready. Licensed firearm dealer offering quality weapons and ammunition for self-defense and sporting purposes.",
+    "voice": "en-US-JennyNeural"
+  },
+  "mechanic": {
+    "file": "audio/mechanic.mp3",
+    "text": "Los Santos Customs. Vehicle Excellence. Transform your ride with our comprehensive vehicle modification services. From performance upgrades to visual enhancements.",
+    "voice": "en-US-JennyNeural"
+  },
+  "sandy_shores": {
+    "file": "audio/sandy_shores.mp3",
+    "text": "Sandy Shores Medical Center. Rural Healthcare. Our Sandy Shores location provides comprehensive medical services to the rural communities of Phantom World.",
+    "voice": "en-US-JennyNeural"
+  },
+  "vinewood": {
+    "file": "audio/vinewood.mp3",
+    "text": "Vinewood Boulevard. Entertainment District. Experience the glamour and excitement of Vinewood, home to entertainment venues, luxury shopping, and celebrity sightings.",
+    "voice": "en-US-JennyNeural"
+  },
+  "airport": {
+    "file": "audio/airport.mp3",
+    "text": "Los Santos International Airport. Gateway to the World. LSX connects Phantom World to destinations worldwide. Whether for business or pleasure, your journey starts here.",
+    "voice": "en-US-JennyNeural"
+  }
+}

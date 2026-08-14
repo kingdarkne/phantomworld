@@ -23,7 +23,9 @@ server_scripts {
 }
 
 files {
-    'web/build/index.html'
+    'web/build/index.html',
+    'web/build/audio/*.mp3',
+    'web/build/audio/manifest.json'
 }
 
 dependencies {

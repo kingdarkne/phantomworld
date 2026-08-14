@@ -257,8 +257,8 @@ function StartCityTour()
         SendNUIMessage({
             action = "showTour",
             tourData = GetTourOverview(),
-            -- Captions only by default — CEF TTS was crashing FiveM + sounded bad.
-            speakEnabled = Config.TourSettings.EnableNarration == true,
+            speakEnabled = Config.TourSettings.EnableNarration ~= false,
+            narrationVolume = Config.TourSettings.NarrationVolume or 0.85,
             currentLocation = nil
         })
 

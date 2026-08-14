@@ -17,9 +17,9 @@ Config.TourSettings = {
     ShowProgress = true,
     
     -- Audio / narration
-    -- Browser speechSynthesis in FiveM CEF is robotic and has hard-crashed clients.
-    -- Captions are always shown. Keep TTS off unless you explicitly want it.
-    EnableNarration = false,
+    -- Uses pre-rendered neural voice clips (Jenny) via NUI <audio> — not browser speechSynthesis.
+    EnableNarration = true,
+    NarrationVolume = 0.85,
     BackgroundMusic = false,
     MusicVolume = 0.3,
     
