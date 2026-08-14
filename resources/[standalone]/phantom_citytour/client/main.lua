@@ -8,6 +8,8 @@ local preMulticharMode = false
 local activeSubtitle = nil
 local tourGeneration = 0
 local tourAnchorCoords = nil
+local scriptCamsOn = false
+local lastSkipAt = 0
 local KVP_DONE = 'phantom_citytour_done'
 
 local function safeDestroyCam()
@@ -26,6 +28,56 @@ local function safeRenderCams(active, easeMs)
     pcall(function()
         RenderScriptCams(active and true or false, (easeMs or 0) > 0, easeMs or 0, true, true)
     end)
+    scriptCamsOn = active and true or false
+end
+
+local function ensureTourCam()
+    if cameraHandle and DoesCamExist(cameraHandle) then
+        return cameraHandle
+    end
+    cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
+    if not cameraHandle or cameraHandle == 0 then
+        cameraHandle = nil
+        return nil
+    end
+    return cameraHandle
+end
+
+local function setTourFocus(x, y, z)
+    pcall(function()
+        SetFocusPosAndVel(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0)
+    end)
+end
+
+local function clearTourFocus()
+    pcall(ClearFocus)
+end
+
+local function resolveCameraPose(cameraData)
+    local start = cameraData.start
+    local target = cameraData.target
+    local camX, camY, camZ = start.x + 0.0, start.y + 0.0, start.z + 0.0
+    local lookX, lookY, lookZ = target.x + 0.0, target.y + 0.0, target.z + 0.0
+
+    local dx = lookX - camX
+    local dy = lookY - camY
+    if (dx * dx + dy * dy) < 25.0 then
+        local heading = start.w or 0.0
+        local rad = math.rad(heading)
+        local dist = cameraData.distance or Config.TourSettings.CameraFallbackDistance or 18.0
+        local height = cameraData.height or Config.TourSettings.CameraFallbackHeight or 8.0
+        camX = lookX - (math.sin(rad) * dist)
+        camY = lookY + (math.cos(rad) * dist)
+        camZ = lookZ + height
+        lookZ = lookZ + 1.5
+    end
+
+    -- Keep FOV in a GPU-safe band (extreme FOV + AMD has been crashy).
+    local fov = cameraData.fov or Config.TourSettings.CameraFOV or 50.0
+    if fov < 40.0 then fov = 40.0 end
+    if fov > 60.0 then fov = 60.0 end
+
+    return camX, camY, camZ, lookX, lookY, lookZ, fov
 end
 
 -- Local variables
@@ -303,9 +355,11 @@ function StopCityTour(markCompleted)
         TriggerServerEvent('phantom_citytour:markCompleted')
     end
     
-    safeRenderCams(false, 400)
-    Wait(50)
+    -- Ease off script cam, then destroy once (never thrash AMD drivers).
+    safeRenderCams(false, 500)
+    Wait(100)
     safeDestroyCam()
+    clearTourFocus()
     
     -- Restore player
     RestorePlayer()
@@ -353,6 +407,9 @@ function InitializeTour()
         SetOverrideWeather('EXTRASUNNY')
     end)
     NetworkOverrideClockTime(12, 0, 0)
+
+    -- Create the one reusable script cam up front.
+    ensureTourCam()
 end
 
 function RestorePlayer()
@@ -459,14 +516,7 @@ end
 
 function ApplyLocationEffects(effects)
     if not effects then return end
-
-    ClearTimecycleModifier()
-    
-    -- Time is stored as hour-of-day (0-23). Avoid weather thrash between stops.
-    if effects.time then
-        local hour = math.floor(tonumber(effects.time) or 12) % 24
-        NetworkOverrideClockTime(hour, 0, 0)
-    end
+    -- No per-stop weather/timecycle/time flips — those hitch AMD/NVIDIA drivers mid-cinematic.
 end
 
 function SetupCamera(cameraData)
@@ -474,66 +524,31 @@ function SetupCamera(cameraData)
         print('[phantom_citytour] SetupCamera missing start/target')
         return
     end
-    
-    local start = cameraData.start
-    local target = cameraData.target
-    local camX, camY, camZ = start.x + 0.0, start.y + 0.0, start.z + 0.0
-    local lookX, lookY, lookZ = target.x + 0.0, target.y + 0.0, target.z + 0.0
 
-    -- Old data pointed straight down (same XY). Offset the eye so we frame the landmark.
-    local dx = lookX - camX
-    local dy = lookY - camY
-    if (dx * dx + dy * dy) < 25.0 then
-        local heading = start.w or 0.0
-        local rad = math.rad(heading)
-        local dist = cameraData.distance or Config.TourSettings.CameraFallbackDistance or 18.0
-        local height = cameraData.height or Config.TourSettings.CameraFallbackHeight or 8.0
-        camX = lookX - (math.sin(rad) * dist)
-        camY = lookY + (math.cos(rad) * dist)
-        camZ = lookZ + height
-        lookZ = lookZ + 1.5
-    end
+    local camX, camY, camZ, lookX, lookY, lookZ, fov = resolveCameraPose(cameraData)
 
+    -- Stream the landmark the camera is looking at (ped stays parked elsewhere).
+    setTourFocus(lookX, lookY, lookZ)
     RequestCollisionAtCoord(camX, camY, camZ)
     RequestCollisionAtCoord(lookX, lookY, lookZ)
-    -- Short non-blocking collision nudge (do not spin forever).
-    local deadline = GetGameTimer() + 400
-    while GetGameTimer() < deadline do
-        RequestCollisionAtCoord(camX, camY, camZ)
-        Wait(0)
-        break
-    end
+    Wait(50)
 
-    -- Tear down previous cam cleanly before creating another (avoids hard crashes).
-    safeRenderCams(false, 0)
-    safeDestroyCam()
-
-    local fov = cameraData.fov or Config.TourSettings.CameraFOV or 50.0
-    cameraHandle = CreateCamWithParams(
-        'DEFAULT_SCRIPTED_CAMERA',
-        camX, camY, camZ,
-        0.0, 0.0, 0.0,
-        fov,
-        false,
-        2
-    )
-    if not cameraHandle or cameraHandle == 0 then
-        cameraHandle = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-        if cameraHandle and cameraHandle ~= 0 then
-            SetCamCoord(cameraHandle, camX, camY, camZ)
-            SetCamFov(cameraHandle, fov)
-        end
-    end
-
-    if not cameraHandle or cameraHandle == 0 then
+    local cam = ensureTourCam()
+    if not cam then
         print('[phantom_citytour] SetupCamera failed to create cam')
-        cameraHandle = nil
         return
     end
 
-    PointCamAtCoord(cameraHandle, lookX, lookY, lookZ)
-    SetCamActive(cameraHandle, true)
-    safeRenderCams(true, 600)
+    -- Reuse the same cam — never Destroy/Create between stops (AMD amdxx64 crashes).
+    SetCamCoord(cam, camX, camY, camZ)
+    SetCamFov(cam, fov)
+    PointCamAtCoord(cam, lookX, lookY, lookZ)
+    SetCamActive(cam, true)
+
+    -- Only enable render once; do not toggle off/on each stop.
+    if not scriptCamsOn then
+        safeRenderCams(true, 400)
+    end
 end
 
 function SetupPlayer(_playerData)
@@ -573,6 +588,11 @@ end
 
 function SkipLocation()
     if not isTourActive then return end
+    -- Debounce rapid SPACE spam (cam thrash → GPU crashes).
+    if (GetGameTimer() - lastSkipAt) < 750 then
+        return
+    end
+    lastSkipAt = GetGameTimer()
     tourGeneration = tourGeneration + 1
     NextLocation()
 end
@@ -595,7 +615,6 @@ function PauseTour()
             isPaused = false
         })
         
-        -- Continue after a short delay
         local gen = tourGeneration
         CreateThread(function()
             Wait(1000)
@@ -606,51 +625,43 @@ function PauseTour()
     end
 end
 
--- Keep script cam alive + native controls/captions (NUI alone is not enough).
+-- Controls + captions only. Never call RenderScriptCams every frame (AMD amdxx64 crash).
 CreateThread(function()
     while true do
         if isTourActive then
-            if cameraHandle and DoesCamExist(cameraHandle) then
-                if not IsCamActive(cameraHandle) then
-                    SetCamActive(cameraHandle, true)
-                end
-                RenderScriptCams(true, false, 0, true, true)
-            end
-
-            DisableControlAction(0, 30, true) -- move LR
-            DisableControlAction(0, 31, true) -- move UD
-            DisableControlAction(0, 21, true) -- sprint
-            DisableControlAction(0, 22, true) -- jump / space
+            DisableControlAction(0, 30, true)
+            DisableControlAction(0, 31, true)
+            DisableControlAction(0, 21, true)
+            DisableControlAction(0, 22, true)
             DisableControlAction(0, 24, true)
             DisableControlAction(0, 25, true)
             DisableControlAction(0, 37, true)
 
-            -- SPACE skip (works even when keybind conflicts)
             if IsDisabledControlJustPressed(0, 22) or IsControlJustPressed(0, 22) then
                 SkipLocation()
             end
 
             if activeSubtitle then
                 SetTextFont(4)
-                SetTextScale(0.55, 0.55)
-                SetTextColour(255, 255, 255, 255)
+                SetTextScale(0.45, 0.45)
+                SetTextColour(255, 255, 255, 230)
                 SetTextCentre(true)
-                SetTextDropshadow(2, 0, 0, 0, 255)
+                SetTextDropshadow(1, 0, 0, 0, 200)
                 SetTextOutline()
                 BeginTextCommandDisplayText('STRING')
                 AddTextComponentSubstringPlayerName(activeSubtitle)
-                EndTextCommandDisplayText(0.5, 0.82)
+                EndTextCommandDisplayText(0.5, 0.84)
 
                 SetTextFont(4)
-                SetTextScale(0.35, 0.35)
-                SetTextColour(200, 220, 255, 220)
+                SetTextScale(0.32, 0.32)
+                SetTextColour(200, 220, 255, 200)
                 SetTextCentre(true)
                 BeginTextCommandDisplayText('STRING')
                 AddTextComponentSubstringPlayerName(('SPACE skip  ·  F7 stop  ·  %s/%s'):format(
                     currentLocationIndex,
                     #TourLocations
                 ))
-                EndTextCommandDisplayText(0.5, 0.88)
+                EndTextCommandDisplayText(0.5, 0.89)
             end
 
             Wait(0)
