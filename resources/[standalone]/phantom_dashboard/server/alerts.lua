@@ -26,6 +26,9 @@ local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
 local dmOwnerOnEvents = GetConvarInt('phantom_dashboard:dmOwnerOnEvents', 0) == 1
 local pingOwnerOnWebhook = GetConvarInt('phantom_dashboard:pingOwnerOnWebhook', 0) == 1
 local inviteIfMissingDiscord = GetConvarInt('phantom_dashboard:inviteIfMissingDiscord', 1) == 1
+local staffJoinAlerts = GetConvarInt('phantom_dashboard:staffJoinAlerts', 1) == 1
+local staffJoinDmOwner = GetConvarInt('phantom_dashboard:staffJoinDmOwner', 1) == 1
+local lastStaffJoinAlert = {} -- [src] = gameTimer
 
 local QUIET_EVENT_CATEGORIES = {
     connect = true,
@@ -65,6 +68,65 @@ local function discordIdentifier(src)
     local id = GetPlayerIdentifierByType(src, 'discord')
     if id then return id:gsub('discord:', '') end
     return nil
+end
+
+--- Owner Discord id or ACE admin/god.
+local function staffRoleFor(src)
+    local did = discordIdentifier(src)
+    if did and ownerDiscordId ~= '' and did == ownerDiscordId then
+        return 'owner'
+    end
+    if IsPlayerAceAllowed(src, 'admin')
+        or IsPlayerAceAllowed(src, 'god')
+        or IsPlayerAceAllowed(src, 'qbcore.god')
+        or IsPlayerAceAllowed(src, 'qbcore.admin')
+    then
+        -- Prefer clearer labels when ACE matches common staff groups
+        if IsPlayerAceAllowed(src, 'qbcore.god') or IsPlayerAceAllowed(src, 'god') then
+            return 'god'
+        end
+        return 'admin'
+    end
+    return nil
+end
+
+local function maybeAlertStaffJoin(src, context)
+    if not staffJoinAlerts or not src then return end
+    local role = staffRoleFor(src)
+    if not role then return end
+
+    local now = GetGameTimer()
+    if lastStaffJoinAlert[src] and (now - lastStaffJoinAlert[src]) < 120000 then
+        return -- debounce duplicate QBCore/qbx load events
+    end
+    lastStaffJoinAlert[src] = now
+
+    local roleLabel = ({
+        owner = '👑 Owner',
+        god = '⭐ God Admin',
+        admin = '🛡️ Admin',
+    })[role] or '🛡️ Staff'
+
+    local title = ('%s joined the city'):format(roleLabel)
+    if role == 'owner' then
+        title = '👑 Owner is online'
+    end
+
+    PhantomDashboardEmit(
+        'staff_join',
+        title,
+        playerLabel(src)
+            .. ('\nRole: **%s**'):format(role)
+            .. (context and ('\n%s'):format(context) or '')
+            .. ('\nPlayers online: **%s/%s**'):format(playerCount(), GetConvarInt('sv_maxclients', 48)),
+        15844367, -- gold
+        {
+            discordId = discordIdentifier(src),
+            inviteIfMissing = false,
+            dmOwner = staffJoinDmOwner and role ~= 'owner', -- DM owner when another admin joins
+            pingOwner = false,
+        }
+    )
 end
 
 local function playerLabel(src)
@@ -379,69 +441,79 @@ AddEventHandler('playerConnecting', function(name, _setKickReason, _deferrals)
 end)
 
 AddEventHandler('playerJoining', function()
-    if not shouldAlert() then return end
     local src = source
-    PhantomDashboardEmit(
-        'join',
-        '👋 Player Joining',
-        playerLabel(src) .. ('\nSession loading (%s/%s)'):format(
-            playerCount(),
-            GetConvarInt('sv_maxclients', 48)
-        ),
-        5763719,
-        {
-            discordId = discordIdentifier(src),
-            inviteIfMissing = inviteIfMissingDiscord,
-        }
-    )
+    if shouldAlert() then
+        PhantomDashboardEmit(
+            'join',
+            '👋 Player Joining',
+            playerLabel(src) .. ('\nSession loading (%s/%s)'):format(
+                playerCount(),
+                GetConvarInt('sv_maxclients', 48)
+            ),
+            5763719,
+            {
+                discordId = discordIdentifier(src),
+                inviteIfMissing = inviteIfMissingDiscord,
+            }
+        )
+    end
+    maybeAlertStaffJoin(src, 'Connecting / session start')
 end)
 
 AddEventHandler('QBCore:Server:PlayerLoaded', function(player)
-    if not shouldAlert() then return end
     local src = player.PlayerData.source
     local char = player.PlayerData.charinfo
     local job = player.PlayerData.job and player.PlayerData.job.label or 'Unknown'
-    local extra = ''
-    if char then
-        extra = ('\nCharacter: %s %s'):format(char.firstname or '', char.lastname or '')
+    if shouldAlert() then
+        local extra = ''
+        if char then
+            extra = ('\nCharacter: %s %s'):format(char.firstname or '', char.lastname or '')
+        end
+        PhantomDashboardEmit(
+            'loaded',
+            '✅ Player Loaded',
+            playerLabel(src) .. extra .. ('\nJob: %s (%s/%s online)'):format(
+                job,
+                playerCount(),
+                GetConvarInt('sv_maxclients', 48)
+            ),
+            5763719,
+            {
+                discordId = discordIdentifier(src),
+                inviteIfMissing = inviteIfMissingDiscord,
+            }
+        )
     end
-    PhantomDashboardEmit(
-        'loaded',
-        '✅ Player Loaded',
-        playerLabel(src) .. extra .. ('\nJob: %s (%s/%s online)'):format(
-            job,
-            playerCount(),
-            GetConvarInt('sv_maxclients', 48)
-        ),
-        5763719,
-        {
-            discordId = discordIdentifier(src),
-            inviteIfMissing = inviteIfMissingDiscord,
-        }
+    maybeAlertStaffJoin(
+        src,
+        char and ('Character: %s %s · Job: %s'):format(char.firstname or '', char.lastname or '', job) or ('Job: %s'):format(job)
     )
 end)
 
 -- Qbox may use this event name instead of / alongside QBCore compat
 AddEventHandler('qbx_core:server:playerLoggedIn', function(player)
-    if not shouldAlert() then return end
     local src = type(player) == 'table' and (player.PlayerData and player.PlayerData.source or player.source) or source
     if not src then return end
-    PhantomDashboardEmit(
-        'loaded',
-        '✅ Player Loaded',
-        playerLabel(src) .. ('\n(%s/%s online)'):format(
-            playerCount(),
-            GetConvarInt('sv_maxclients', 48)
-        ),
-        5763719,
-        {
-            discordId = discordIdentifier(src),
-            inviteIfMissing = inviteIfMissingDiscord,
-        }
-    )
+    if shouldAlert() then
+        PhantomDashboardEmit(
+            'loaded',
+            '✅ Player Loaded',
+            playerLabel(src) .. ('\n(%s/%s online)'):format(
+                playerCount(),
+                GetConvarInt('sv_maxclients', 48)
+            ),
+            5763719,
+            {
+                discordId = discordIdentifier(src),
+                inviteIfMissing = inviteIfMissingDiscord,
+            }
+        )
+    end
+    maybeAlertStaffJoin(src, 'Character loaded')
 end)
 
 AddEventHandler('playerDropped', function(reason)
+    lastStaffJoinAlert[source] = nil
     if not shouldAlert() then return end
     local src = source
     PhantomDashboardEmit(

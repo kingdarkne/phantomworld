@@ -265,6 +265,7 @@ async function postErrorTargets(client, entry) {
 async function postNormalEvent(client, entry) {
   const cat = String(entry.category || '').toLowerCase();
   // Routine FX join/leave: keep status-channel alerts, no owner DM spam.
+  // staff_join is intentional and can DM the owner when another admin comes online.
   const quietCats = new Set([
     'join',
     'connect',
@@ -278,8 +279,10 @@ async function postNormalEvent(client, entry) {
   ]);
   const quiet = quietCats.has(cat) || entry.dmOwner === false;
 
-  if (!quiet && entry.dmOwner !== false) {
-    await dmOwner(client, { embeds: [eventEmbed(entry)] });
+  if (cat === 'staff_join' || (!quiet && entry.dmOwner !== false)) {
+    if (entry.dmOwner !== false) {
+      await dmOwner(client, { embeds: [eventEmbed(entry)] });
+    }
   }
 
   const mirrorId = statusChannelId();

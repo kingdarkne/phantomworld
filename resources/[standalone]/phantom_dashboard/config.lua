@@ -49,4 +49,8 @@ Config.Discord = {
     StuckAutoReport = GetConvarInt('phantom_dashboard:stuckAutoReport', 0) == 1,
     --- When a FiveM player is not in Discord, bot DMs a server invite (via relay)
     InviteIfMissingDiscord = GetConvarInt('phantom_dashboard:inviteIfMissingDiscord', 1) == 1,
+    --- Special alert when owner / admin joins the FiveM server
+    StaffJoinAlerts = GetConvarInt('phantom_dashboard:staffJoinAlerts', 1) == 1,
+    --- DM the owner when another admin joins (owner join is channel-only)
+    StaffJoinDmOwner = GetConvarInt('phantom_dashboard:staffJoinDmOwner', 1) == 1,
 }
