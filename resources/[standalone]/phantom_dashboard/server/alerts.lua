@@ -15,10 +15,10 @@ local function directOwnerDmEnabled()
     return true
 end
 
---- Node relay only when no botToken (relay must run on same machine as FXServer).
+--- Prefer Node relay whenever configured. Owner DMs are best-effort and often
+--- blocked (Discord app quarantine); channel/webhook delivery must keep working.
 local function shouldUseBotRelay()
-    if not botRelay or botRelay == '' then return false end
-    return not directOwnerDmEnabled()
+    return botRelay and botRelay ~= ''
 end
 local alertAll = GetConvarInt('phantom_dashboard:alertAllEvents', 1) == 1
 local ownerDiscordId = GetConvar('phantom_dashboard:ownerDiscordId', '')
@@ -173,7 +173,7 @@ function PhantomDashboardEmitLifecycle(category, title, description, color)
     pushLog(entry)
     postWebhook(embedPayload(title, description, color))
     PhantomDashboardDmOwner(entry)
-    postBotRelayWithRetries(entry, 6)
+    postBotRelayWithRetries(entry, 2)
 end
 
 exports('EmitAlert', function(title, message, color)
@@ -193,11 +193,12 @@ AddEventHandler('onResourceStart', function(resourceName)
         PhantomDashboardEmitLifecycle(
             'server',
             '🟢 FXServer / Phantom Dashboard Online',
-            ('**%s** started on the **game host**\nPlayers: **%s/%s**\nOwner DMs: %s'):format(
+            ('**%s** started on the **game host**\nPlayers: **%s/%s**\nDelivery: webhook%s%s'):format(
                 status.serverName,
                 status.playerCount,
                 status.maxPlayers,
-                directOwnerDmEnabled() and 'direct (botToken)' or (shouldUseBotRelay() and ('relay ' .. botRelay) or 'webhook only')
+                shouldUseBotRelay() and (' + relay ' .. botRelay) or '',
+                directOwnerDmEnabled() and ' + owner DM (best-effort)' or ''
             ),
             5763719
         )

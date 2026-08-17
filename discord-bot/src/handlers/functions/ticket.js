@@ -1,12 +1,23 @@
 const discord = require('discord.js');
-const jsdom = require('jsdom');
 const fs = require('fs');
-const purify = require('dompurify');
 const he = require('he');
 const static = require('../../assets/utils/static');
 
 const ticketSchema = require("../../database/models/tickets");
 const ticketChannels = require("../../database/models/ticketChannels");
+
+/** Lazy-load jsdom/dompurify — canvas/libjpeg.so.8 breaks Debian 12 boots if required at top-level. */
+function loadTranscriptDeps() {
+    let jsdom;
+    let purify;
+    try {
+        jsdom = require('jsdom');
+        purify = require('dompurify');
+    } catch (err) {
+        throw new Error(`Ticket transcripts unavailable (${err.message}). Ticket actions still work.`);
+    }
+    return { jsdom, purify };
+}
 
 module.exports = async (client) => {
 
@@ -36,6 +47,7 @@ module.exports = async (client) => {
     // Transcript
 
     client.transcript = async function (interaction, channel) {
+        const { jsdom, purify } = loadTranscriptDeps();
         const template = fs.readFileSync('./src/config/template.html', 'utf8');
         const messages = await interaction.channel.messages.fetch({ limit: 100 });
 
