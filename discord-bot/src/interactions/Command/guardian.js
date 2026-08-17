@@ -89,8 +89,12 @@ module.exports = {
     }
 
     if (sub === 'lockdown') {
-      const n = await lockdownGuild(client, interaction.guild, `Manual lockdown by ${interaction.user.tag}`);
-      await interaction.editReply(`Lockdown engaged — touched **${n}** channels.`);
+      const result = await lockdownGuild(client, interaction.guild, `Manual lockdown by ${interaction.user.tag}`);
+      const hidden = result?.hidden ?? result?.locked ?? result;
+      const sz = result?.safeZoneId ? `<#${result.safeZoneId}>` : 'safe-zone';
+      await interaction.editReply(
+        `Full lockdown engaged — **${hidden}** channels hidden. Only ${sz} is visible (warning posted there).`,
+      );
       return;
     }
 

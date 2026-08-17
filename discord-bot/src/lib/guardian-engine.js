@@ -14,8 +14,59 @@ const windows = new Map();
 /** @type {Map<string, number>} guildId -> lockdown until ms */
 const lockdownUntil = new Map();
 
+/** @type {Map<string, { safeZoneId: string, created: boolean }>} */
+const lockdownState = new Map();
+
 /** @type {Map<string, any>} last infra snapshot */
 const infraState = new Map();
+
+const SAFE_ZONE_BASENAME = (process.env.GUARDIAN_SAFE_ZONE_NAME || 'safe-zone').toLowerCase();
+
+function isSafeZoneChannel(ch) {
+  if (!ch?.name) return false;
+  const n = String(ch.name).toLowerCase().replace(/[^a-z0-9-]/g, '');
+  return n === 'safezone' || n === 'safe-zone' || n.includes('safezone') || n.includes('safe-zone');
+}
+
+async function ensureSafeZone(guild, me) {
+  await guild.channels.fetch().catch(() => {});
+  const existing = guild.channels.cache.find(
+    (c) => c.type === ChannelType.GuildText && isSafeZoneChannel(c),
+  );
+  if (existing) return { channel: existing, created: false };
+
+  const channel = await guild.channels.create({
+    name: '⚠️┊safe-zone',
+    type: ChannelType.GuildText,
+    topic: 'Rex Guardian emergency safe zone — official lockdown notices only',
+    reason: 'Rex Guardian lockdown — create safe zone',
+    permissionOverwrites: [
+      {
+        id: guild.id,
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+        deny: [
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.AddReactions,
+          PermissionFlagsBits.CreatePublicThreads,
+          PermissionFlagsBits.CreatePrivateThreads,
+          PermissionFlagsBits.SendMessagesInThreads,
+        ],
+      },
+      ...(me
+        ? [{
+            id: me.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.EmbedLinks,
+              PermissionFlagsBits.MentionEveryone,
+            ],
+          }]
+        : []),
+    ],
+  });
+  return { channel, created: true };
+}
 
 function envInt(name, fallback) {
   const n = Number(process.env[name]);
@@ -121,89 +172,198 @@ async function lockdownGuild(client, guild, reason, options = {}) {
   const minutes = options.minutes || envInt('GUARDIAN_LOCKDOWN_MINUTES', 30);
   lockdownUntil.set(guild.id, Date.now() + minutes * 60_000);
 
+  const me = guild.members.me || (await guild.members.fetchMe().catch(() => null));
+  let safeZone = null;
+  let createdSafe = false;
+  try {
+    const ensured = await ensureSafeZone(guild, me);
+    safeZone = ensured.channel;
+    createdSafe = ensured.created;
+  } catch (err) {
+    console.warn('[guardian] safe-zone create/find failed:', err.message);
+  }
+
   let locked = 0;
+  let hidden = 0;
+  const hideTypes = [
+    ChannelType.GuildText,
+    ChannelType.GuildAnnouncement,
+    ChannelType.GuildVoice,
+    ChannelType.GuildForum,
+    ChannelType.GuildStageVoice,
+    ChannelType.GuildCategory,
+  ];
+
   for (const ch of guild.channels.cache.values()) {
-    if (![ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice, ChannelType.GuildForum].includes(ch.type)) {
-      continue;
-    }
+    if (!hideTypes.includes(ch.type)) continue;
+    if (safeZone && ch.id === safeZone.id) continue;
     try {
       await ch.permissionOverwrites.edit(guild.id, {
+        ViewChannel: false,
         SendMessages: false,
         AddReactions: false,
         CreatePublicThreads: false,
         CreatePrivateThreads: false,
         SendMessagesInThreads: false,
-        Connect: ch.type === ChannelType.GuildVoice ? false : undefined,
+        Connect: false,
+        Speak: false,
       });
+      hidden += 1;
       locked += 1;
     } catch (_) {}
   }
 
+  if (safeZone) {
+    try {
+      await safeZone.permissionOverwrites.edit(guild.id, {
+        ViewChannel: true,
+        ReadMessageHistory: true,
+        SendMessages: false,
+        AddReactions: false,
+        CreatePublicThreads: false,
+        CreatePrivateThreads: false,
+        SendMessagesInThreads: false,
+      });
+      if (me) {
+        await safeZone.permissionOverwrites.edit(me.id, {
+          ViewChannel: true,
+          SendMessages: true,
+          EmbedLinks: true,
+          MentionEveryone: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[guardian] safe-zone perms failed:', err.message);
+    }
+
+    lockdownState.set(guild.id, { safeZoneId: safeZone.id, created: createdSafe });
+
+    const { EmbedBuilder } = require('discord.js');
+    const warnEmbed = new EmbedBuilder()
+      .setColor(0x7f1d1d)
+      .setTitle(isDrill
+        ? '🚨⚠️ WARNING — SERVER LOCKDOWN (DRILL) ⚠️🚨'
+        : '🚨☠️ WARNING — SERVER LOCKDOWN IN PROGRESS ☠️🚨')
+      .setDescription([
+        isDrill ? '# 🧪 SECURITY DRILL' : '# ⛔ NOT A DRILL',
+        isDrill ? '## Lockout system test' : '## ☄️ FULL SERVER LOCKDOWN',
+        '',
+        `🌍 **${guild.name}** is locked by **Rex Guardian**.`,
+        '',
+        '### 🔒 What you can see',
+        '• **This channel only** — safe zone',
+        '• All other channels are **hidden** until unlock',
+        '',
+        `📋 **Reason:** ${reason}`,
+        `⏱️ **Hold:** ~${minutes} minute(s) (or until \`/guardian unlock\`)`,
+        '',
+        isDrill
+          ? '🧪 _This is a controlled test of the lockout system._'
+          : '👮 Staff are responding. Stay here. Do not panic.',
+      ].join('\n'))
+      .setFooter({ text: isDrill ? 'DRILL · Rex Guardian safe zone' : 'LIVE LOCKDOWN · Rex Guardian safe zone' })
+      .setTimestamp();
+
+    try {
+      await safeZone.send({
+        content: isDrill
+          ? '@everyone\n\n🚨 **WARNING — LOCKDOWN DRILL** 🚨\nYou are in the **SAFE ZONE**. All other channels are hidden.'
+          : '@everyone\n\n🚨🚨🚨 **WARNING — NOT A DRILL — SERVER LOCKDOWN** 🚨🚨🚨\n☠️ You are in the **SAFE ZONE**. All other channels are **HIDDEN**. ☠️',
+        embeds: [warnEmbed],
+        allowedMentions: { parse: ['everyone'] },
+      });
+    } catch (err) {
+      console.warn('[guardian] safe-zone warn failed:', err.message);
+    }
+  }
+
   await postGuardianAlert(client, {
     level: 'critical',
-    title: isDrill ? 'DRILL — LOCKDOWN ENGAGED' : 'LOCKDOWN ENGAGED',
-    description: isDrill
-      ? [
-          `# 🚨☠️ WARNING — SERVER LOCKDOWN IN PROGRESS ☠️🚨`,
-          `## ☄️ THIS IS A SCHEDULED SECURITY DRILL ☄️`,
-          '',
-          `🌍 **${guild.name}** is under a **full communication lockdown** to validate Rex Guardian.`,
-          '',
-          '💣 Messaging, reactions, and voice connects are restricted for `@everyone`',
-          '🛡️ Staff with override permissions may still operate',
-          '🧪 **This is not a real attack** — systems are being tested on purpose',
-          '',
-          `📋 **Drill reason:** ${reason}`,
-          `⏱️ **Hold time:** ~${minutes} minute(s) (or until \`/guardian unlock\`)`,
-          '',
-          '☢️ **END-OF-THE-WORLD ENERGY. DRILL PROTOCOLS ACTIVE.** ☢️',
-        ].join('\n')
-      : `**${guild.name}** is under automatic lockdown.\n**Reason:** ${reason}\n**Duration:** ~${minutes} minutes (or until \`/guardian unlock\`).`,
+    title: isDrill ? 'DRILL — LOCKDOWN + SAFE ZONE' : 'LOCKDOWN + SAFE ZONE ENGAGED',
+    description: [
+      `# ${isDrill ? 'DRILL' : '⛔ FULL'} LOCKDOWN`,
+      'All channels **hidden**. Only **safe-zone** is visible.',
+      `**Reason:** ${reason}`,
+      `**Duration:** ~${minutes} minutes (or \`/guardian unlock\`).`,
+    ].join('\n'),
     fields: [
-      { name: 'Channels locked', value: String(locked), inline: true },
+      { name: 'Channels hidden', value: String(hidden), inline: true },
+      { name: 'Safe zone', value: safeZone ? `<#${safeZone.id}>` : '_failed_', inline: true },
       { name: 'Mode', value: isDrill ? 'DRILL / TEST' : 'LIVE', inline: true },
-      { name: 'Guild', value: `${guild.name} (\`${guild.id}\`)`, inline: false },
     ],
     pingOwner: true,
   });
 
-  return locked;
+  return { locked, hidden, safeZoneId: safeZone?.id || null };
 }
 
 async function unlockGuild(client, guild, options = {}) {
   const isDrill = Boolean(options.drill);
   lockdownUntil.delete(guild.id);
+  const state = lockdownState.get(guild.id);
+  lockdownState.delete(guild.id);
+
   let unlocked = 0;
+  const restoreTypes = [
+    ChannelType.GuildText,
+    ChannelType.GuildAnnouncement,
+    ChannelType.GuildVoice,
+    ChannelType.GuildForum,
+    ChannelType.GuildStageVoice,
+    ChannelType.GuildCategory,
+  ];
+
   for (const ch of guild.channels.cache.values()) {
-    if (![ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.GuildVoice, ChannelType.GuildForum].includes(ch.type)) {
-      continue;
-    }
+    if (!restoreTypes.includes(ch.type)) continue;
+    if (state?.safeZoneId && ch.id === state.safeZoneId) continue;
     try {
       await ch.permissionOverwrites.edit(guild.id, {
+        ViewChannel: null,
         SendMessages: null,
         AddReactions: null,
         CreatePublicThreads: null,
         CreatePrivateThreads: null,
         SendMessagesInThreads: null,
         Connect: null,
+        Speak: null,
+        ReadMessageHistory: null,
       });
       unlocked += 1;
     } catch (_) {}
   }
+
+  // Clean up safe-zone: delete if we created it, otherwise hide from everyone again
+  if (state?.safeZoneId) {
+    try {
+      const sz = await guild.channels.fetch(state.safeZoneId).catch(() => null);
+      if (sz) {
+        if (state.created) {
+          await sz.delete('Rex Guardian unlock — remove temporary safe zone');
+        } else {
+          await sz.permissionOverwrites.edit(guild.id, {
+            ViewChannel: null,
+            SendMessages: null,
+            AddReactions: null,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[guardian] safe-zone cleanup failed:', err.message);
+    }
+  }
+
   await postGuardianAlert(client, {
-    level: isDrill ? 'medium' : 'medium',
+    level: 'medium',
     title: isDrill ? 'DRILL COMPLETE — Lockdown lifted' : 'Lockdown lifted',
     description: isDrill
       ? [
-          `# ✅ SECURITY DRILL COMPLETE`,
+          '# ✅ SECURITY DRILL COMPLETE',
           '',
           `The **test lockdown** on **${guild.name}** has ended.`,
-          `**${unlocked}** channels were restored to normal \`@everyone\` permissions.`,
-          '',
-          'Thank you for your patience. Rex Guardian lockout systems are verified and ready.',
+          `**${unlocked}** channels were restored. Safe zone cleaned up.`,
           '_This was a drill — no hostile activity was detected._',
         ].join('\n')
-      : `**${guild.name}** lockdown cleared (${unlocked} channels restored to default @everyone overwrites).`,
+      : `**${guild.name}** lockdown cleared (${unlocked} channels restored). Safe zone cleaned up.`,
     pingOwner: true,
   });
   return unlocked;
@@ -301,10 +461,11 @@ async function runLockdownDrill(client, guild, {
     }
   } catch (_) {}
 
-  const locked = await lockdownGuild(client, guild, 'Scheduled security drill / lockout system test', {
+  const lockResult = await lockdownGuild(client, guild, 'Scheduled security drill / lockout system test', {
     drill: true,
     minutes: Math.max(1, Math.ceil(hold / 60)),
   });
+  const locked = typeof lockResult === 'object' ? lockResult.locked : lockResult;
 
   await new Promise((r) => setTimeout(r, hold * 1000));
 
@@ -508,6 +669,7 @@ module.exports = {
   THRESHOLDS,
   DANGEROUS_PERMS,
   lockdownUntil,
+  lockdownState,
   infraState,
   envInt,
   envList,
