@@ -632,7 +632,10 @@ module.exports = function setupPhantomFivem(client) {
   attachRexMentionEscalation(client);
 
   // Defer boot work until Discord login finishes (bridge loads before ready).
+  let bootStarted = false;
   const onReady = async () => {
+    if (bootStarted) return;
+    bootStarted = true;
     try {
       await ensureAlertsThread(client);
     } catch (err) {
