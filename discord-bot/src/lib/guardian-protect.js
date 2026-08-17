@@ -27,6 +27,12 @@ const {
 const { postGuardianAlert, ownerIds } = require('./guardian-alerts');
 const { memberHasCoOwnerRole } = require('./ensure-staff-roles');
 const { jailMember, isOwnerProtected } = require('./guardian-jail');
+const {
+  rememberBotInviter,
+  forgetBot,
+  registerOperatorWatch,
+  jailOperatorsForBotNuke,
+} = require('./guardian-operators');
 
 /** guildId -> Map(botId -> { invitedBy, taggedAt, tag }) */
 const xeonWatch = new Map();
@@ -292,6 +298,15 @@ async function handleCoOwnerAppNuke(client, guild, {
     });
   }
 
+  // Also jail anyone who ran .clear / purge right before the nuke
+  if (targetAppId) {
+    try {
+      await jailOperatorsForBotNuke(client, guild, targetAppId, reason);
+    } catch (err) {
+      console.warn('[guardian-protect] operator jail:', err.message);
+    }
+  }
+
   // If a different human executor also nuked, jail them too
   if (executorId && executorId !== targetAppId && executorId !== inviterId) {
     const execMember = guild.members.cache.get(executorId)
@@ -444,6 +459,8 @@ function registerGuardianProtect(client) {
   if (client.isReady?.() || client.readyAt) start();
   else client.once(Events.ClientReady, start);
 
+  registerOperatorWatch(client);
+
   client.on(Events.GuildMemberAdd, async (member) => {
     try {
       if (!guardianEnabled() || !member.user.bot) return;
@@ -462,6 +479,11 @@ function registerGuardianProtect(client) {
       }
 
       const byCoOwner = Boolean(inviter && memberHasCoOwnerRole(inviter));
+
+      // Always remember who invited every bot (for operator jail on nuke)
+      if (ex?.id) {
+        rememberBotInviter(member.guild.id, member.id, ex.id, member.user.tag);
+      }
 
       // Always strip Administrator / dangerous perms from newly added bots
       const strip = await stripDangerousBotPerms(member.guild, member);
@@ -546,6 +568,7 @@ function registerGuardianProtect(client) {
     try {
       guildXeonMap(member.guild.id).delete(member.id);
       guildCoOwnerAppMap(member.guild.id).delete(member.id);
+      forgetBot(member.guild.id, member.id);
     } catch (_) {}
   });
 

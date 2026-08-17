@@ -853,6 +853,13 @@ async function noteAction(client, guild, {
   let result;
   if (isBot) {
     result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
+    // Jail humans who ran .clear / purge, and Co-Owner inviters — audit only shows the bot
+    try {
+      const { jailOperatorsForBotNuke } = require('./guardian-operators');
+      await jailOperatorsForBotNuke(client, guild, executorId, punishReason);
+    } catch (err) {
+      console.warn('[guardian] jail operators failed:', err.message);
+    }
   } else {
     const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
     result = jail.ok

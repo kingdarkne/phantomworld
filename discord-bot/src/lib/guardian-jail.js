@@ -103,7 +103,8 @@ async function ensureJailRole(guild) {
  */
 async function jailMember(client, guild, userId, reason, options = {}) {
   const force = options.force === true;
-  const kickBots = options.kickBots !== false;
+  // Default: do NOT kick — only kick when explicitly requested for bot accounts
+  const kickBots = options.kickBots === true;
   const timeoutMs = options.timeoutMs ?? envInt('GUARDIAN_JAIL_TIMEOUT_MS', 24 * 60 * 60 * 1000);
 
   if (!userId) return { skipped: true, reason: 'no_id' };
