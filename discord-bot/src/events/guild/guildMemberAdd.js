@@ -28,6 +28,12 @@ module.exports = async (client, member) => {
         sendWelcomeDm(client, member).catch(() => {});
     } catch (_) {}
 
+    // Unbanned users who could not be DMed (no mutual guild) — welcome on rejoin
+    try {
+        const { deliverPendingWelcomeOnJoin } = require('../../lib/unban-welcome');
+        deliverPendingWelcomeOnJoin(member).catch(() => {});
+    } catch (_) {}
+
     // Server logging for member adds
     try {
         const serverlog = new Discord.WebhookClient({

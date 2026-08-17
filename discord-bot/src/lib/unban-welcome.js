@@ -3,7 +3,11 @@
  * and report anyone who could not be DMed.
  */
 const { EmbedBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const { postGuardianAlert } = require('./guardian-alerts');
+
+const PENDING_FILE = path.join(process.cwd(), 'data', 'unban-pending-welcome.json');
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -101,6 +105,64 @@ function welcomeBackPayload(guild, inviteUrl) {
   };
 }
 
+function loadPending() {
+  try {
+    return JSON.parse(fs.readFileSync(PENDING_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function savePending(state) {
+  fs.mkdirSync(path.dirname(PENDING_FILE), { recursive: true });
+  fs.writeFileSync(PENDING_FILE, JSON.stringify(state, null, 2));
+}
+
+/** Remember unbanned users we could not DM (no mutual guild) so we welcome on rejoin. */
+function queuePendingWelcomes(guildId, entries, inviteUrl) {
+  const state = loadPending();
+  if (!state[guildId]) state[guildId] = {};
+  for (const e of entries) {
+    if (!e?.id) continue;
+    state[guildId][e.id] = {
+      tag: e.tag || null,
+      inviteUrl: inviteUrl || null,
+      queuedAt: Date.now(),
+      reason: e.reason || 'dm failed',
+    };
+  }
+  savePending(state);
+}
+
+async function deliverPendingWelcomeOnJoin(member) {
+  if (!member || member.user.bot) return false;
+  const state = loadPending();
+  const guildPending = state[member.guild.id];
+  if (!guildPending?.[member.id]) return false;
+
+  const entry = guildPending[member.id];
+  const payload = welcomeBackPayload(member.guild, entry.inviteUrl);
+  // On rejoin they share a guild — DM usually works now
+  try {
+    await member.send(payload);
+  } catch (err) {
+    console.warn('[unban-welcome] rejoin DM failed', member.id, err.message);
+    return false;
+  }
+
+  delete guildPending[member.id];
+  if (!Object.keys(guildPending).length) delete state[member.guild.id];
+  savePending(state);
+  return true;
+}
+
+/** Seed pending list from a finished report (e.g. REST resume job). */
+function seedPendingFromReport(guildId, report) {
+  if (!report?.dmFailed?.length) return 0;
+  queuePendingWelcomes(guildId, report.dmFailed, report.inviteUrl || null);
+  return report.dmFailed.length;
+}
+
 /**
  * @returns {{
  *   total: number,
@@ -176,6 +238,11 @@ async function unbanAllAndWelcome(client, guild, { dryRun = false } = {}) {
     if (delay) await sleep(delay);
   }
 
+  if (result.dmFailed.length) {
+    queuePendingWelcomes(guild.id, result.dmFailed, inviteUrl);
+    result.pendingOnRejoin = result.dmFailed.length;
+  }
+
   return result;
 }
 
@@ -191,11 +258,14 @@ function formatUnbanReport(result) {
     `**Unbanned:** ${result.unbanned}`,
     `**Unban failed:** ${result.unbanFailed.length}`,
     `**Welcome DMs sent:** ${result.dmOk}`,
-    `**Unable to DM:** ${result.dmFailed.length}`,
+    `**Unable to DM now:** ${result.dmFailed.length}`,
+    result.pendingOnRejoin
+      ? `**Queued for rejoin DM:** ${result.pendingOnRejoin} (Discord blocks DMs with no mutual server)`
+      : null,
     result.inviteUrl ? `**Invite:** ${result.inviteUrl}` : '**Invite:** _could not create_',
     '',
     result.dmFailed.length
-      ? ['**Could not DM:**', ...failLines, more].join('\n')
+      ? ['**Could not DM (will retry when they rejoin):**', ...failLines, more].join('\n')
       : '_Everyone who was unbanned received a DM (or list was empty)._',
   ]
     .filter((x) => x !== null)
@@ -222,4 +292,7 @@ module.exports = {
   reportUnbanResults,
   createGuildInvite,
   welcomeBackPayload,
+  queuePendingWelcomes,
+  deliverPendingWelcomeOnJoin,
+  seedPendingFromReport,
 };
