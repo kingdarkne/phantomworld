@@ -23,6 +23,11 @@ const {
   isLocked,
 } = require('../../lib/guardian-engine');
 const { postGuardianAlert, ownerIds } = require('../../lib/guardian-alerts');
+const {
+  registerGuardianProtect,
+  isXeonBot,
+  guildHasXeon,
+} = require('../../lib/guardian-protect');
 
 async function maybeExecutor(guild, type, targetId) {
   return fetchExecutor(guild, type, targetId);
@@ -161,6 +166,7 @@ module.exports = async (client) => {
   }
 
   console.log('[guardian] Anti-raid / anti-nuke / infra watch armed');
+  registerGuardianProtect(client);
 
   // ---- Mass join raid ----
   client.on(Events.GuildMemberAdd, async (member) => {
@@ -214,6 +220,8 @@ module.exports = async (client) => {
   client.on(Events.ChannelDelete, async (channel) => {
     try {
       if (!channel.guild || !guardianEnabled()) return;
+      // Xeon/backup path handled by guardian-protect (no full lockdown)
+      if (guildHasXeon(channel.guild)) return;
       const ex = await maybeExecutor(channel.guild, AuditLogEvent.ChannelDelete, channel.id);
       await noteAction(client, channel.guild, {
         action: 'channelDelete',
@@ -231,6 +239,7 @@ module.exports = async (client) => {
   client.on(Events.ChannelCreate, async (channel) => {
     try {
       if (!channel.guild || !guardianEnabled()) return;
+      if (guildHasXeon(channel.guild)) return;
       const ex = await maybeExecutor(channel.guild, AuditLogEvent.ChannelCreate, channel.id);
       await noteAction(client, channel.guild, {
         action: 'channelCreate',
@@ -249,6 +258,7 @@ module.exports = async (client) => {
   client.on(Events.GuildRoleDelete, async (role) => {
     try {
       if (!guardianEnabled()) return;
+      if (guildHasXeon(role.guild)) return;
       const ex = await maybeExecutor(role.guild, AuditLogEvent.RoleDelete, role.id);
       await noteAction(client, role.guild, {
         action: 'roleDelete',
@@ -266,6 +276,7 @@ module.exports = async (client) => {
   client.on(Events.GuildRoleCreate, async (role) => {
     try {
       if (!guardianEnabled()) return;
+      if (guildHasXeon(role.guild)) return;
       const ex = await maybeExecutor(role.guild, AuditLogEvent.RoleCreate, role.id);
       await noteAction(client, role.guild, {
         action: 'roleCreate',
@@ -396,6 +407,8 @@ module.exports = async (client) => {
     try {
       if (!guardianEnabled() || !member.user.bot) return;
       if (isWhitelisted(client, member.id)) return;
+      // Xeon/backup bots: watch only (guardian-protect). Do not kick on join.
+      if (isXeonBot(member.user)) return;
       const allow = new Set(
         String(process.env.GUARDIAN_ALLOWED_BOTS || '')
           .split(/[,\s]+/)
@@ -481,11 +494,15 @@ module.exports = async (client) => {
       title: 'Guardian online',
       description: [
         'Automatic **anti-raid / anti-nuke** is armed.',
+        '**Rex role fortress:** keeps Rex high + restores perms; punishes anyone who strips/kicks Rex.',
+        '**Xeon/backup bots:** watched on join — if they backup/delete, Rex kicks bot + operator (DM) **without** full lockdown.',
         'Watching: mass joins, channel/role nukes, mass ban/kick, webhooks, bot adds, dangerous perms, guild/vanity changes.',
         'Infra watch: FiveM, billing, panel, bot relay' + (process.env.LAVALINK_HOST ? ', Lavalink' : '') + '.',
         '',
         `Owners: ${ownerIds().map((id) => `<@${id}>`).join(' ') || '_none set_'}`,
         'All alerts post **here**.',
+        '',
+        '_Discord cannot make roles 100% undeletable for the server owner — drag Rex **under you only** at the top._',
       ].join('\n'),
       pingOwner: false,
       footer: 'Rex Guardian · maximum lockdown',
