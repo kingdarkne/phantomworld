@@ -277,7 +277,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         client.loadSubcommands(client, interaction, args);
     },
 };

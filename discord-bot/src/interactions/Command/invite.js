@@ -14,7 +14,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         let row = new Discord.ActionRowBuilder()
             .addComponents(
                 new Discord.ButtonBuilder()

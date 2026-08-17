@@ -66,7 +66,7 @@ module.exports = {
         
         // Handle 'ask' subcommand directly
         if (sub === 'ask') {
-            await interaction.deferReply({});
+            if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
             
             const question = interaction.options.getString('question');
             const guildId  = interaction.guild.id;

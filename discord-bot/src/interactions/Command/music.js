@@ -122,7 +122,7 @@ module.exports = {
 
     run: async (client, interaction, args) => {
         if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply();
+            if (!interaction.deferred && !interaction.replied) await interaction.deferReply();
         }
 
         const hasPerms = await client.checkBotPerms({

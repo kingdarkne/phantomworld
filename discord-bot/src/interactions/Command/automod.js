@@ -1,4 +1,4 @@
-const { CommandInteraction, Client } = require('discord.js');
+const {CommandInteraction, Client, PermissionFlagsBits} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const { ChannelType } = require('discord.js');
 const Discord = require('discord.js');
@@ -6,7 +6,8 @@ const Discord = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('automod')
-        .setDescription('Manage the auto mod')
+        .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Manage the auto mod')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('help')
@@ -76,7 +77,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         const perms = await client.checkUserPerms({
             flags: [Discord.PermissionsBitField.Flags.ManageMessages],
             perms: [Discord.PermissionsBitField.Flags.ManageMessages]
