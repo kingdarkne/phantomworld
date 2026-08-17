@@ -109,6 +109,82 @@ function threatDmEmbed({ guildName, reason, kind }) {
     .setTimestamp();
 }
 
+function debugLog(hypothesisId, location, message, data = {}) {
+  // #region agent log
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const line = JSON.stringify({
+      hypothesisId, location, message, data, timestamp: Date.now(),
+    }) + '\n';
+    try { fs.appendFileSync('/opt/cursor/logs/debug.log', line); } catch (_) {}
+    try {
+      const p = path.join(process.cwd(), 'data', 'guardian-debug.ndjson');
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.appendFileSync(p, line);
+    } catch (_) {}
+    console.log(`[guardian-debug] ${hypothesisId} ${location} ${message}`, JSON.stringify(data));
+  } catch (_) {}
+  // #endregion
+}
+
+/**
+ * Strip Administrator / dangerous perms from a newly added bot's managed roles.
+ * Never edits non-managed shared staff roles.
+ */
+async function stripDangerousBotPerms(guild, member) {
+  if (!member?.user?.bot) return { stripped: 0, roles: [] };
+  const me = guild.members.me;
+  if (!me?.permissions?.has(PermissionFlagsBits.ManageRoles)) {
+    return { stripped: 0, roles: [], reason: 'no_manage_roles' };
+  }
+
+  const dangerous = [
+    PermissionFlagsBits.Administrator,
+    PermissionFlagsBits.ManageGuild,
+    PermissionFlagsBits.ManageRoles,
+    PermissionFlagsBits.ManageChannels,
+    PermissionFlagsBits.BanMembers,
+    PermissionFlagsBits.KickMembers,
+    PermissionFlagsBits.ManageWebhooks,
+    PermissionFlagsBits.MentionEveryone,
+  ];
+
+  const changed = [];
+  for (const role of member.roles.cache.values()) {
+    if (role.id === guild.id) continue;
+    // Only touch managed bot roles (integration roles) we can edit
+    if (!role.managed || !role.editable) continue;
+    if (me.roles.highest.position <= role.position) continue;
+
+    let perms = role.permissions;
+    let dirty = false;
+    for (const p of dangerous) {
+      if (perms.has(p)) {
+        perms = perms.remove(p);
+        dirty = true;
+      }
+    }
+    if (!dirty) continue;
+    try {
+      await role.setPermissions(perms, 'Rex Guardian: strip dangerous perms from new bot');
+      changed.push(role.name);
+    } catch (err) {
+      console.warn('[guardian-protect] strip bot perms', role.id, err.message);
+    }
+  }
+
+  // #region agent log
+  debugLog('H4', 'guardian-protect.js:stripDangerousBotPerms', 'stripped bot perms', {
+    botId: member.id,
+    tag: member.user.tag,
+    roles: changed,
+  });
+  // #endregion
+
+  return { stripped: changed.length, roles: changed };
+}
+
 async function fortifyBotRole(guild, me) {
   if (!me) return { ok: false, reason: 'no_me' };
   const role = me.roles.highest;
@@ -184,6 +260,30 @@ async function handleCoOwnerAppNuke(client, guild, {
 
   const reason = `Co-Owner-added app nuke attempt (${action})`;
 
+  // Kick/ban the nuking app FIRST — alerts/DMs must not delay removal during mass-delete
+  let appKick = null;
+  if (targetAppId) {
+    const t0 = Date.now();
+    appKick = await punish(client, guild, targetAppId, reason, { ban: true });
+    if (!appKick?.ok) {
+      appKick = await jailMember(client, guild, targetAppId, reason, { kickBots: true });
+    }
+    watched.delete(targetAppId);
+    guildXeonMap(guild.id).delete(targetAppId);
+    // #region agent log
+    debugLog('H3', 'guardian-protect.js:handleCoOwnerAppNuke', 'app removed first', {
+      targetAppId, appKick, ms: Date.now() - t0,
+    });
+    // #endregion
+  }
+
+  if (!isLocked(guild.id)) {
+    lockdownGuild(client, guild, reason, {
+      pingEveryone: false,
+      minutes: envInt('GUARDIAN_LOCKDOWN_MINUTES', 30),
+    }).catch(() => {});
+  }
+
   await postGuardianAlert(client, {
     level: 'critical',
     title: 'Co-Owner app nuke — kick app + JAIL Co-Founder',
@@ -191,9 +291,10 @@ async function handleCoOwnerAppNuke(client, guild, {
       `**Action:** ${action}`,
       detail || '',
       '',
-      '• Kicking the **app/bot**',
+      '• Kicking/banning the **app/bot** (immediate)',
       '• Putting the **Co-Founder** who added it in **Jail**',
       '• Engaging **safe-zone lockdown** (**no @everyone**)',
+      appKick ? `• App result: **${appKick.action || appKick.reason || 'done'}**` : '',
     ]
       .filter(Boolean)
       .join('\n'),
@@ -206,13 +307,9 @@ async function handleCoOwnerAppNuke(client, guild, {
   });
 
   if (targetAppId) {
-    await dmUser(client, targetAppId, {
+    dmUser(client, targetAppId, {
       embeds: [threatDmEmbed({ guildName: guild.name, reason, kind: 'coowner-app' })],
-    });
-    // Bot account → kick
-    await jailMember(client, guild, targetAppId, reason, { kickBots: true });
-    watched.delete(targetAppId);
-    guildXeonMap(guild.id).delete(targetAppId);
+    }).catch(() => {});
   }
 
   // Jail Co-Founder who added the nuking app (force past trusted roles; never owner)
@@ -254,14 +351,7 @@ async function handleCoOwnerAppNuke(client, guild, {
     pingOwner: true,
   });
 
-  if (!isLocked(guild.id)) {
-    await lockdownGuild(client, guild, reason, {
-      pingEveryone: false,
-      minutes: envInt('GUARDIAN_LOCKDOWN_MINUTES', 30),
-    });
-  }
-
-  return { appId: targetAppId, inviterId, jailResult };
+  return { appId: targetAppId, inviterId, jailResult, appKick };
 }
 
 async function handleXeonThreat(client, guild, {
@@ -406,6 +496,26 @@ function registerGuardianProtect(client) {
 
       const byCoOwner = Boolean(inviter && memberHasCoOwnerRole(inviter));
 
+      // Always strip Administrator / dangerous perms from newly added bots
+      const strip = await stripDangerousBotPerms(member.guild, member);
+      if (strip.stripped) {
+        console.log(`[guardian-protect] stripped dangerous perms from ${member.user.tag}: ${strip.roles.join(', ')}`);
+        await postGuardianAlert(client, {
+          level: 'high',
+          title: 'New bot — dangerous perms stripped',
+          description: [
+            `**${member.user.tag}** joined with elevated perms.`,
+            `Rex removed: **${strip.roles.join(', ') || 'n/a'}** (Administrator / manage / ban / kick / webhooks).`,
+            'First destructive action still triggers **instant ban + lockdown**.',
+          ].join('\n'),
+          fields: [
+            { name: 'App', value: `<@${member.id}>`, inline: true },
+            { name: 'Added by', value: ex?.id ? `<@${ex.id}>` : 'Unknown', inline: true },
+          ],
+          pingOwner: true,
+        });
+      }
+
       if (byCoOwner) {
         guildCoOwnerAppMap(member.guild.id).set(member.id, {
           invitedBy: ex.id,
@@ -414,12 +524,17 @@ function registerGuardianProtect(client) {
           coOwner: true,
         });
         console.log(`[guardian-protect] Co-Owner app watched: ${member.user.tag} by ${inviter.user.tag}`);
+        // #region agent log
+        debugLog('H4', 'guardian-protect.js:GuildMemberAdd', 'co-owner app watched', {
+          botId: member.id, inviterId: ex.id, stripped: strip.stripped,
+        });
+        // #endregion
         await postGuardianAlert(client, {
           level: 'high',
           title: 'App added by Co-Owner — WATCHING',
           description: [
             `**${member.user.tag}** was added by a **Co-Owner/Co-Founder**.`,
-            'If this app tries to **nuke**, Rex will **kick the app**, **Jail the Co-Founder**, **lockdown** (no @everyone), and **ping the owner**.',
+            'If this app tries to **nuke**, Rex will **ban the app**, **Jail the Co-Founder**, **lockdown** (no @everyone), and **ping the owner**.',
           ].join('\n'),
           fields: [
             { name: 'App', value: `<@${member.id}>`, inline: true },
@@ -428,7 +543,12 @@ function registerGuardianProtect(client) {
           pingOwner: true,
         });
       } else if (member.user.bot) {
-        console.log(`[guardian-protect] bot joined (not Co-Owner add): ${member.user.tag} invitedBy=${ex?.id || 'unknown'}`);
+        console.log(`[guardian-protect] bot joined (not Co-Owner add): ${member.user.tag} invitedBy=${ex?.id || 'unknown'} stripped=${strip.stripped}`);
+        // #region agent log
+        debugLog('H4', 'guardian-protect.js:GuildMemberAdd', 'bot joined not co-owner', {
+          botId: member.id, inviterId: ex?.id || null, stripped: strip.stripped,
+        });
+        // #endregion
       }
 
       if (!isXeonBot(member.user)) return;
@@ -476,7 +596,16 @@ function registerGuardianProtect(client) {
     if (!guardianEnabled() || !guild) return false;
     const ex = await fetchExecutor(guild, auditType, targetId);
     const execId = ex?.id || null;
-    const execMember = execId ? guild.members.cache.get(execId) : null;
+    const execMember = execId
+      ? (guild.members.cache.get(execId) || await guild.members.fetch(execId).catch(() => null))
+      : null;
+    let execBot = Boolean(execMember?.user?.bot);
+    if (!execBot && execId) {
+      try {
+        const u = await client.users.fetch(execId);
+        execBot = Boolean(u?.bot);
+      } catch (_) {}
+    }
     let execXeon = Boolean(execMember && isXeonBot(execMember.user)) || guildXeonMap(guild.id).has(execId);
     if (!execXeon && execId) {
       try {
@@ -489,7 +618,13 @@ function registerGuardianProtect(client) {
     const execIsCoApp = execId && coMap.has(execId);
     const hasCoApp = coMap.size > 0;
 
-    if (execIsCoApp || (hasCoApp && execMember?.user?.bot && coMap.has(execId))) {
+    // #region agent log
+    debugLog('H2', 'guardian-protect.js:maybeThreatCounter', 'executor resolved', {
+      action, targetId, execId, execBot, execXeon, execIsCoApp, hasCoApp,
+    });
+    // #endregion
+
+    if (execIsCoApp || (hasCoApp && execBot && coMap.has(execId))) {
       await handleCoOwnerAppNuke(client, guild, {
         action,
         executorId: execId,
@@ -499,7 +634,7 @@ function registerGuardianProtect(client) {
       return true;
     }
 
-    if (hasCoApp && execMember?.user?.bot) {
+    if (hasCoApp && execBot) {
       const firstApp = [...coMap.keys()][0];
       await handleCoOwnerAppNuke(client, guild, {
         action,
@@ -510,6 +645,8 @@ function registerGuardianProtect(client) {
       return true;
     }
 
+    // Any non-Rex bot doing destructive structure changes → instant ban path via noteAction
+    // (handled in guardian.js); still intercept Xeon here.
     const hasXeon = guildHasXeon(guild) || execXeon;
     if (!hasXeon && !execXeon) return false;
 
@@ -651,6 +788,7 @@ function registerGuardianProtect(client) {
 module.exports = {
   registerGuardianProtect,
   fortifyBotRole,
+  stripDangerousBotPerms,
   isXeonBot,
   handleXeonThreat,
   handleCoOwnerAppNuke,

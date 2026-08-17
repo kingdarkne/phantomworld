@@ -710,7 +710,9 @@ function isLocked(guildId) {
 }
 
 /**
- * Ban (preferred) or kick a nuker/raider and strip roles first.
+ * Ban (preferred) or kick a nuker/raider.
+ * Bots: ban/kick FIRST (role strip wastes critical ms during mass-delete).
+ * Humans: strip roles then ban/kick.
  */
 async function punish(client, guild, userId, reason, { ban = true } = {}) {
   if (!userId || isWhitelisted(client, userId)) {
@@ -736,12 +738,18 @@ async function punish(client, guild, userId, reason, { ban = true } = {}) {
     return { skipped: true, reason: 'hierarchy' };
   }
 
-  try {
-    if (member) {
-      const removable = member.roles.cache.filter((r) => r.id !== guild.id && r.editable);
-      if (removable.size) await member.roles.remove(removable, `[Guardian] ${reason}`).catch(() => {});
-    }
-  } catch (_) {}
+  const isBot = Boolean(member?.user?.bot);
+  const doStrip = async () => {
+    try {
+      if (member) {
+        const removable = member.roles.cache.filter((r) => r.id !== guild.id && r.editable);
+        if (removable.size) await member.roles.remove(removable, `[Guardian] ${reason}`).catch(() => {});
+      }
+    } catch (_) {}
+  };
+
+  // Humans: strip first. Bots: remove immediately — strip is pointless once banned.
+  if (!isBot) await doStrip();
 
   try {
     if (ban && guild.members.me?.permissions?.has(PermissionFlagsBits.BanMembers)) {
@@ -764,11 +772,43 @@ async function punish(client, guild, userId, reason, { ban = true } = {}) {
     console.warn('[guardian] kick failed:', err.message);
   }
 
+  if (isBot) await doStrip();
   return { ok: false, reason: 'no_perms' };
+}
+
+/** guildId:userId → in-flight nuke response (dedupe concurrent ChannelDelete floods) */
+const nukeInFlight = new Set();
+
+function debugLog(hypothesisId, location, message, data = {}) {
+  // #region agent log
+  try {
+    const fs = require('fs');
+    const line = JSON.stringify({
+      hypothesisId,
+      location,
+      message,
+      data,
+      timestamp: Date.now(),
+      runId: process.env.GUARDIAN_DEBUG_RUN_ID || 'pre-fix',
+    }) + '\n';
+    fs.appendFileSync('/opt/cursor/logs/debug.log', line);
+  } catch (_) {}
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.join(process.cwd(), 'data', 'guardian-debug.ndjson');
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.appendFileSync(p, JSON.stringify({
+      hypothesisId, location, message, data, timestamp: Date.now(),
+    }) + '\n');
+  } catch (_) {}
+  console.log(`[guardian-debug] ${hypothesisId} ${location} ${message}`, JSON.stringify(data));
+  // #endregion
 }
 
 /**
  * Record a dangerous action; auto-punish + lockdown when thresholds trip.
+ * Bot executors on destructive actions: threshold forced to 1 (instant ban/kick).
  */
 async function noteAction(client, guild, {
   action,
@@ -787,12 +827,107 @@ async function noteAction(client, guild, {
     return;
   }
 
+  let member = executorId ? guild.members.cache.get(executorId) : null;
+  if (executorId && !member) {
+    try {
+      member = await guild.members.fetch(executorId);
+    } catch (_) {}
+  }
+  if (!member && executorId) {
+    try {
+      const u = await client.users.fetch(executorId);
+      if (u?.bot) member = { user: u, id: executorId };
+    } catch (_) {}
+  }
+
+  const isBot = Boolean(member?.user?.bot);
+  const destructActions = new Set([
+    'channelDelete', 'channelCreate', 'roleDelete', 'roleCreate', 'webhookCreate',
+  ]);
+  // Instant response for any bot nuke — do not allow a free first delete
+  const botInstant = isBot && destructActions.has(action);
+  const limit = botInstant
+    ? envInt('GUARDIAN_BOT_DESTRUCT_THRESHOLD', 1)
+    : threshold;
+
   const key = `${guild.id}:${action}:${executorId || 'unknown'}`;
   const count = hit(key, windowMs);
-  const limit = threshold;
+
+  // #region agent log
+  debugLog(botInstant ? 'H1' : 'H1b', 'guardian-engine.js:noteAction', 'action counted', {
+    guildId: guild.id,
+    action,
+    executorId: executorId || null,
+    isBot,
+    botInstant,
+    count,
+    limit,
+    thresholdIn: threshold,
+  });
+  // #endregion
+
+  if (count < limit) {
+    await postGuardianAlert(client, {
+      level: count >= Math.max(1, limit - 1) ? 'high' : 'medium',
+      title: `${action} detected`,
+      description: detail || `Suspicious **${action}** in **${guild.name}**.`,
+      fields: [
+        { name: 'Executor', value: executorId ? `<@${executorId}> (\`${executorId}\`)\n${executorTag || ''}` : 'Unknown (check Audit Log)', inline: true },
+        { name: 'Target', value: String(targetLabel || '—').slice(0, 200), inline: true },
+        { name: 'Window', value: `${count}/${limit} in ${Math.round(windowMs / 1000)}s`, inline: true },
+      ],
+      pingOwner: false,
+    });
+    return;
+  }
+
+  const punishReason = `Anti-nuke: ${action} x${count}`;
+  const flightKey = `${guild.id}:${executorId || 'unknown'}:${action}`;
+  if (nukeInFlight.has(flightKey)) {
+    // #region agent log
+    debugLog('H3', 'guardian-engine.js:noteAction', 'dedupe in-flight nuke response', { flightKey, count });
+    // #endregion
+    return;
+  }
+  nukeInFlight.add(flightKey);
+  setTimeout(() => nukeInFlight.delete(flightKey), 15_000);
+
+  // Punish FIRST (before alerts) — mass-delete bots win races against Discord REST otherwise
+  const { jailMember } = require('./guardian-jail');
+  let result;
+  const t0 = Date.now();
+  try {
+    if (isBot) {
+      result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
+    } else {
+      const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
+      result = jail.ok
+        ? { ok: true, action: jail.action }
+        : await punish(client, guild, executorId, punishReason, { ban: punishBan });
+    }
+  } finally {
+    // keep flight lock until lockdown starts
+  }
+
+  // #region agent log
+  debugLog('H3', 'guardian-engine.js:noteAction', 'punish completed', {
+    executorId,
+    isBot,
+    result,
+    ms: Date.now() - t0,
+    botInstant,
+  });
+  // #endregion
+
+  if (lockdown && !isLocked(guild.id)) {
+    // Fire lockdown without awaiting alerts
+    lockdownGuild(client, guild, punishReason, { pingEveryone: false }).catch((err) => {
+      console.warn('[guardian] lockdown after nuke failed:', err.message);
+    });
+  }
 
   await postGuardianAlert(client, {
-    level: count >= limit ? 'critical' : count >= Math.max(1, limit - 1) ? 'high' : 'medium',
+    level: 'critical',
     title: `${action} detected`,
     description: detail || `Suspicious **${action}** in **${guild.name}**.`,
     fields: [
@@ -800,50 +935,22 @@ async function noteAction(client, guild, {
       { name: 'Target', value: String(targetLabel || '—').slice(0, 200), inline: true },
       { name: 'Window', value: `${count}/${limit} in ${Math.round(windowMs / 1000)}s`, inline: true },
     ],
-    pingOwner: count >= limit,
+    pingOwner: true,
   });
-
-  if (count < limit) return;
-
-  const punishReason = `Anti-nuke: ${action} x${count}`;
-  const { jailMember } = require('./guardian-jail');
-
-  let member = executorId ? guild.members.cache.get(executorId) : null;
-  if (executorId && !member) {
-    try {
-      member = await guild.members.fetch(executorId);
-    } catch (_) {}
-  }
-
-  let result;
-  if (member?.user?.bot) {
-    // Bot account nuking → kick/ban
-    result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
-  } else {
-    // Human (any role) nuking → jail + strip power
-    const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
-    result = jail.ok
-      ? { ok: true, action: jail.action }
-      : await punish(client, guild, executorId, punishReason, { ban: punishBan });
-  }
 
   await postGuardianAlert(client, {
     level: 'critical',
     title: `JAILED / punished for ${action}`,
-    description: result.ok
+    description: result?.ok
       ? `Applied **${result.action}** to <@${executorId}> for **${action}** nuke activity.`
-      : `Threshold hit but jail/punish failed: \`${result.reason || result.error || 'unknown'}\`.`,
+      : `Threshold hit but jail/punish failed: \`${result?.reason || result?.error || result?.skipped || 'unknown'}\`.`,
     fields: [
       { name: 'Executor', value: `<@${executorId}>`, inline: true },
       { name: 'Count', value: `${count}/${limit}`, inline: true },
-      { name: 'Type', value: member?.user?.bot ? 'Bot account' : 'Human / role', inline: true },
+      { name: 'Type', value: isBot ? 'Bot account (instant)' : 'Human / role', inline: true },
     ],
     pingOwner: true,
   });
-
-  if (lockdown && !isLocked(guild.id)) {
-    await lockdownGuild(client, guild, punishReason, { pingEveryone: false });
-  }
 }
 
 /** Threshold presets — “maximum” defaults, overridable via env */
