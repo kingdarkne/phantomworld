@@ -14,11 +14,15 @@ module.exports = async (client, member) => {
         }
     } catch (_) {}
 
-    // Always try to apply the Member role
+    // Always try to apply Phantom Civilian (and strip legacy Member)
     try {
         const memberRole = findMemberRole(member.guild);
+        const legacy = member.guild.roles.cache.find((r) => /^member$/i.test(r.name) && r.id !== memberRole?.id);
+        if (legacy && member.roles.cache.has(legacy.id)) {
+            await member.roles.remove(legacy, 'Auto: strip legacy Member').catch(() => {});
+        }
         if (memberRole && !member.roles.cache.has(memberRole.id)) {
-            await member.roles.add(memberRole, 'Auto Member role').catch(() => {});
+            await member.roles.add(memberRole, 'Auto Phantom Civilian').catch(() => {});
         }
     } catch (_) {}
 

@@ -4,7 +4,9 @@
 const { Events, PermissionFlagsBits } = require('discord.js');
 
 const DEFAULT_COFOUNDER_IDS = ['1472295497149579491'];
+/** Legacy Member role — stripped in favor of Phantom | Civilian */
 const DEFAULT_MEMBER_IDS = ['1522386919902937210'];
+const DEFAULT_CIVILIAN_IDS = ['1472295618935259372'];
 
 function envList(name) {
   return String(process.env[name] || '')
@@ -23,12 +25,31 @@ function memberRoleIds() {
   return fromEnv.length ? fromEnv : DEFAULT_MEMBER_IDS;
 }
 
+function civilianRoleIds() {
+  const fromEnv = envList('CIVILIAN_ROLE_IDS');
+  return fromEnv.length ? fromEnv : DEFAULT_CIVILIAN_IDS;
+}
+
 /** Co-Founder / Co-Owner style role names. */
 function isCoOwnerRoleName(name) {
   return /^co[- ]?(founder|owner)$/i.test(String(name || '').trim());
 }
 
+function findCivilianRole(guild) {
+  for (const id of civilianRoleIds()) {
+    const byId = guild.roles.cache.get(id);
+    if (byId) return byId;
+  }
+  return (
+    guild.roles.cache.find((r) => /phantom\s*\|\s*civilian/i.test(r.name)) ||
+    guild.roles.cache.find((r) => /^civilian$/i.test(r.name))
+  );
+}
+
 function findMemberRole(guild) {
+  // Prefer Phantom Civilian as the default join role
+  const civ = findCivilianRole(guild);
+  if (civ) return civ;
   for (const id of memberRoleIds()) {
     const byId = guild.roles.cache.get(id);
     if (byId) return byId;
@@ -94,31 +115,43 @@ async function ensureCofounderCanAddBots(guild) {
 }
 
 async function ensureEveryoneHasMemberRole(guild) {
-  const role = findMemberRole(guild);
-  if (!role || !role.editable) return { role: role?.name || null, given: 0 };
+  const civilian = findCivilianRole(guild) || findMemberRole(guild);
+  const legacyMember = guild.roles.cache.get(memberRoleIds()[0])
+    || guild.roles.cache.find((r) => /^member$/i.test(r.name));
+  if (!civilian || !civilian.editable) return { role: civilian?.name || null, given: 0, stripped: 0 };
 
   let given = 0;
+  let stripped = 0;
   try {
     await guild.members.fetch();
   } catch (_) {}
 
   for (const member of guild.members.cache.values()) {
     if (member.user.bot) continue;
-    if (member.roles.cache.has(role.id)) continue;
+    // Remove legacy Member if present
+    if (legacyMember && member.roles.cache.has(legacyMember.id) && legacyMember.id !== civilian.id) {
+      try {
+        await member.roles.remove(legacyMember, 'Rex: replace Member with Phantom Civilian');
+        stripped += 1;
+      } catch (_) {}
+    }
+    if (member.roles.cache.has(civilian.id)) continue;
+    // Skip jailed
+    if (member.roles.cache.some((r) => /^jail$/i.test(r.name))) continue;
     try {
-      await member.roles.add(role, 'Rex: ensure Member role');
+      await member.roles.add(civilian, 'Rex: ensure Phantom Civilian role');
       given += 1;
     } catch (_) {}
   }
-  return { role: role.name, given };
+  return { role: civilian.name, given, stripped };
 }
 
 async function syncGuildStaffRoles(guild) {
   const cof = await ensureCofounderCanAddBots(guild);
   const mem = await ensureEveryoneHasMemberRole(guild);
-  if (cof.length || mem.given) {
+  if (cof.length || mem.given || mem.stripped) {
     console.log(
-      `[ensure-staff-roles] ${guild.name}: cofounder=${cof.join(',') || 'ok'} member=${mem.role} given=${mem.given}`,
+      `[ensure-staff-roles] ${guild.name}: cofounder=${cof.join(',') || 'ok'} civilian=${mem.role} given=${mem.given} memberStripped=${mem.stripped || 0}`,
     );
   }
   return { cof, mem };
@@ -152,6 +185,7 @@ module.exports = {
   ensureCofounderCanAddBots,
   ensureEveryoneHasMemberRole,
   findMemberRole,
+  findCivilianRole,
   findCofounderRoles,
   memberHasCoOwnerRole,
   isCoOwnerRoleName,
