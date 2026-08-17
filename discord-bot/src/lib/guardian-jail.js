@@ -55,7 +55,7 @@ async function ensureJailRole(guild) {
 
   role = await guild.roles.create({
     name: process.env.GUARDIAN_JAIL_ROLE_NAME || DEFAULT_JAIL_NAME,
-    color: 0x111827,
+    colors: { primary: 0x111827 },
     hoist: true,
     mentionable: false,
     permissions: [],
