@@ -38,7 +38,7 @@ module.exports = {
     run: async (client, interaction, args) => {
         // MUST defer first to avoid "The application did not respond"
         if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply();
+            if (!interaction.deferred && !interaction.replied) await interaction.deferReply();
         }
 
         const hasPerms = await client.checkBotPerms({

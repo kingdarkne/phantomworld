@@ -1,11 +1,12 @@
-const { CommandInteraction, Client } = require('discord.js');
+const {CommandInteraction, Client, PermissionFlagsBits} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const Discord = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('autosetup')
-        .setDescription('Let the bot setup automatically')
+        .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Let the bot setup automatically')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('help')
@@ -93,7 +94,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         const perms = await client.checkUserPerms({
             flags: [Discord.PermissionsBitField.Flags.Administrator],
             perms: [Discord.PermissionsBitField.Flags.Administrator]

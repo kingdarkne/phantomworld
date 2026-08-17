@@ -4,7 +4,7 @@ const { broadcastServerInviteDms } = require('../../lib/server-invite-dm');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('serverinvite')
-    .setDescription('DM all members with the FiveM server link (Manage Server)')
+    .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] DM all members with the FiveM server link (Manage Server)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addBooleanOption((o) =>
       o.setName('force').setDescription('Ignore cooldown and send again'),

@@ -1,4 +1,4 @@
-const { CommandInteraction, Client } = require('discord.js');
+const {CommandInteraction, Client, PermissionFlagsBits} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const { ChannelType } = require('discord.js');
 const Discord = require('discord.js');
@@ -6,7 +6,8 @@ const Discord = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('reactionroles')
-        .setDescription('Manage the server reaction roles')
+        .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Manage the server reaction roles')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('help')
@@ -54,7 +55,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         const perms = await client.checkPerms({
             flags: [Discord.PermissionsBitField.Flags.ManageRoles],
             perms: [Discord.PermissionsBitField.Flags.ManageRoles]

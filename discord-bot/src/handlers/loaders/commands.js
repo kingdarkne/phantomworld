@@ -29,12 +29,32 @@ module.exports = (client) => {
                 const command = require(`${process.cwd()}/src/interactions/${dirs}/${file}`);
                 console.log(`[COMMAND] Loading command: ${command.data.name} from ${file}`);
                 client.commands.set(command.data.name, command);
-                commands.push(command.data);
+                commands.push(typeof command.data.toJSON === 'function' ? command.data.toJSON() : command.data);
             } catch (err) {
                 console.error(`[COMMAND] Failed to load command ${file}:`, err.message);
             }
         };
     });
+
+    const leafCount = commands.reduce((n, cmd) => {
+        const opts = cmd.options || [];
+        if (!opts.length) return n + 1;
+        let c = 0;
+        for (const o of opts) {
+            if (o.type === 1) c += 1;
+            else if (o.type === 2) c += (o.options || []).filter((x) => x.type === 1).length;
+        }
+        return n + (c || 1);
+    }, 0);
+    console.log(
+        chalk.blue(chalk.bold(`System`)),
+        chalk.white(`>>`),
+        chalk.green(`Prepared`),
+        chalk.red(`${commands.length}`),
+        chalk.green(`slash roots /`),
+        chalk.red(`${leafCount}`),
+        chalk.green(`leaf commands`),
+    );
 
     const token = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN;
     const rest = new REST({ version: '10' }).setToken(token);
@@ -63,7 +83,7 @@ module.exports = (client) => {
             }
 
             const embedFinal = new Discord.EmbedBuilder()
-                .setDescription(`Successfully reloaded ${commands.length} application (/) commands.`)
+                .setDescription(`Successfully reloaded ${commands.length} slash roots (${leafCount} commands).`)
                 .setColor(client.config.colors.normal)
             interactionLogs.send({
                 username: 'Bot Logs',

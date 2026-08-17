@@ -1,11 +1,12 @@
-const { CommandInteraction, Client } = require('discord.js');
+const {CommandInteraction, Client, PermissionFlagsBits} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const Discord = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('serverstats')
-        .setDescription('Manage the server stats')
+        .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Manage the server stats')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('help')
@@ -95,7 +96,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         const perms = await client.checkPerms({
             flags: [Discord.PermissionsBitField.Flags.ManageChannels],
             perms: [Discord.PermissionsBitField.Flags.ManageChannels]

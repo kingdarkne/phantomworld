@@ -1,4 +1,4 @@
-const { CommandInteraction, Client } = require('discord.js');
+const {CommandInteraction, Client, PermissionFlagsBits} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const Discord = require('discord.js');
 
@@ -7,7 +7,8 @@ const model = require('../../database/models/badge');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('developers')
-        .setDescription('Commands for the Bot developers')
+        .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Commands for the Bot developers')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('help')
@@ -90,14 +91,13 @@ module.exports = {
 
             if (!ownerIds.includes(interaction.user.id)) {
                 return client.errNormal({
-                    error: 'Only Bot developers are allowed to do this',
-                    type: 'ephemeral'
+                    error: 'Only Bot developers / founders are allowed to do this',
+                    type: interaction.deferred || interaction.replied ? 'editreply' : 'ephemeral'
                 }, interaction)
             }
 
             const sub = interaction.options.getSubcommand(false);
-            await interaction.deferReply({
-                
+            if (!interaction.deferred && !interaction.replied) await interaction.deferReply({
                 ephemeral: sub === 'servers',
             });
             client.loadSubcommands(client, interaction, args);

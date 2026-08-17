@@ -4,7 +4,7 @@ const { dmInviteToUserIds } = require('../../lib/server-invite-dm');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('dminvite')
-    .setDescription('DM the FiveM invite to friends by Discord user ID (Manage Server)')
+    .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] DM the FiveM invite to friends by Discord user ID (Manage Server)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addStringOption((o) =>
       o

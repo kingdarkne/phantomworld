@@ -4,7 +4,7 @@ const { upsertStatusMessage } = require('../../lib/live-status-channel');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('statuslive')
-    .setDescription('Post or refresh the live-updating FiveM status embed in this channel')
+    .setDescription('[ADMIN — FOUNDERS/ADMINS ONLY] Post or refresh the live-updating FiveM status embed in this channel')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   run: async (client, interaction) => {

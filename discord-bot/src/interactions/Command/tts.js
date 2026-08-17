@@ -14,7 +14,7 @@ module.exports = {
         ),
 
     run: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({ ephemeral: true });
         client.loadSubcommands(client, interaction);
     },
 };

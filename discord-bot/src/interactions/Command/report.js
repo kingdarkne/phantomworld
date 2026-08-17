@@ -29,7 +29,7 @@ module.exports = {
      */
 
     run: async (client, interaction, args) => {
-        await interaction.deferReply({});
+        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({});
         const webhookClient = new Discord.WebhookClient({
             id: client.webhooks.bugReportLogs.id,
             token: client.webhooks.bugReportLogs.token
