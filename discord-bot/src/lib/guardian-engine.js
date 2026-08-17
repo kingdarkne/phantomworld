@@ -316,23 +316,33 @@ async function lockdownGuild(client, guild, reason, options = {}) {
     ChannelType.GuildCategory,
   ];
 
+  const hideJobs = [];
   for (const ch of guild.channels.cache.values()) {
     if (!hideTypes.includes(ch.type)) continue;
     if (safeZone && ch.id === safeZone.id) continue;
-    try {
-      await ch.permissionOverwrites.edit(guild.id, {
-        ViewChannel: false,
-        SendMessages: false,
-        AddReactions: false,
-        CreatePublicThreads: false,
-        CreatePrivateThreads: false,
-        SendMessagesInThreads: false,
-        Connect: false,
-        Speak: false,
-      });
-      hidden += 1;
-      locked += 1;
-    } catch (_) {}
+    hideJobs.push(
+      ch.permissionOverwrites
+        .edit(guild.id, {
+          ViewChannel: false,
+          SendMessages: false,
+          AddReactions: false,
+          CreatePublicThreads: false,
+          CreatePrivateThreads: false,
+          SendMessagesInThreads: false,
+          Connect: false,
+          Speak: false,
+        })
+        .then(() => {
+          hidden += 1;
+          locked += 1;
+        })
+        .catch(() => {}),
+    );
+  }
+  // Parallel batches so full hide finishes in ~1s instead of 20–30s
+  const batchSize = envInt('GUARDIAN_LOCK_BATCH', 15);
+  for (let i = 0; i < hideJobs.length; i += batchSize) {
+    await Promise.all(hideJobs.slice(i, i + batchSize));
   }
 
   if (safeZone) {
@@ -465,6 +475,7 @@ async function unlockGuild(client, guild, options = {}) {
   lockdownState.delete(guild.id);
 
   let unlocked = 0;
+  const restoreJobs = [];
   const restoreTypes = [
     ChannelType.GuildText,
     ChannelType.GuildAnnouncement,
@@ -477,20 +488,28 @@ async function unlockGuild(client, guild, options = {}) {
   for (const ch of guild.channels.cache.values()) {
     if (!restoreTypes.includes(ch.type)) continue;
     if (state?.safeZoneId && ch.id === state.safeZoneId) continue;
-    try {
-      await ch.permissionOverwrites.edit(guild.id, {
-        ViewChannel: null,
-        SendMessages: null,
-        AddReactions: null,
-        CreatePublicThreads: null,
-        CreatePrivateThreads: null,
-        SendMessagesInThreads: null,
-        Connect: null,
-        Speak: null,
-        ReadMessageHistory: null,
-      });
-      unlocked += 1;
-    } catch (_) {}
+    restoreJobs.push(
+      ch.permissionOverwrites
+        .edit(guild.id, {
+          ViewChannel: null,
+          SendMessages: null,
+          AddReactions: null,
+          CreatePublicThreads: null,
+          CreatePrivateThreads: null,
+          SendMessagesInThreads: null,
+          Connect: null,
+          Speak: null,
+          ReadMessageHistory: null,
+        })
+        .then(() => {
+          unlocked += 1;
+        })
+        .catch(() => {}),
+    );
+  }
+  const batchSize = envInt('GUARDIAN_LOCK_BATCH', 15);
+  for (let i = 0; i < restoreJobs.length; i += batchSize) {
+    await Promise.all(restoreJobs.slice(i, i + batchSize));
   }
 
   // Clean up safe-zone: delete if we created it, otherwise restore perms
@@ -536,7 +555,7 @@ async function unlockGuild(client, guild, options = {}) {
           `**${guild.name}** lockdown cleared (${unlocked} channels restored).`,
           `**Roles restored:** ${roleRestore.restoredMembers} members / ${roleRestore.restoredRoles} assigns`,
         ].join('\n'),
-    pingOwner: true,
+    pingOwner: false,
   });
   return { unlocked, ...roleRestore };
 }
@@ -545,12 +564,12 @@ async function unlockGuild(client, guild, options = {}) {
  * Professional server-wide lockdown drill: warn everyone, lock, hold, unlock.
  */
 async function runLockdownDrill(client, guild, {
-  holdSeconds = 45,
+  holdSeconds = 1,
   announceChannelId = null,
 } = {}) {
   const { EmbedBuilder } = require('discord.js');
   const { resolveAlertsTarget, ownerIds } = require('./guardian-alerts');
-  const hold = Math.max(15, Number(holdSeconds) || 45);
+  const hold = Math.max(1, Number(holdSeconds) || 1);
 
   const warningEmbed = new EmbedBuilder()
     .setColor(0x7f1d1d)
@@ -641,36 +660,37 @@ async function runLockdownDrill(client, guild, {
 
   await new Promise((r) => setTimeout(r, hold * 1000));
 
-  const unlocked = await unlockGuild(client, guild, { drill: true });
+  const unlockResult = await unlockGuild(client, guild, { drill: true });
+  const unlockedCount =
+    typeof unlockResult === 'object' ? unlockResult.unlocked : unlockResult;
 
-  // All-clear in announce channels
+  // All-clear in announce channels — NO @everyone ping on lift
   const clearEmbed = new EmbedBuilder()
     .setColor(0x16a34a)
-    .setTitle('✅🌤️ ALL CLEAR — SECURITY DRILL COMPLETE 🌤️✅')
+    .setTitle('✅ ALL CLEAR — LOCKDOWN LIFTED')
     .setDescription(
       [
-        '# 🌈 THE SKY CLEARS',
+        `Lockdown on **${guild.name}** has ended.`,
+        `Channels restored: **${unlockedCount}**`,
         '',
-        `🎉 The lockdown drill on **${guild.name}** is finished.`,
-        `🔓 Channels restored: **${unlocked}**`,
-        '💚 Thank you for cooperating. Normal operations have resumed.',
-        '',
-        '🦖🛡 _Rex Guardian lockout systems tested successfully._',
-        '📢 _This was a drill — no hostile activity was detected._',
+        '_Rex Guardian — no @everyone ping on unlock._',
       ].join('\n'),
     )
-    .setFooter({ text: '✅ DRILL COMPLETE · Systems normal' })
+    .setFooter({ text: 'Lockdown lifted · quiet unlock' })
     .setTimestamp();
 
   for (const id of announced) {
     try {
       const ch = await client.channels.fetch(id);
       if (!ch?.isTextBased?.()) continue;
-      await ch.send({ embeds: [clearEmbed] });
+      await ch.send({
+        embeds: [clearEmbed],
+        allowedMentions: { parse: [] },
+      });
     } catch (_) {}
   }
 
-  return { locked, unlocked, holdSeconds: hold };
+  return { locked, unlocked: unlockedCount, holdSeconds: hold };
 }
 
 function isLocked(guildId) {

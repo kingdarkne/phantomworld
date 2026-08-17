@@ -21,12 +21,12 @@ module.exports = {
     .addSubcommand((s) =>
       s
         .setName('drill')
-        .setDescription('Run a professional lockdown DRILL (warn everyone, lock, auto-unlock)')
+        .setDescription('Run a lockdown DRILL (warn, lock ~1s, auto-unlock — no @everyone on lift)')
         .addIntegerOption((o) =>
           o
             .setName('seconds')
-            .setDescription('How long to hold the lockdown (15–180, default 45)')
-            .setMinValue(15)
+            .setDescription('Hold time in seconds (default 1)')
+            .setMinValue(1)
             .setMaxValue(180),
         ),
     )
@@ -112,9 +112,9 @@ module.exports = {
     }
 
     if (sub === 'drill') {
-      const seconds = interaction.options.getInteger('seconds') || 45;
+      const seconds = interaction.options.getInteger('seconds') || 1;
       await interaction.editReply(
-        `Starting **security lockdown drill** for **${seconds}s** — warning @everyone, locking the server, then auto-unlocking.`,
+        `Starting lockdown drill (**${seconds}s** hold). Unlock will **not** @everyone.`,
       );
       const result = await runLockdownDrill(client, interaction.guild, { holdSeconds: seconds });
       await interaction.followUp({
