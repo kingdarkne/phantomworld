@@ -74,6 +74,12 @@ function appendFeedback(entry) {
   }
 }
 
+async function dmMember(member, payload) {
+  if (typeof member?.send === 'function') return member.send(payload);
+  if (typeof member?.user?.send === 'function') return member.user.send(payload);
+  throw new Error('No DM send method on member');
+}
+
 async function postFeedbackToStaff(client, entry) {
   const channelId = process.env.LEAVE_FEEDBACK_CHANNEL_ID || process.env.BILLING_NOTIFY_CHANNEL_ID;
   const embed = new EmbedBuilder()
@@ -168,7 +174,7 @@ async function sendWelcomeDm(client, member) {
   }
 
   try {
-    await member.send({
+    await dmMember(member, {
       embeds: [embed],
       components: row.components.length ? [row] : [],
     });
@@ -224,7 +230,7 @@ async function sendLeaveFeedbackDm(client, member) {
     );
 
   try {
-    await member.send({
+    await dmMember(member, {
       embeds: [embed],
       components: [new ActionRowBuilder().addComponents(select)],
     });
