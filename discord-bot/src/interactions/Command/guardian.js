@@ -99,8 +99,15 @@ module.exports = {
     }
 
     if (sub === 'unlock') {
-      const n = await unlockGuild(client, interaction.guild);
-      await interaction.editReply(`Lockdown lifted — restored **${n}** channels.`);
+      const result = await unlockGuild(client, interaction.guild);
+      const unlocked = typeof result === 'object' ? result.unlocked : result;
+      const rm = typeof result === 'object' ? result.restoredMembers || 0 : 0;
+      const rr = typeof result === 'object' ? result.restoredRoles || 0 : 0;
+      await interaction.editReply(
+        `Lockdown lifted — restored **${unlocked}** channels` +
+          (rm ? `, restored roles for **${rm}** members (**${rr}** assigns)` : '') +
+          '.',
+      );
       return;
     }
 

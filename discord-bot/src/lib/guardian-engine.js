@@ -6,6 +6,8 @@ const {
   PermissionFlagsBits,
   ChannelType,
 } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const { postGuardianAlert, ownerIds } = require('./guardian-alerts');
 
 /** @type {Map<string, { ts: number[] }>} */
@@ -14,11 +16,41 @@ const windows = new Map();
 /** @type {Map<string, number>} guildId -> lockdown until ms */
 const lockdownUntil = new Map();
 
-/** @type {Map<string, { safeZoneId: string, created: boolean }>} */
+/** @type {Map<string, { safeZoneId: string, created: boolean, roleSnapshots?: Record<string, string[]> }>} */
 const lockdownState = new Map();
 
 /** @type {Map<string, any>} last infra snapshot */
 const infraState = new Map();
+
+const STATE_FILE = path.join(process.cwd(), 'data', 'guardian-lockdown-state.json');
+
+function loadPersistedLockdownState() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    for (const [guildId, state] of Object.entries(raw || {})) {
+      lockdownState.set(guildId, state);
+      if (state.until) lockdownUntil.set(guildId, state.until);
+    }
+  } catch (_) {}
+}
+
+function persistLockdownState() {
+  try {
+    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    const out = {};
+    for (const [guildId, state] of lockdownState.entries()) {
+      out[guildId] = {
+        ...state,
+        until: lockdownUntil.get(guildId) || null,
+      };
+    }
+    fs.writeFileSync(STATE_FILE, JSON.stringify(out, null, 2));
+  } catch (err) {
+    console.warn('[guardian] persist lockdown state failed:', err.message);
+  }
+}
+
+loadPersistedLockdownState();
 
 const SAFE_ZONE_BASENAME = (process.env.GUARDIAN_SAFE_ZONE_NAME || 'safe-zone').toLowerCase();
 
@@ -167,6 +199,96 @@ async function fetchExecutor(guild, type, targetId) {
   return null;
 }
 
+
+/**
+ * Snapshot member roles then strip them (quarantine). Skips owners + Rex.
+ * @returns {Record<string, string[]>}
+ */
+async function snapshotAndQuarantineRoles(client, guild, { reason = 'Guardian lockdown quarantine' } = {}) {
+  const me = guild.members.me || (await guild.members.fetchMe().catch(() => null));
+  const owners = new Set(ownerIds());
+  if (client?.user?.id) owners.add(client.user.id);
+
+  try {
+    await guild.members.fetch();
+  } catch (_) {}
+
+  /** @type {Record<string, string[]>} */
+  const snapshots = {};
+  let strippedMembers = 0;
+
+  for (const member of guild.members.cache.values()) {
+    if (owners.has(member.id)) continue;
+    if (member.user.bot && member.id === client.user.id) continue;
+
+    const roleIds = member.roles.cache
+      .filter((r) => r.id !== guild.id)
+      .map((r) => r.id);
+    if (!roleIds.length) continue;
+
+    snapshots[member.id] = roleIds;
+
+    const removable = member.roles.cache.filter(
+      (r) =>
+        r.id !== guild.id &&
+        r.editable &&
+        me &&
+        r.position < me.roles.highest.position,
+    );
+    if (!removable.size) continue;
+    try {
+      await member.roles.remove(removable, `[Guardian] ${reason}`.slice(0, 512));
+      strippedMembers += 1;
+    } catch (err) {
+      console.warn('[guardian] role strip failed', member.id, err.message);
+    }
+  }
+
+  console.log(`[guardian] quarantined roles for ${strippedMembers} members (${Object.keys(snapshots).length} snapshots)`);
+  return snapshots;
+}
+
+/**
+ * Restore roles from a prior quarantine snapshot.
+ */
+async function restoreQuarantineRoles(guild, snapshots = {}) {
+  let restoredMembers = 0;
+  let restoredRoles = 0;
+  const me = guild.members.me || (await guild.members.fetchMe().catch(() => null));
+
+  for (const [userId, roleIds] of Object.entries(snapshots || {})) {
+    if (!roleIds?.length) continue;
+    let member = guild.members.cache.get(userId);
+    if (!member) {
+      try {
+        member = await guild.members.fetch(userId);
+      } catch (_) {
+        continue;
+      }
+    }
+
+    const toAdd = [];
+    for (const roleId of roleIds) {
+      const role = guild.roles.cache.get(roleId);
+      if (!role) continue;
+      if (member.roles.cache.has(roleId)) continue;
+      if (me && role.position >= me.roles.highest.position && !role.editable) continue;
+      toAdd.push(role);
+    }
+    if (!toAdd.length) continue;
+    try {
+      await member.roles.add(toAdd, 'Rex Guardian unlock — restore quarantine roles');
+      restoredMembers += 1;
+      restoredRoles += toAdd.length;
+    } catch (err) {
+      console.warn('[guardian] role restore failed', userId, err.message);
+    }
+  }
+
+  console.log(`[guardian] restored roles for ${restoredMembers} members (${restoredRoles} assigns)`);
+  return { restoredMembers, restoredRoles };
+}
+
 async function lockdownGuild(client, guild, reason, options = {}) {
   const isDrill = Boolean(options.drill);
   const minutes = options.minutes || envInt('GUARDIAN_LOCKDOWN_MINUTES', 30);
@@ -236,7 +358,13 @@ async function lockdownGuild(client, guild, reason, options = {}) {
       console.warn('[guardian] safe-zone perms failed:', err.message);
     }
 
-    lockdownState.set(guild.id, { safeZoneId: safeZone.id, created: createdSafe });
+    lockdownState.set(guild.id, {
+      ...(lockdownState.get(guild.id) || {}),
+      safeZoneId: safeZone.id,
+      created: createdSafe,
+      roleSnapshots: lockdownState.get(guild.id)?.roleSnapshots || {},
+    });
+    persistLockdownState();
 
     const { EmbedBuilder } = require('discord.js');
     const warnEmbed = new EmbedBuilder()
@@ -277,6 +405,29 @@ async function lockdownGuild(client, guild, reason, options = {}) {
     }
   }
 
+  // Optional: strip member roles during lockdown and restore on unlock
+  let roleSnapshots = {};
+  const shouldStrip =
+    options.stripRoles === true ||
+    (!options.drill && envInt('GUARDIAN_STRIP_ROLES_ON_LOCKDOWN', 0) === 1);
+  if (shouldStrip) {
+    roleSnapshots = await snapshotAndQuarantineRoles(client, guild, {
+      reason: `lockdown quarantine — ${reason}`,
+    });
+  }
+
+  const prev = lockdownState.get(guild.id) || {};
+  lockdownState.set(guild.id, {
+    ...prev,
+    safeZoneId: safeZone?.id || prev.safeZoneId || null,
+    created: safeZone ? (prev.created ?? createdSafe) : prev.created,
+    roleSnapshots: Object.keys(roleSnapshots).length
+      ? roleSnapshots
+      : prev.roleSnapshots || {},
+    until: lockdownUntil.get(guild.id) || null,
+  });
+  persistLockdownState();
+
   await postGuardianAlert(client, {
     level: 'critical',
     title: isDrill ? 'DRILL — LOCKDOWN + SAFE ZONE' : 'LOCKDOWN + SAFE ZONE ENGAGED',
@@ -285,7 +436,12 @@ async function lockdownGuild(client, guild, reason, options = {}) {
       'All channels **hidden**. Only **safe-zone** is visible.',
       `**Reason:** ${reason}`,
       `**Duration:** ~${minutes} minutes (or \`/guardian unlock\`).`,
-    ].join('\n'),
+      shouldStrip
+        ? `**Roles:** quarantined for **${Object.keys(roleSnapshots).length}** members (restored on unlock).`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n'),
     fields: [
       { name: 'Channels hidden', value: String(hidden), inline: true },
       { name: 'Safe zone', value: safeZone ? `<#${safeZone.id}>` : '_failed_', inline: true },
@@ -294,7 +450,12 @@ async function lockdownGuild(client, guild, reason, options = {}) {
     pingOwner: true,
   });
 
-  return { locked, hidden, safeZoneId: safeZone?.id || null };
+  return {
+    locked,
+    hidden,
+    safeZoneId: safeZone?.id || null,
+    rolesStripped: Object.keys(roleSnapshots).length,
+  };
 }
 
 async function unlockGuild(client, guild, options = {}) {
@@ -332,7 +493,7 @@ async function unlockGuild(client, guild, options = {}) {
     } catch (_) {}
   }
 
-  // Clean up safe-zone: delete if we created it, otherwise hide from everyone again
+  // Clean up safe-zone: delete if we created it, otherwise restore perms
   if (state?.safeZoneId) {
     try {
       const sz = await guild.channels.fetch(state.safeZoneId).catch(() => null);
@@ -352,6 +513,13 @@ async function unlockGuild(client, guild, options = {}) {
     }
   }
 
+  // Restore roles that were quarantined during lockdown
+  let roleRestore = { restoredMembers: 0, restoredRoles: 0 };
+  if (state?.roleSnapshots && Object.keys(state.roleSnapshots).length) {
+    roleRestore = await restoreQuarantineRoles(guild, state.roleSnapshots);
+  }
+  persistLockdownState();
+
   await postGuardianAlert(client, {
     level: 'medium',
     title: isDrill ? 'DRILL COMPLETE — Lockdown lifted' : 'Lockdown lifted',
@@ -360,13 +528,17 @@ async function unlockGuild(client, guild, options = {}) {
           '# ✅ SECURITY DRILL COMPLETE',
           '',
           `The **test lockdown** on **${guild.name}** has ended.`,
-          `**${unlocked}** channels were restored. Safe zone cleaned up.`,
+          `**${unlocked}** channels restored. Safe zone cleaned up.`,
+          `**Roles restored:** ${roleRestore.restoredMembers} members / ${roleRestore.restoredRoles} assigns`,
           '_This was a drill — no hostile activity was detected._',
         ].join('\n')
-      : `**${guild.name}** lockdown cleared (${unlocked} channels restored). Safe zone cleaned up.`,
+      : [
+          `**${guild.name}** lockdown cleared (${unlocked} channels restored).`,
+          `**Roles restored:** ${roleRestore.restoredMembers} members / ${roleRestore.restoredRoles} assigns`,
+        ].join('\n'),
     pingOwner: true,
   });
-  return unlocked;
+  return { unlocked, ...roleRestore };
 }
 
 /**
@@ -662,6 +834,8 @@ module.exports = {
   fetchExecutor,
   lockdownGuild,
   unlockGuild,
+  snapshotAndQuarantineRoles,
+  restoreQuarantineRoles,
   runLockdownDrill,
   isLocked,
   punish,
