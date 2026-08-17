@@ -5,12 +5,17 @@ module.exports = async (client) => {
     client.getLogs = async function (guildId) {
         const data = await Schema.findOne({ Guild: guildId });
         if (data && data.Channel) {
-            const channel = client.channels.cache.get(data.Channel);
-            return channel;
+            const channel = client.channels.cache.get(data.Channel)
+                || await client.channels.fetch(data.Channel).catch(() => null);
+            if (channel) return channel;
         }
-        else {
-            return false;
+        const fallbackId = process.env.DISCORD_LOGS_CHANNEL_ID || process.env.MOD_LOG_CHANNEL_ID || '';
+        if (fallbackId) {
+            const channel = client.channels.cache.get(fallbackId)
+                || await client.channels.fetch(fallbackId).catch(() => null);
+            if (channel) return channel;
         }
+        return false;
     }
 
     client.on(Discord.Events.GuildMemberUpdate, (oldMember, newMember) => {
