@@ -189,6 +189,44 @@ module.exports = async (client, interaction) => {
         }
     }
 
+    // Leave-feedback reason dropdown (DM after member leaves)
+    if (interaction.isStringSelectMenu()) {
+        if (
+            interaction.customId === 'phantom-leave-reason' ||
+            String(interaction.customId).startsWith('phantom-leave-reason:')
+        ) {
+            try {
+                const { handleLeaveReasonSelect } = require('../../lib/member-lifecycle-dm');
+                const handled = await handleLeaveReasonSelect(client, interaction);
+                if (handled) return;
+            } catch (err) {
+                console.error('[leave-feedback] select failed:', err.message);
+                try {
+                    await interaction.reply({
+                        content: 'Could not open the feedback form. Thanks anyway!',
+                        ephemeral: true,
+                    });
+                } catch (_) {}
+                return;
+            }
+        }
+    }
+
+    // Leave-feedback modal submit
+    if (interaction.isModalSubmit?.() && String(interaction.customId).startsWith('phantom-leave-feedback:')) {
+        try {
+            const { handleLeaveFeedbackModal } = require('../../lib/member-lifecycle-dm');
+            const handled = await handleLeaveFeedbackModal(client, interaction);
+            if (handled) return;
+        } catch (err) {
+            console.error('[leave-feedback] modal failed:', err.message);
+            try {
+                await interaction.reply({ content: 'Thanks — we still got your reason.', ephemeral: true });
+            } catch (_) {}
+            return;
+        }
+    }
+
     // Reaction roles select
     if (interaction.isStringSelectMenu()) {
         if (interaction.customId == "reaction_select") {
