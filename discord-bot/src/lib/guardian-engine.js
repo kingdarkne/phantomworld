@@ -779,33 +779,6 @@ async function punish(client, guild, userId, reason, { ban = true } = {}) {
 /** guildId:userId → in-flight nuke response (dedupe concurrent ChannelDelete floods) */
 const nukeInFlight = new Set();
 
-function debugLog(hypothesisId, location, message, data = {}) {
-  // #region agent log
-  try {
-    const fs = require('fs');
-    const line = JSON.stringify({
-      hypothesisId,
-      location,
-      message,
-      data,
-      timestamp: Date.now(),
-      runId: process.env.GUARDIAN_DEBUG_RUN_ID || 'pre-fix',
-    }) + '\n';
-    fs.appendFileSync('/opt/cursor/logs/debug.log', line);
-  } catch (_) {}
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const p = path.join(process.cwd(), 'data', 'guardian-debug.ndjson');
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.appendFileSync(p, JSON.stringify({
-      hypothesisId, location, message, data, timestamp: Date.now(),
-    }) + '\n');
-  } catch (_) {}
-  console.log(`[guardian-debug] ${hypothesisId} ${location} ${message}`, JSON.stringify(data));
-  // #endregion
-}
-
 /**
  * Record a dangerous action; auto-punish + lockdown when thresholds trip.
  * Bot executors on destructive actions: threshold forced to 1 (instant ban/kick).
@@ -823,7 +796,6 @@ async function noteAction(client, guild, {
 }) {
   if (!guardianEnabled() || !guild) return;
   if (executorId && isWhitelisted(client, executorId)) {
-    // Still log quietly at low level for visibility? skip to reduce noise
     return;
   }
 
@@ -853,19 +825,6 @@ async function noteAction(client, guild, {
   const key = `${guild.id}:${action}:${executorId || 'unknown'}`;
   const count = hit(key, windowMs);
 
-  // #region agent log
-  debugLog(botInstant ? 'H1' : 'H1b', 'guardian-engine.js:noteAction', 'action counted', {
-    guildId: guild.id,
-    action,
-    executorId: executorId || null,
-    isBot,
-    botInstant,
-    count,
-    limit,
-    thresholdIn: threshold,
-  });
-  // #endregion
-
   if (count < limit) {
     await postGuardianAlert(client, {
       level: count >= Math.max(1, limit - 1) ? 'high' : 'medium',
@@ -884,9 +843,6 @@ async function noteAction(client, guild, {
   const punishReason = `Anti-nuke: ${action} x${count}`;
   const flightKey = `${guild.id}:${executorId || 'unknown'}:${action}`;
   if (nukeInFlight.has(flightKey)) {
-    // #region agent log
-    debugLog('H3', 'guardian-engine.js:noteAction', 'dedupe in-flight nuke response', { flightKey, count });
-    // #endregion
     return;
   }
   nukeInFlight.add(flightKey);
@@ -895,32 +851,16 @@ async function noteAction(client, guild, {
   // Punish FIRST (before alerts) — mass-delete bots win races against Discord REST otherwise
   const { jailMember } = require('./guardian-jail');
   let result;
-  const t0 = Date.now();
-  try {
-    if (isBot) {
-      result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
-    } else {
-      const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
-      result = jail.ok
-        ? { ok: true, action: jail.action }
-        : await punish(client, guild, executorId, punishReason, { ban: punishBan });
-    }
-  } finally {
-    // keep flight lock until lockdown starts
+  if (isBot) {
+    result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
+  } else {
+    const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
+    result = jail.ok
+      ? { ok: true, action: jail.action }
+      : await punish(client, guild, executorId, punishReason, { ban: punishBan });
   }
 
-  // #region agent log
-  debugLog('H3', 'guardian-engine.js:noteAction', 'punish completed', {
-    executorId,
-    isBot,
-    result,
-    ms: Date.now() - t0,
-    botInstant,
-  });
-  // #endregion
-
   if (lockdown && !isLocked(guild.id)) {
-    // Fire lockdown without awaiting alerts
     lockdownGuild(client, guild, punishReason, { pingEveryone: false }).catch((err) => {
       console.warn('[guardian] lockdown after nuke failed:', err.message);
     });

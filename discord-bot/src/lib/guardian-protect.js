@@ -109,25 +109,6 @@ function threatDmEmbed({ guildName, reason, kind }) {
     .setTimestamp();
 }
 
-function debugLog(hypothesisId, location, message, data = {}) {
-  // #region agent log
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const line = JSON.stringify({
-      hypothesisId, location, message, data, timestamp: Date.now(),
-    }) + '\n';
-    try { fs.appendFileSync('/opt/cursor/logs/debug.log', line); } catch (_) {}
-    try {
-      const p = path.join(process.cwd(), 'data', 'guardian-debug.ndjson');
-      fs.mkdirSync(path.dirname(p), { recursive: true });
-      fs.appendFileSync(p, line);
-    } catch (_) {}
-    console.log(`[guardian-debug] ${hypothesisId} ${location} ${message}`, JSON.stringify(data));
-  } catch (_) {}
-  // #endregion
-}
-
 /**
  * Strip Administrator / dangerous perms from a newly added bot's managed roles.
  * Never edits non-managed shared staff roles.
@@ -173,14 +154,6 @@ async function stripDangerousBotPerms(guild, member) {
       console.warn('[guardian-protect] strip bot perms', role.id, err.message);
     }
   }
-
-  // #region agent log
-  debugLog('H4', 'guardian-protect.js:stripDangerousBotPerms', 'stripped bot perms', {
-    botId: member.id,
-    tag: member.user.tag,
-    roles: changed,
-  });
-  // #endregion
 
   return { stripped: changed.length, roles: changed };
 }
@@ -263,18 +236,12 @@ async function handleCoOwnerAppNuke(client, guild, {
   // Kick/ban the nuking app FIRST — alerts/DMs must not delay removal during mass-delete
   let appKick = null;
   if (targetAppId) {
-    const t0 = Date.now();
     appKick = await punish(client, guild, targetAppId, reason, { ban: true });
     if (!appKick?.ok) {
       appKick = await jailMember(client, guild, targetAppId, reason, { kickBots: true });
     }
     watched.delete(targetAppId);
     guildXeonMap(guild.id).delete(targetAppId);
-    // #region agent log
-    debugLog('H3', 'guardian-protect.js:handleCoOwnerAppNuke', 'app removed first', {
-      targetAppId, appKick, ms: Date.now() - t0,
-    });
-    // #endregion
   }
 
   if (!isLocked(guild.id)) {
@@ -524,11 +491,6 @@ function registerGuardianProtect(client) {
           coOwner: true,
         });
         console.log(`[guardian-protect] Co-Owner app watched: ${member.user.tag} by ${inviter.user.tag}`);
-        // #region agent log
-        debugLog('H4', 'guardian-protect.js:GuildMemberAdd', 'co-owner app watched', {
-          botId: member.id, inviterId: ex.id, stripped: strip.stripped,
-        });
-        // #endregion
         await postGuardianAlert(client, {
           level: 'high',
           title: 'App added by Co-Owner — WATCHING',
@@ -544,11 +506,6 @@ function registerGuardianProtect(client) {
         });
       } else if (member.user.bot) {
         console.log(`[guardian-protect] bot joined (not Co-Owner add): ${member.user.tag} invitedBy=${ex?.id || 'unknown'} stripped=${strip.stripped}`);
-        // #region agent log
-        debugLog('H4', 'guardian-protect.js:GuildMemberAdd', 'bot joined not co-owner', {
-          botId: member.id, inviterId: ex?.id || null, stripped: strip.stripped,
-        });
-        // #endregion
       }
 
       if (!isXeonBot(member.user)) return;
@@ -617,12 +574,6 @@ function registerGuardianProtect(client) {
     const coMap = guildCoOwnerAppMap(guild.id);
     const execIsCoApp = execId && coMap.has(execId);
     const hasCoApp = coMap.size > 0;
-
-    // #region agent log
-    debugLog('H2', 'guardian-protect.js:maybeThreatCounter', 'executor resolved', {
-      action, targetId, execId, execBot, execXeon, execIsCoApp, hasCoApp,
-    });
-    // #endregion
 
     if (execIsCoApp || (hasCoApp && execBot && coMap.has(execId))) {
       await handleCoOwnerAppNuke(client, guild, {
