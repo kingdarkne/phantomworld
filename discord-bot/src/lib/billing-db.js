@@ -132,7 +132,7 @@ async function insertBillingServerRow({
 
 async function listPlans() {
   return query(
-    `SELECT id, name, description, ram, cpu, disk, swap, io, databases, backups, extra_ports, locations_nodes_id, nests_eggs_id, min_port, max_port
+    `SELECT id, name, description, ram, cpu, disk, swap, io, \`databases\`, backups, extra_ports, locations_nodes_id, nests_eggs_id, min_port, max_port
      FROM plans ORDER BY \`order\` ASC, id ASC`,
   );
 }
