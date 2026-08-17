@@ -35,6 +35,17 @@ module.exports = {
       s
         .setName('testalert')
         .setDescription('Post a test alert to the security channel'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('unbanall')
+        .setDescription('Unban everyone, DM welcome-back + invite, report DM failures')
+        .addBooleanOption((o) =>
+          o
+            .setName('confirm')
+            .setDescription('Must be true to actually unban (false = preview only)')
+            .setRequired(true),
+        ),
     ),
 
   /**
@@ -141,6 +152,42 @@ module.exports = {
         pingOwner: true,
       });
       await interaction.editReply('Test alert posted to the security alerts channel/thread.');
+      return;
+    }
+
+    if (sub === 'unbanall') {
+      const confirm = interaction.options.getBoolean('confirm');
+      const {
+        unbanAllAndWelcome,
+        formatUnbanReport,
+        reportUnbanResults,
+      } = require('../../lib/unban-welcome');
+
+      if (!confirm) {
+        const preview = await unbanAllAndWelcome(client, interaction.guild, { dryRun: true });
+        await interaction.editReply({
+          content: [
+            `Preview: **${preview.total}** ban(s) on **${interaction.guild.name}**.`,
+            'Re-run with `confirm:true` to unban everyone, DM welcome-back + invite, and report DM failures.',
+          ].join('\n'),
+        });
+        return;
+      }
+
+      await interaction.editReply(
+        `Unbanning everyone on **${interaction.guild.name}** and sending welcome-back DMs… this can take a while.`,
+      );
+
+      const result = await unbanAllAndWelcome(client, interaction.guild, { dryRun: false });
+      await reportUnbanResults(client, interaction.guild, result, interaction.user.id);
+
+      const report = formatUnbanReport(result);
+      const truncated =
+        report.length > 1800 ? `${report.slice(0, 1800)}\n_…truncated — full report in Rex Alerts_` : report;
+      await interaction.followUp({
+        ephemeral: true,
+        content: truncated,
+      });
     }
   },
 };

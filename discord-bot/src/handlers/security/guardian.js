@@ -27,6 +27,7 @@ const {
   registerGuardianProtect,
   isXeonBot,
   guildHasXeon,
+  guildHasCoOwnerApp,
 } = require('../../lib/guardian-protect');
 
 async function maybeExecutor(guild, type, targetId) {
@@ -228,8 +229,8 @@ module.exports = async (client) => {
   client.on(Events.ChannelDelete, async (channel) => {
     try {
       if (!channel.guild || !guardianEnabled()) return;
-      // Xeon/backup path handled by guardian-protect (no full lockdown)
-      if (guildHasXeon(channel.guild)) return;
+      // Xeon / Co-Owner-added app path handled by guardian-protect
+      if (guildHasXeon(channel.guild) || guildHasCoOwnerApp(channel.guild)) return;
       const ex = await maybeExecutor(channel.guild, AuditLogEvent.ChannelDelete, channel.id);
       await noteAction(client, channel.guild, {
         action: 'channelDelete',
@@ -247,7 +248,7 @@ module.exports = async (client) => {
   client.on(Events.ChannelCreate, async (channel) => {
     try {
       if (!channel.guild || !guardianEnabled()) return;
-      if (guildHasXeon(channel.guild)) return;
+      if (guildHasXeon(channel.guild) || guildHasCoOwnerApp(channel.guild)) return;
       const ex = await maybeExecutor(channel.guild, AuditLogEvent.ChannelCreate, channel.id);
       await noteAction(client, channel.guild, {
         action: 'channelCreate',
@@ -266,7 +267,7 @@ module.exports = async (client) => {
   client.on(Events.GuildRoleDelete, async (role) => {
     try {
       if (!guardianEnabled()) return;
-      if (guildHasXeon(role.guild)) return;
+      if (guildHasXeon(role.guild) || guildHasCoOwnerApp(role.guild)) return;
       const ex = await maybeExecutor(role.guild, AuditLogEvent.RoleDelete, role.id);
       await noteAction(client, role.guild, {
         action: 'roleDelete',
@@ -284,7 +285,7 @@ module.exports = async (client) => {
   client.on(Events.GuildRoleCreate, async (role) => {
     try {
       if (!guardianEnabled()) return;
-      if (guildHasXeon(role.guild)) return;
+      if (guildHasXeon(role.guild) || guildHasCoOwnerApp(role.guild)) return;
       const ex = await maybeExecutor(role.guild, AuditLogEvent.RoleCreate, role.id);
       await noteAction(client, role.guild, {
         action: 'roleCreate',

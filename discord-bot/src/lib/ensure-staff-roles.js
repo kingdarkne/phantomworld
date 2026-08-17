@@ -1,5 +1,5 @@
 /**
- * Keep Member auto-assigned and Co-Founder able to invite/add bots (Manage Server).
+ * Keep Member auto-assigned and Co-Founder / Co-Owner able to invite/add apps (Manage Server).
  */
 const { Events, PermissionFlagsBits } = require('discord.js');
 
@@ -23,6 +23,11 @@ function memberRoleIds() {
   return fromEnv.length ? fromEnv : DEFAULT_MEMBER_IDS;
 }
 
+/** Co-Founder / Co-Owner style role names. */
+function isCoOwnerRoleName(name) {
+  return /^co[- ]?(founder|owner)$/i.test(String(name || '').trim());
+}
+
 function findMemberRole(guild) {
   for (const id of memberRoleIds()) {
     const byId = guild.roles.cache.get(id);
@@ -37,18 +42,31 @@ function findMemberRole(guild) {
 
 function findCofounderRoles(guild) {
   const roles = [];
+  const seen = new Set();
   for (const id of cofounderRoleIds()) {
     const r = guild.roles.cache.get(id);
-    if (r) roles.push(r);
+    if (r && !seen.has(r.id)) {
+      roles.push(r);
+      seen.add(r.id);
+    }
   }
-  if (!roles.length) {
-    const byName = guild.roles.cache.find((r) => /^co[- ]?founder$/i.test(r.name));
-    if (byName) roles.push(byName);
+  for (const r of guild.roles.cache.values()) {
+    if (seen.has(r.id)) continue;
+    if (isCoOwnerRoleName(r.name)) {
+      roles.push(r);
+      seen.add(r.id);
+    }
   }
   return roles;
 }
 
-/** Perms needed so Co-Founder can authorize bot OAuth / integrations. */
+function memberHasCoOwnerRole(member) {
+  if (!member?.roles?.cache) return false;
+  const ids = new Set(cofounderRoleIds());
+  return member.roles.cache.some((r) => ids.has(r.id) || isCoOwnerRoleName(r.name));
+}
+
+/** Perms needed so Co-Founder/Co-Owner can authorize app/bot OAuth. */
 const BOT_INVITE_PERMS = [
   PermissionFlagsBits.ManageGuild,
   PermissionFlagsBits.CreateInstantInvite,
@@ -66,8 +84,8 @@ async function ensureCofounderCanAddBots(guild) {
     const missing = BOT_INVITE_PERMS.filter((p) => !role.permissions.has(p));
     if (!missing.length) continue;
     try {
-      await role.setPermissions(role.permissions.add(...missing), 'Rex: Co-Founder can add bots');
-      changes.push(`cofounder:${role.name}: +ManageGuild/invite`);
+      await role.setPermissions(role.permissions.add(...missing), 'Rex: Co-Owner/Co-Founder can add apps');
+      changes.push(`coowner:${role.name}: +ManageGuild/invite`);
     } catch (err) {
       console.warn('[ensure-staff-roles] cofounder perms', guild.id, role.id, err.message);
     }
@@ -121,7 +139,7 @@ function registerEnsureStaffRoles(client) {
     run().catch(() => {});
     const ms = Math.max(60_000, Number(process.env.ENSURE_STAFF_ROLES_MS || 300_000) || 300_000);
     setInterval(() => run().catch(() => {}), ms);
-    console.log('[ensure-staff-roles] Member + Co-Founder bot-invite sync armed');
+    console.log('[ensure-staff-roles] Member + Co-Owner app-invite sync armed');
   };
 
   if (client.isReady?.() || client.readyAt) start();
@@ -134,4 +152,8 @@ module.exports = {
   ensureCofounderCanAddBots,
   ensureEveryoneHasMemberRole,
   findMemberRole,
+  findCofounderRoles,
+  memberHasCoOwnerRole,
+  isCoOwnerRoleName,
+  cofounderRoleIds,
 };

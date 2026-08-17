@@ -402,13 +402,19 @@ async function lockdownGuild(client, guild, reason, options = {}) {
       .setFooter({ text: isDrill ? 'DRILL · Rex Guardian safe zone' : 'LIVE LOCKDOWN · Rex Guardian safe zone' })
       .setTimestamp();
 
+    // Default: no @everyone (Co-Owner app-nuke / live lock). Drills may opt in.
+    const pingEveryone = options.pingEveryone === true;
     try {
       await safeZone.send({
         content: isDrill
-          ? '@everyone\n\n🚨 **WARNING — LOCKDOWN DRILL** 🚨\nYou are in the **SAFE ZONE**. All other channels are hidden.'
-          : '@everyone\n\n🚨🚨🚨 **WARNING — NOT A DRILL — SERVER LOCKDOWN** 🚨🚨🚨\n☠️ You are in the **SAFE ZONE**. All other channels are **HIDDEN**. ☠️',
+          ? (pingEveryone
+            ? '@everyone\n\n🚨 **WARNING — LOCKDOWN DRILL** 🚨\nYou are in the **SAFE ZONE**. All other channels are hidden.'
+            : '🚨 **WARNING — LOCKDOWN DRILL** 🚨\nYou are in the **SAFE ZONE**. All other channels are hidden.')
+          : (pingEveryone
+            ? '@everyone\n\n🚨🚨🚨 **WARNING — NOT A DRILL — SERVER LOCKDOWN** 🚨🚨🚨\n☠️ You are in the **SAFE ZONE**. All other channels are **HIDDEN**. ☠️'
+            : '🚨🚨🚨 **WARNING — NOT A DRILL — SERVER LOCKDOWN** 🚨🚨🚨\n☠️ You are in the **SAFE ZONE**. All other channels are **HIDDEN**. ☠️'),
         embeds: [warnEmbed],
-        allowedMentions: { parse: ['everyone'] },
+        allowedMentions: pingEveryone ? { parse: ['everyone'] } : { parse: [] },
       });
     } catch (err) {
       console.warn('[guardian] safe-zone warn failed:', err.message);
