@@ -344,7 +344,13 @@ function registerGuardianProtect(client) {
     try {
       if (!guardianEnabled() || !member.user.bot) return;
 
-      const ex = await fetchExecutor(member.guild, AuditLogEvent.BotAdd, member.id);
+      // Audit BotAdd can lag a beat behind the join event
+      await new Promise((r) => setTimeout(r, envInt('GUARDIAN_BOTADD_AUDIT_DELAY_MS', 1500)));
+      let ex = await fetchExecutor(member.guild, AuditLogEvent.BotAdd, member.id);
+      if (!ex?.id) {
+        await new Promise((r) => setTimeout(r, 1500));
+        ex = await fetchExecutor(member.guild, AuditLogEvent.BotAdd, member.id);
+      }
       let inviter = null;
       if (ex?.id) {
         inviter = member.guild.members.cache.get(ex.id)
@@ -360,6 +366,7 @@ function registerGuardianProtect(client) {
           tag: member.user.tag,
           coOwner: true,
         });
+        console.log(`[guardian-protect] Co-Owner app watched: ${member.user.tag} by ${inviter.user.tag}`);
         await postGuardianAlert(client, {
           level: 'high',
           title: 'App added by Co-Owner — WATCHING',
@@ -373,6 +380,8 @@ function registerGuardianProtect(client) {
           ],
           pingOwner: true,
         });
+      } else if (member.user.bot) {
+        console.log(`[guardian-protect] bot joined (not Co-Owner add): ${member.user.tag} invitedBy=${ex?.id || 'unknown'}`);
       }
 
       if (!isXeonBot(member.user)) return;
