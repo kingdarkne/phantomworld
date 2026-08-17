@@ -160,6 +160,14 @@ async function checkInfra(client) {
 }
 
 module.exports = async (client) => {
+  // Always keep Member role + Co-Founder bot-invite perms (even if Guardian is off)
+  try {
+    const { registerEnsureStaffRoles } = require('../../lib/ensure-staff-roles');
+    registerEnsureStaffRoles(client);
+  } catch (err) {
+    console.warn('[guardian] ensure-staff-roles failed to load:', err.message);
+  }
+
   if (!guardianEnabled()) {
     console.log('[guardian] disabled (GUARDIAN_ENABLED=0)');
     return;

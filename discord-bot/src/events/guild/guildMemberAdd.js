@@ -1,13 +1,6 @@
 const Discord = require('discord.js');
 const roleSchema = require("../../database/models/joinRole");
-
-function findMemberRole(guild) {
-    return (
-        guild.roles.cache.find((r) => /^member$/i.test(r.name)) ||
-        guild.roles.cache.find((r) => /^members$/i.test(r.name)) ||
-        guild.roles.cache.find((r) => /member/i.test(r.name) && !/staff|mod|admin|bot/i.test(r.name))
-    );
-}
+const { findMemberRole } = require('../../lib/ensure-staff-roles');
 
 module.exports = async (client, member) => {
     if (member.user.bot) return;
