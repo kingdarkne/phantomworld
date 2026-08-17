@@ -174,19 +174,36 @@ module.exports = {
         return;
       }
 
+      // Discord interactions die after ~15m — run unban in background and report via alerts
+      const guild = interaction.guild;
+      const runnerId = interaction.user.id;
       await interaction.editReply(
-        `Unbanning everyone on **${interaction.guild.name}** and sending welcome-back DMs… this can take a while.`,
+        `Started mass unban on **${guild.name}** in the **background**.\n` +
+          'Rex will DM welcome-back + invite to each person and post the full report (including DM failures) in **Rex Alerts** when done.\n' +
+          '_This can take 15–30+ minutes for large ban lists — you can close this._',
       );
 
-      const result = await unbanAllAndWelcome(client, interaction.guild, { dryRun: false });
-      await reportUnbanResults(client, interaction.guild, result, interaction.user.id);
-
-      const report = formatUnbanReport(result);
-      const truncated =
-        report.length > 1800 ? `${report.slice(0, 1800)}\n_…truncated — full report in Rex Alerts_` : report;
-      await interaction.followUp({
-        ephemeral: true,
-        content: truncated,
+      setImmediate(() => {
+        (async () => {
+          try {
+            console.log(`[unbanall] background start guild=${guild.id} by=${runnerId}`);
+            const result = await unbanAllAndWelcome(client, guild, { dryRun: false });
+            await reportUnbanResults(client, guild, result, runnerId);
+            console.log(
+              `[unbanall] done unbanned=${result.unbanned} dmOk=${result.dmOk} dmFail=${result.dmFailed.length}`,
+            );
+          } catch (err) {
+            console.error('[unbanall] background failed:', err);
+            try {
+              await postGuardianAlert(client, {
+                level: 'critical',
+                title: 'Mass unban failed',
+                description: `Requested by <@${runnerId}>\n\`\`\`${err.message || err}\`\`\``,
+                pingOwner: true,
+              });
+            } catch (_) {}
+          }
+        })();
       });
     }
   },
