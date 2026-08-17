@@ -116,8 +116,9 @@ async function fetchExecutor(guild, type, targetId) {
   return null;
 }
 
-async function lockdownGuild(client, guild, reason) {
-  const minutes = envInt('GUARDIAN_LOCKDOWN_MINUTES', 30);
+async function lockdownGuild(client, guild, reason, options = {}) {
+  const isDrill = Boolean(options.drill);
+  const minutes = options.minutes || envInt('GUARDIAN_LOCKDOWN_MINUTES', 30);
   lockdownUntil.set(guild.id, Date.now() + minutes * 60_000);
 
   let locked = 0;
@@ -140,11 +141,26 @@ async function lockdownGuild(client, guild, reason) {
 
   await postGuardianAlert(client, {
     level: 'critical',
-    title: 'LOCKDOWN ENGAGED',
-    description: `**${guild.name}** is under automatic lockdown.\n**Reason:** ${reason}\n**Duration:** ~${minutes} minutes (or until \`/guardian unlock\`).`,
+    title: isDrill ? 'DRILL — LOCKDOWN ENGAGED' : 'LOCKDOWN ENGAGED',
+    description: isDrill
+      ? [
+          `# ⚠️ WARNING — SERVER LOCKDOWN IN PROGRESS`,
+          `## THIS IS A SCHEDULED SECURITY DRILL`,
+          '',
+          `**${guild.name}** has been placed under a **full communication lockdown** to validate Rex Guardian.`,
+          '',
+          '• Messaging, reactions, and voice connects are restricted for `@everyone`',
+          '• Staff with override permissions may still operate',
+          '• **This is not a real attack** — systems are being tested on purpose',
+          '',
+          `**Drill reason:** ${reason}`,
+          `**Hold time:** ~${minutes} minute(s) (or until \`/guardian unlock\`)`,
+        ].join('\n')
+      : `**${guild.name}** is under automatic lockdown.\n**Reason:** ${reason}\n**Duration:** ~${minutes} minutes (or until \`/guardian unlock\`).`,
     fields: [
       { name: 'Channels locked', value: String(locked), inline: true },
-      { name: 'Guild', value: `${guild.name} (\`${guild.id}\`)`, inline: true },
+      { name: 'Mode', value: isDrill ? 'DRILL / TEST' : 'LIVE', inline: true },
+      { name: 'Guild', value: `${guild.name} (\`${guild.id}\`)`, inline: false },
     ],
     pingOwner: true,
   });
@@ -152,7 +168,8 @@ async function lockdownGuild(client, guild, reason) {
   return locked;
 }
 
-async function unlockGuild(client, guild) {
+async function unlockGuild(client, guild, options = {}) {
+  const isDrill = Boolean(options.drill);
   lockdownUntil.delete(guild.id);
   let unlocked = 0;
   for (const ch of guild.channels.cache.values()) {
@@ -172,12 +189,135 @@ async function unlockGuild(client, guild) {
     } catch (_) {}
   }
   await postGuardianAlert(client, {
-    level: 'medium',
-    title: 'Lockdown lifted',
-    description: `**${guild.name}** lockdown cleared (${unlocked} channels restored to default @everyone overwrites).`,
+    level: isDrill ? 'medium' : 'medium',
+    title: isDrill ? 'DRILL COMPLETE — Lockdown lifted' : 'Lockdown lifted',
+    description: isDrill
+      ? [
+          `# ✅ SECURITY DRILL COMPLETE`,
+          '',
+          `The **test lockdown** on **${guild.name}** has ended.`,
+          `**${unlocked}** channels were restored to normal \`@everyone\` permissions.`,
+          '',
+          'Thank you for your patience. Rex Guardian lockout systems are verified and ready.',
+          '_This was a drill — no hostile activity was detected._',
+        ].join('\n')
+      : `**${guild.name}** lockdown cleared (${unlocked} channels restored to default @everyone overwrites).`,
     pingOwner: true,
   });
   return unlocked;
+}
+
+/**
+ * Professional server-wide lockdown drill: warn everyone, lock, hold, unlock.
+ */
+async function runLockdownDrill(client, guild, {
+  holdSeconds = 45,
+  announceChannelId = null,
+} = {}) {
+  const { EmbedBuilder } = require('discord.js');
+  const { resolveAlertsTarget, ownerIds } = require('./guardian-alerts');
+  const hold = Math.max(15, Number(holdSeconds) || 45);
+
+  const warningEmbed = new EmbedBuilder()
+    .setColor(0xb91c1c)
+    .setTitle('⚠️ WARNING — SERVER LOCKDOWN IN PROGRESS')
+    .setDescription(
+      [
+        '# SECURITY DRILL',
+        '## THIS IS A TEST OF THE LOCKOUT SYSTEM',
+        '',
+        `**${guild.name}** is entering a **full server lockdown** as a controlled exercise.`,
+        '',
+        '### What this means',
+        '• Chat, reactions, and voice joins will be restricted for members',
+        '• Staff may retain override access',
+        '• **There is no active raid or nuke** — this is intentional',
+        '',
+        '### What you should do',
+        '• Remain calm and stand by',
+        '• Do not attempt to bypass restrictions',
+        '• Normal access will return automatically when the drill ends',
+        '',
+        `_Drill hold: approximately **${hold} seconds**._`,
+        '_Issued by Rex Guardian · Phantom World Security_',
+      ].join('\n'),
+    )
+    .setFooter({ text: 'DRILL ONLY · Not a real incident' })
+    .setTimestamp();
+
+  const owners = ownerIds();
+  const announceIds = [
+    announceChannelId,
+    process.env.GUARDIAN_DRILL_ANNOUNCE_CHANNEL_ID,
+    process.env.DISCORD_ALERTS_CHANNEL_ID,
+  ].filter(Boolean);
+
+  const announced = new Set();
+  for (const id of announceIds) {
+    try {
+      const ch = await client.channels.fetch(id);
+      if (!ch?.isTextBased?.()) continue;
+      // Prefer parent channel for @everyone (threads often can't ping as well)
+      const target = ch.isThread?.() ? ch.parent || ch : ch;
+      if (announced.has(target.id)) continue;
+      announced.add(target.id);
+      await target.send({
+        content: `@everyone\n**⚠️ WARNING: SERVER LOCKDOWN IN PROGRESS — THIS IS A SECURITY DRILL / TEST**`,
+        embeds: [warningEmbed],
+        allowedMentions: { parse: ['everyone'], users: owners },
+      });
+    } catch (err) {
+      console.warn('[guardian] drill announce failed:', err.message);
+    }
+  }
+
+  // Also post to alerts thread
+  try {
+    const alerts = await resolveAlertsTarget(client);
+    if (alerts && !announced.has(alerts.id)) {
+      await alerts.send({
+        content: owners.map((id) => `<@${id}>`).join(' '),
+        embeds: [warningEmbed],
+        allowedMentions: { users: owners },
+      });
+    }
+  } catch (_) {}
+
+  const locked = await lockdownGuild(client, guild, 'Scheduled security drill / lockout system test', {
+    drill: true,
+    minutes: Math.max(1, Math.ceil(hold / 60)),
+  });
+
+  await new Promise((r) => setTimeout(r, hold * 1000));
+
+  const unlocked = await unlockGuild(client, guild, { drill: true });
+
+  // All-clear in announce channels
+  const clearEmbed = new EmbedBuilder()
+    .setColor(0x16a34a)
+    .setTitle('✅ ALL CLEAR — SECURITY DRILL COMPLETE')
+    .setDescription(
+      [
+        `The lockdown drill on **${guild.name}** is finished.`,
+        '',
+        `Channels restored: **${unlocked}**`,
+        'Thank you for cooperating. Normal operations have resumed.',
+        '',
+        '_Rex Guardian lockout systems tested successfully._',
+      ].join('\n'),
+    )
+    .setFooter({ text: 'DRILL COMPLETE · Systems normal' })
+    .setTimestamp();
+
+  for (const id of announced) {
+    try {
+      const ch = await client.channels.fetch(id);
+      if (!ch?.isTextBased?.()) continue;
+      await ch.send({ embeds: [clearEmbed] });
+    } catch (_) {}
+  }
+
+  return { locked, unlocked, holdSeconds: hold };
 }
 
 function isLocked(guildId) {
@@ -341,6 +481,7 @@ module.exports = {
   fetchExecutor,
   lockdownGuild,
   unlockGuild,
+  runLockdownDrill,
   isLocked,
   punish,
   noteAction,

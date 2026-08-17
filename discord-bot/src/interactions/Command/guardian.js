@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const {
   lockdownGuild,
   unlockGuild,
+  runLockdownDrill,
   isLocked,
   guardianEnabled,
   THRESHOLDS,
@@ -17,6 +18,18 @@ module.exports = {
     .addSubcommand((s) => s.setName('status').setDescription('Show Guardian status + thresholds'))
     .addSubcommand((s) => s.setName('lockdown').setDescription('Force full server lockdown now'))
     .addSubcommand((s) => s.setName('unlock').setDescription('Lift Guardian lockdown'))
+    .addSubcommand((s) =>
+      s
+        .setName('drill')
+        .setDescription('Run a professional lockdown DRILL (warn everyone, lock, auto-unlock)')
+        .addIntegerOption((o) =>
+          o
+            .setName('seconds')
+            .setDescription('How long to hold the lockdown (15–180, default 45)')
+            .setMinValue(15)
+            .setMaxValue(180),
+        ),
+    )
     .addSubcommand((s) => s.setName('infra').setDescription('Run infra health checks now'))
     .addSubcommand((s) =>
       s
@@ -84,6 +97,19 @@ module.exports = {
     if (sub === 'unlock') {
       const n = await unlockGuild(client, interaction.guild);
       await interaction.editReply(`Lockdown lifted — restored **${n}** channels.`);
+      return;
+    }
+
+    if (sub === 'drill') {
+      const seconds = interaction.options.getInteger('seconds') || 45;
+      await interaction.editReply(
+        `Starting **security lockdown drill** for **${seconds}s** — warning @everyone, locking the server, then auto-unlocking.`,
+      );
+      const result = await runLockdownDrill(client, interaction.guild, { holdSeconds: seconds });
+      await interaction.followUp({
+        ephemeral: true,
+        content: `Drill finished. Locked **${result.locked}** → unlocked **${result.unlocked}** after ${result.holdSeconds}s.`,
+      });
       return;
     }
 
