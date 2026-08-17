@@ -160,37 +160,44 @@ async function computeStability() {
     // optional
   }
 
-  // Dashboard HTTP (often overridden by another SetHttpHandler — still try)
-  try {
-    const dash = await probeJson(`${base}/phantom-dashboard/status`, { auth: true, timeoutMs: 5000 });
-    if (dash.ok && dash.json && !dash.json.error) {
-      factors.push({
-        id: 'dashboard',
-        label: 'phantom_dashboard HTTP',
-        ok: true,
-        penalty: 0,
-        detail: `OK · uptime signals available`,
-      });
-    } else {
-      factors.push({
-        id: 'dashboard',
-        label: 'phantom_dashboard HTTP',
-        ok: false,
-        penalty: 6,
-        detail: dash.ok
-          ? `Unexpected body`
-          : `HTTP ${dash.status} (another resource may own SetHttpHandler)`,
-        fixable: true,
-      });
-      score -= 6;
+  // Dashboard HTTP — screencapture owns SetHttpHandler and mounts routes under
+  // /screencapture/phantom-dashboard/* (also try unprefixed / legacy paths).
+  const dashPaths = [
+    '/screencapture/phantom-dashboard/status',
+    '/phantom-dashboard/status',
+    '/screenshot-basic/phantom-dashboard/status',
+  ];
+  let dashOk = null;
+  let dashFailDetail = 'unreachable';
+  for (const path of dashPaths) {
+    try {
+      const dash = await probeJson(`${base}${path}`, { auth: true, timeoutMs: 5000 });
+      if (dash.ok && dash.json && !dash.json.error && dash.json.serverName) {
+        dashOk = { path, ms: dash.ms };
+        break;
+      }
+      dashFailDetail = dash.ok
+        ? `Unexpected body from ${path}`
+        : `HTTP ${dash.status} at ${path}`;
+    } catch (err) {
+      dashFailDetail = `${path}: ${err.message}`;
     }
-  } catch (err) {
+  }
+  if (dashOk) {
+    factors.push({
+      id: 'dashboard',
+      label: 'phantom_dashboard HTTP',
+      ok: true,
+      penalty: 0,
+      detail: `OK via ${dashOk.path} (${dashOk.ms}ms)`,
+    });
+  } else {
     factors.push({
       id: 'dashboard',
       label: 'phantom_dashboard HTTP',
       ok: false,
       penalty: 6,
-      detail: err.message,
+      detail: dashFailDetail,
       fixable: true,
     });
     score -= 6;
@@ -408,7 +415,7 @@ async function attemptRemediation(client, { allowRestart = false } = {}) {
     }
   } else if (dashBad) {
     notes.push(
-      'Dashboard HTTP still overridden — run `ensure phantom_dashboard` on the game host to restore stuck/error bridge',
+      'Dashboard HTTP failed — ensure screencapture is running (it proxies /screencapture/phantom-dashboard/*)',
     );
   }
 

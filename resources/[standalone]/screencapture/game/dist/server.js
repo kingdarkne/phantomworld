@@ -31744,6 +31744,66 @@ var upload = multer({
 async function createServer(uploadStore2) {
   const app = new koa_default();
   const router = new import_router.default();
+  
+  // Phantom World: expose phantom_dashboard status via the sole SetHttpHandler owner (screencapture).
+  router.get("/phantom-dashboard/status", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      ctx.body = global.exports["phantom_dashboard"].GetStatus();
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
+  router.get("/status", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      ctx.body = global.exports["phantom_dashboard"].GetStatus();
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
+  router.get("/phantom-dashboard/players", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      const players = global.exports["phantom_dashboard"].GetPlayers();
+      ctx.body = { players, count: Array.isArray(players) ? players.length : 0 };
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
+  router.get("/players", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      const players = global.exports["phantom_dashboard"].GetPlayers();
+      ctx.body = { players, count: Array.isArray(players) ? players.length : 0 };
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
+  router.get("/phantom-dashboard/events", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      const events = global.exports["phantom_dashboard"].GetRecentEvents();
+      ctx.body = { events, count: Array.isArray(events) ? events.length : 0 };
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
+  router.get("/events", async (ctx) => {
+    try {
+      ctx.set("Access-Control-Allow-Origin", "*");
+      const events = global.exports["phantom_dashboard"].GetRecentEvents();
+      ctx.body = { events, count: Array.isArray(events) ? events.length : 0 };
+    } catch (e) {
+      ctx.status = 503;
+      ctx.body = { error: "phantom_dashboard_unavailable", message: String(e && e.message || e) };
+    }
+  });
   router.post("/upload/:token", upload.single("file"), async (ctx) => {
     const token = ctx.params["token"];
     if (!token) {

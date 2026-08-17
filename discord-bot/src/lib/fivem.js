@@ -21,6 +21,22 @@ export async function fetchFivem(path) {
   return res.json();
 }
 
+/** screencapture owns SetHttpHandler — dashboard routes live under /screencapture/... */
+const DASHBOARD_PREFIXES = ['/screencapture', '', '/screenshot-basic'];
+
+export async function fetchDashboard(path) {
+  const suffix = path.startsWith('/') ? path : `/${path}`;
+  let lastErr = null;
+  for (const prefix of DASHBOARD_PREFIXES) {
+    try {
+      return await fetchFivem(`${prefix}${suffix}`);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error('dashboard unreachable');
+}
+
 const CFX_API_BASES = [
   'https://frontend.cfx-services.net/api/servers/single',
   'https://servers-frontend.fivem.net/api/servers/single',
@@ -131,7 +147,7 @@ export async function getStatus() {
 
   let dashboard = null;
   try {
-    dashboard = await fetchFivem('/phantom-dashboard/status');
+    dashboard = await fetchDashboard('/phantom-dashboard/status');
     dashboard.source = 'fivem-dashboard';
   } catch (err) {
     console.warn('FiveM dashboard HTTP failed:', err.message);
@@ -149,7 +165,7 @@ export async function getStatus() {
 
   if (dashboard && (merged.playerCount ?? 0) > 0) {
     try {
-      const playerData = await fetchFivem('/phantom-dashboard/players');
+      const playerData = await fetchDashboard('/phantom-dashboard/players');
       const names = (playerData.players || []).map((p) => p.name).filter(Boolean).slice(0, 8);
       if (names.length > 0) merged.topPlayers = names;
     } catch {
@@ -163,7 +179,7 @@ export async function getStatus() {
 
 export async function getPlayers() {
   try {
-    const data = await fetchFivem('/phantom-dashboard/players');
+    const data = await fetchDashboard('/phantom-dashboard/players');
     return data.players || [];
   } catch {
     return [];
