@@ -144,17 +144,19 @@ async function lockdownGuild(client, guild, reason, options = {}) {
     title: isDrill ? 'DRILL — LOCKDOWN ENGAGED' : 'LOCKDOWN ENGAGED',
     description: isDrill
       ? [
-          `# ⚠️ WARNING — SERVER LOCKDOWN IN PROGRESS`,
-          `## THIS IS A SCHEDULED SECURITY DRILL`,
+          `# 🚨☠️ WARNING — SERVER LOCKDOWN IN PROGRESS ☠️🚨`,
+          `## ☄️ THIS IS A SCHEDULED SECURITY DRILL ☄️`,
           '',
-          `**${guild.name}** has been placed under a **full communication lockdown** to validate Rex Guardian.`,
+          `🌍 **${guild.name}** is under a **full communication lockdown** to validate Rex Guardian.`,
           '',
-          '• Messaging, reactions, and voice connects are restricted for `@everyone`',
-          '• Staff with override permissions may still operate',
-          '• **This is not a real attack** — systems are being tested on purpose',
+          '💣 Messaging, reactions, and voice connects are restricted for `@everyone`',
+          '🛡️ Staff with override permissions may still operate',
+          '🧪 **This is not a real attack** — systems are being tested on purpose',
           '',
-          `**Drill reason:** ${reason}`,
-          `**Hold time:** ~${minutes} minute(s) (or until \`/guardian unlock\`)`,
+          `📋 **Drill reason:** ${reason}`,
+          `⏱️ **Hold time:** ~${minutes} minute(s) (or until \`/guardian unlock\`)`,
+          '',
+          '☢️ **END-OF-THE-WORLD ENERGY. DRILL PROTOCOLS ACTIVE.** ☢️',
         ].join('\n')
       : `**${guild.name}** is under automatic lockdown.\n**Reason:** ${reason}\n**Duration:** ~${minutes} minutes (or until \`/guardian unlock\`).`,
     fields: [
@@ -219,30 +221,39 @@ async function runLockdownDrill(client, guild, {
   const hold = Math.max(15, Number(holdSeconds) || 45);
 
   const warningEmbed = new EmbedBuilder()
-    .setColor(0xb91c1c)
-    .setTitle('⚠️ WARNING — SERVER LOCKDOWN IN PROGRESS')
+    .setColor(0x7f1d1d)
+    .setTitle('🚨☠️⚠️ WARNING — SERVER LOCKDOWN IN PROGRESS ⚠️☠️🚨')
     .setDescription(
       [
-        '# SECURITY DRILL',
-        '## THIS IS A TEST OF THE LOCKOUT SYSTEM',
+        '# 🌑 THIS IS NOT A DRILL… WAIT — IT IS A DRILL 🌑',
+        '## ☄️ SECURITY LOCKOUT SYSTEM TEST ☄️',
         '',
-        `**${guild.name}** is entering a **full server lockdown** as a controlled exercise.`,
+        '🛑🛑🛑 **STOP. READ THIS. NOW.** 🛑🛑🛑',
         '',
-        '### What this means',
-        '• Chat, reactions, and voice joins will be restricted for members',
-        '• Staff may retain override access',
-        '• **There is no active raid or nuke** — this is intentional',
+        `🌍 **${guild.name}** is entering **FULL SERVER LOCKDOWN**.`,
+        '📡 Communications are being sealed. Voice gates are closing. Chat is going dark.',
         '',
-        '### What you should do',
-        '• Remain calm and stand by',
-        '• Do not attempt to bypass restrictions',
-        '• Normal access will return automatically when the drill ends',
+        '### 🔥 WHAT IS HAPPENING',
+        '💣 Messaging · reactions · voice connects → **RESTRICTED**',
+        '🛡️ Staff overrides may still operate',
+        '🧪 **THIS IS A CONTROLLED SECURITY DRILL** — not a real raid/nuke',
         '',
-        `_Drill hold: approximately **${hold} seconds**._`,
-        '_Issued by Rex Guardian · Phantom World Security_',
+        '### 👤 WHAT YOU SHOULD DO',
+        '😮‍💨 Stay calm. Do not panic.',
+        '🙅 Do not try to bypass lockdown.',
+        '⏳ Stand by — access returns when the drill ends.',
+        '',
+        `⏱️ _Hold window: ~**${hold} seconds**_`,
+        '🦖 _Issued by **Rex Guardian** · Phantom World Security_',
+        '',
+        '### 📢 NOTICE',
+        '🚨 If this were real, the same lockdown would protect the city.',
+        '✅ Today it is a **TEST** of that shield.',
+        '',
+        '☢️ **END-OF-THE-WORLD VIBES. DRILL PROTOCOLS. REMAIN ONLINE.** ☢️',
       ].join('\n'),
     )
-    .setFooter({ text: 'DRILL ONLY · Not a real incident' })
+    .setFooter({ text: '🧪 DRILL ONLY · Not a real incident · Rex Guardian' })
     .setTimestamp();
 
   const owners = ownerIds();
@@ -262,7 +273,14 @@ async function runLockdownDrill(client, guild, {
       if (announced.has(target.id)) continue;
       announced.add(target.id);
       await target.send({
-        content: `@everyone\n**⚠️ WARNING: SERVER LOCKDOWN IN PROGRESS — THIS IS A SECURITY DRILL / TEST**`,
+        content: [
+          '@everyone',
+          '',
+          '🚨🚨🚨 **WARNING WARNING WARNING** 🚨🚨🚨',
+          '☠️ **SERVER LOCKDOWN IN PROGRESS** ☠️',
+          '☄️🌍💥 **THIS IS A SECURITY DRILL / TEST OF THE LOCKOUT SYSTEM** 💥🌍☄️',
+          '☢️ Stay calm. Do not panic. This is **NOT** a real attack. ☢️',
+        ].join('\n'),
         embeds: [warningEmbed],
         allowedMentions: { parse: ['everyone'], users: owners },
       });
@@ -295,18 +313,20 @@ async function runLockdownDrill(client, guild, {
   // All-clear in announce channels
   const clearEmbed = new EmbedBuilder()
     .setColor(0x16a34a)
-    .setTitle('✅ ALL CLEAR — SECURITY DRILL COMPLETE')
+    .setTitle('✅🌤️ ALL CLEAR — SECURITY DRILL COMPLETE 🌤️✅')
     .setDescription(
       [
-        `The lockdown drill on **${guild.name}** is finished.`,
+        '# 🌈 THE SKY CLEARS',
         '',
-        `Channels restored: **${unlocked}**`,
-        'Thank you for cooperating. Normal operations have resumed.',
+        `🎉 The lockdown drill on **${guild.name}** is finished.`,
+        `🔓 Channels restored: **${unlocked}**`,
+        '💚 Thank you for cooperating. Normal operations have resumed.',
         '',
-        '_Rex Guardian lockout systems tested successfully._',
+        '🦖🛡 _Rex Guardian lockout systems tested successfully._',
+        '📢 _This was a drill — no hostile activity was detected._',
       ].join('\n'),
     )
-    .setFooter({ text: 'DRILL COMPLETE · Systems normal' })
+    .setFooter({ text: '✅ DRILL COMPLETE · Systems normal' })
     .setTimestamp();
 
   for (const id of announced) {
