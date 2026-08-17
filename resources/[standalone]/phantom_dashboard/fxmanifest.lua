@@ -5,7 +5,7 @@ lua54 'yes'
 name 'phantom_dashboard'
 author 'Phantom World'
 description 'Compact Phantom World info strip + Discord status bridge'
-version '1.0.0'
+version '1.1.0'
 
 ox_lib 'locale'
 
@@ -17,12 +17,18 @@ shared_scripts {
 client_scripts {
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
+    'client/stuck.lua',
+    'client/restart_warn.lua',
 }
 
 server_scripts {
     'server/main.lua',
     'server/discord_dm.lua',
     'server/alerts.lua',
+    'server/owner_admin.lua',
+    'server/restart_protocol.lua',
+    'server/errors.lua',
+    'server/stuck.lua',
     'server/discord.lua',
     'server/http.lua',
 }
@@ -33,6 +39,7 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+    'locales/*.json',
 }
 
 dependencies {
