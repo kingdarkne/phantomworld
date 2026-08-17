@@ -413,8 +413,10 @@ async function postNormalEvent(client, entry) {
   }
 
   // Optional quiet mirror to announcements/status (no pings).
+  // Skip noisy categories — they already land in the Rex Alerts thread.
   const mirrorId = statusChannelId();
-  if (mirrorId && mirrorId !== alertsChannelId()) {
+  const skipMirror = new Set(['resource', 'death', 'kill', 'combat', 'info', 'lifecycle', 'server', 'connect', 'join', 'loaded']);
+  if (mirrorId && mirrorId !== alertsChannelId() && !skipMirror.has(cat)) {
     try {
       const channel = await client.channels.fetch(mirrorId);
       if (channel?.isTextBased?.()) {
@@ -435,10 +437,30 @@ async function postNormalEvent(client, entry) {
 
 function mountRelayRoutes(app, client) {
   const secret = relaySecret();
+  const recentKeys = new Map();
+  const dedupeMs = Number(process.env.FIVEM_EVENT_DEDUPE_MS || 20000);
 
   const authOk = (req) => {
     const auth = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-phantom-token'];
     return !(secret && auth !== secret);
+  };
+
+  const isDuplicate = (entry) => {
+    const key = [
+      String(entry.category || ''),
+      String(entry.title || ''),
+      String(entry.description || '').slice(0, 120),
+    ].join('|');
+    const now = Date.now();
+    const prev = recentKeys.get(key) || 0;
+    if (now - prev < dedupeMs) return true;
+    recentKeys.set(key, now);
+    if (recentKeys.size > 200) {
+      for (const [k, ts] of recentKeys) {
+        if (now - ts > dedupeMs) recentKeys.delete(k);
+      }
+    }
+    return false;
   };
 
   app.post('/events', async (req, res) => {
@@ -448,6 +470,10 @@ function mountRelayRoutes(app, client) {
     }
     const entry = req.body || {};
     try {
+      if (isDuplicate(entry)) {
+        res.json({ ok: true, deduped: true });
+        return;
+      }
       const cat = String(entry.category || '').toLowerCase();
       if (cat === 'error' || cat === 'stuck' || cat === 'critical' || cat === 'scheduled_restart') {
         await postErrorTargets(client, entry);

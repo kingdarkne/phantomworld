@@ -201,7 +201,10 @@ async function run() {
 }
 
 const started = Date.now();
+let running = false;
 const onReady = () => {
+  if (running) return;
+  running = true;
   run().catch((err) => {
     console.error('rebuild-logging FAILED', err);
     process.exit(1);

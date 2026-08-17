@@ -173,7 +173,7 @@ function PhantomDashboardEmitLifecycle(category, title, description, color)
     pushLog(entry)
     postWebhook(embedPayload(title, description, color))
     PhantomDashboardDmOwner(entry)
-    postBotRelayWithRetries(entry, 6)
+    postBotRelayWithRetries(entry, 2)
 end
 
 exports('EmitAlert', function(title, message, color)
