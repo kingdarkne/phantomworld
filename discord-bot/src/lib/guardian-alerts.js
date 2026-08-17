@@ -12,6 +12,7 @@ function ownerIds() {
   return [...new Set([
     process.env.OWNER_ID,
     process.env.DISCORD_OWNER_USER_ID,
+    '413173364216168449',
   ].filter(Boolean))];
 }
 

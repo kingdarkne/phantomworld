@@ -806,23 +806,43 @@ async function noteAction(client, guild, {
   if (count < limit) return;
 
   const punishReason = `Anti-nuke: ${action} x${count}`;
-  const result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
+  const { jailMember } = require('./guardian-jail');
+
+  let member = executorId ? guild.members.cache.get(executorId) : null;
+  if (executorId && !member) {
+    try {
+      member = await guild.members.fetch(executorId);
+    } catch (_) {}
+  }
+
+  let result;
+  if (member?.user?.bot) {
+    // Bot account nuking → kick/ban
+    result = await punish(client, guild, executorId, punishReason, { ban: punishBan });
+  } else {
+    // Human (any role) nuking → jail + strip power
+    const jail = await jailMember(client, guild, executorId, punishReason, { force: true });
+    result = jail.ok
+      ? { ok: true, action: jail.action }
+      : await punish(client, guild, executorId, punishReason, { ban: punishBan });
+  }
 
   await postGuardianAlert(client, {
     level: 'critical',
-    title: `Punished for ${action}`,
+    title: `JAILED / punished for ${action}`,
     description: result.ok
-      ? `Applied **${result.action}** to <@${executorId}> for **${action}** spam.`
-      : `Threshold hit but punishment failed: \`${result.reason || result.error || 'unknown'}\`.`,
+      ? `Applied **${result.action}** to <@${executorId}> for **${action}** nuke activity.`
+      : `Threshold hit but jail/punish failed: \`${result.reason || result.error || 'unknown'}\`.`,
     fields: [
       { name: 'Executor', value: `<@${executorId}>`, inline: true },
       { name: 'Count', value: `${count}/${limit}`, inline: true },
+      { name: 'Type', value: member?.user?.bot ? 'Bot account' : 'Human / role', inline: true },
     ],
     pingOwner: true,
   });
 
   if (lockdown && !isLocked(guild.id)) {
-    await lockdownGuild(client, guild, punishReason);
+    await lockdownGuild(client, guild, punishReason, { pingEveryone: false });
   }
 }
 

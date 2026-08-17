@@ -26,6 +26,7 @@ const {
 } = require('./guardian-engine');
 const { postGuardianAlert, ownerIds } = require('./guardian-alerts');
 const { memberHasCoOwnerRole } = require('./ensure-staff-roles');
+const { jailMember, isOwnerProtected } = require('./guardian-jail');
 
 /** guildId -> Map(botId -> { invitedBy, taggedAt, tag }) */
 const xeonWatch = new Map();
@@ -167,8 +168,8 @@ async function punishRoleAttacker(client, guild, executorId, reason) {
 }
 
 /**
- * App added by Co-Owner/Co-Founder tried to nuke → kick app + lockdown (no @everyone).
- * Co-Owner is NOT kicked for adding the app.
+ * App added by Co-Owner/Co-Founder tried to nuke →
+ * kick app, JAIL the Co-Founder, lockdown (no @everyone), ping owner.
  */
 async function handleCoOwnerAppNuke(client, guild, {
   action,
@@ -185,19 +186,20 @@ async function handleCoOwnerAppNuke(client, guild, {
 
   await postGuardianAlert(client, {
     level: 'critical',
-    title: 'Co-Owner app nuke — kick + lockdown (no @everyone)',
+    title: 'Co-Owner app nuke — kick app + JAIL Co-Founder',
     description: [
       `**Action:** ${action}`,
       detail || '',
       '',
-      'Kicking the **app**. Engaging **safe-zone lockdown** with **no @everyone** ping.',
-      'Co-Owner who added the app is **not** punished for the invite.',
+      '• Kicking the **app/bot**',
+      '• Putting the **Co-Founder** who added it in **Jail**',
+      '• Engaging **safe-zone lockdown** (**no @everyone**)',
     ]
       .filter(Boolean)
       .join('\n'),
     fields: [
       { name: 'App', value: targetAppId ? `<@${targetAppId}>` : '—', inline: true },
-      { name: 'Added by (Co-Owner)', value: inviterId ? `<@${inviterId}>` : 'Unknown', inline: true },
+      { name: 'Co-Founder (jailed)', value: inviterId ? `<@${inviterId}>` : 'Unknown', inline: true },
       { name: 'Executor', value: executorId ? `<@${executorId}>` : '—', inline: true },
     ],
     pingOwner: true,
@@ -207,18 +209,50 @@ async function handleCoOwnerAppNuke(client, guild, {
     await dmUser(client, targetAppId, {
       embeds: [threatDmEmbed({ guildName: guild.name, reason, kind: 'coowner-app' })],
     });
-    await punish(client, guild, targetAppId, reason, { ban: false });
+    // Bot account → kick
+    await jailMember(client, guild, targetAppId, reason, { kickBots: true });
     watched.delete(targetAppId);
     guildXeonMap(guild.id).delete(targetAppId);
   }
 
-  if (executorId && executorId !== targetAppId) {
-    const execMember = guild.members.cache.get(executorId);
+  // Jail Co-Founder who added the nuking app (force past trusted roles; never owner)
+  let jailResult = null;
+  if (inviterId) {
+    jailResult = await jailMember(client, guild, inviterId, reason, { force: true, kickBots: false });
+    await dmUser(client, inviterId, {
+      embeds: [threatDmEmbed({
+        guildName: guild.name,
+        reason: `Your added app tried to nuke the server (${action}). You have been jailed.`,
+        kind: 'coowner-app',
+      })],
+    });
+  }
+
+  // If a different human executor also nuked, jail them too
+  if (executorId && executorId !== targetAppId && executorId !== inviterId) {
+    const execMember = guild.members.cache.get(executorId)
+      || (await guild.members.fetch(executorId).catch(() => null));
     if (execMember?.user?.bot) {
-      await punish(client, guild, executorId, reason, { ban: false });
+      await jailMember(client, guild, executorId, reason, { kickBots: true });
       watched.delete(executorId);
+    } else if (execMember) {
+      await jailMember(client, guild, executorId, reason, { force: true });
     }
   }
+
+  await postGuardianAlert(client, {
+    level: 'critical',
+    title: 'Jail result — Co-Owner app nuke',
+    description: [
+      inviterId
+        ? (jailResult?.ok
+          ? `Co-Founder <@${inviterId}> → **${jailResult.action}** (stripped ${jailResult.stripped || 0} roles).`
+          : `Co-Founder <@${inviterId}> jail failed: \`${jailResult?.reason || 'unknown'}\`.`)
+        : 'No Co-Founder inviter recorded on the app.',
+      targetAppId ? `App <@${targetAppId}> removed.` : '',
+    ].filter(Boolean).join('\n'),
+    pingOwner: true,
+  });
 
   if (!isLocked(guild.id)) {
     await lockdownGuild(client, guild, reason, {
@@ -227,7 +261,7 @@ async function handleCoOwnerAppNuke(client, guild, {
     });
   }
 
-  return { appId: targetAppId, inviterId };
+  return { appId: targetAppId, inviterId, jailResult };
 }
 
 async function handleXeonThreat(client, guild, {
@@ -291,15 +325,28 @@ async function handleXeonThreat(client, guild, {
   }
 
   for (const id of humans) {
-    if (isWhitelisted(client, id)) continue;
-    if (memberHasCoOwnerRole(guild.members.cache.get(id))) continue;
+    if (isOwnerProtected(id)) continue;
+    // Jail human operator (any role) — force so Co-Founder / staff can be jailed for nuke
     await dmUser(client, id, {
       embeds: [threatDmEmbed({ guildName: guild.name, reason, kind: 'xeon' })],
     });
-    await punish(client, guild, id, reason, {
-      ban: envInt('GUARDIAN_XEON_BAN_OPERATOR', 1) === 1,
-    });
+    const jail = await jailMember(client, guild, id, reason, { force: true });
+    if (!jail.ok) {
+      await punish(client, guild, id, reason, {
+        ban: envInt('GUARDIAN_XEON_BAN_OPERATOR', 1) === 1,
+      });
+    }
   }
+
+  await postGuardianAlert(client, {
+    level: 'critical',
+    title: 'Xeon threat — bots kicked, humans JAILED',
+    description: `Operators jailed (or banned if jail failed). Ping for review.`,
+    fields: [
+      { name: 'Operators', value: [...humans].map((id) => `<@${id}>`).join(', ') || '—', inline: false },
+    ],
+    pingOwner: true,
+  });
 
   return { xeonIds: [...xeonIds], humans: [...humans] };
 }
@@ -372,7 +419,7 @@ function registerGuardianProtect(client) {
           title: 'App added by Co-Owner — WATCHING',
           description: [
             `**${member.user.tag}** was added by a **Co-Owner/Co-Founder**.`,
-            'If this app tries to **nuke** (mass delete/create channels or roles), Rex will **kick it** and **lockdown** with **no @everyone**.',
+            'If this app tries to **nuke**, Rex will **kick the app**, **Jail the Co-Founder**, **lockdown** (no @everyone), and **ping the owner**.',
           ].join('\n'),
           fields: [
             { name: 'App', value: `<@${member.id}>`, inline: true },
